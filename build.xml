@@ -1,0 +1,80 @@
+<project name='diad' default='all'>
+
+   <property file='build.properties' />
+
+   <available file="./build.properties" type='file' property='setup.done' />
+   <path id='setuppath'>
+      <pathelement location='..' />
+   </path>
+   <path id='diadpath'>
+      <pathelement location='.' />
+   </path>
+   <property name='setupfile' refid='setuppath' />
+   <property name='diadfile' refid='diadpath' />
+   <property name='PRO' value='${setupfile}' />
+   <property name='DIAD' value='${diadfile}' />
+
+   <target name='setup' unless='setup.done'>
+      <echo file='./build.properties' message="PRO=${setupfile}${line.separator}" />
+      <echo file='./build.properties' message='DIAD=${diadfile}${line.separator}' append='true' />
+      <mkdir dir='./java/edu/brown/cs/diad' />
+      <property name='PRO' value='${setupfile}' />
+      <property name='DIAD' value='${diadfile}' />
+   </target>
+
+
+   <available file='${PRO}/ivy' type="dir" property="ivy.present" />
+   <property name='IVYLIB' value='${PRO}/ivy/lib' />
+
+   <property name='DIADLIB' value='${DIAD}/lib' />
+   <path id='spr.classpath'>
+     <pathelement location='${DIAD}/java' />
+     <pathelement location='${DIAD}/javasrc' />
+     <fileset dir='${DIADLIB}' includes='*.jar' />
+     <fileset dir='${IVYLIB}' includes='ivy.jar' />
+     <fileset dir='${PRO}/ivy/lib/eclipsejar' includes='*.jar' />
+  </path>
+
+  <target name='all' depends='setup,compile,jar' />
+
+  <target name='compile' depends='setup'>
+     <javac srcdir='.' destdir='${DIAD}/java' debug='on' deprecation='on'
+		target='10' source='10'
+		includeantruntime='false'>
+	<classpath refid='spr.classpath' />
+     </javac>
+  </target>
+
+  <target name='jar' depends='setup,compile'>
+     <jar destfile='diad.jar'>
+	<manifest>
+	   <attribute name='Main-Class' value='edu.brown.cs.diad.diad.GrainMain' />
+	</manifest>
+	<fileset dir='${DIAD}/java' includes='**/*.class' />
+	<fileset dir='${DIAD}/resources' includes='*.xml' />
+	<fileset dir='${DIAD}/resources' includes='*.proto' />
+     </jar>
+   </target>
+
+   <target name='bubbles' depends='all'>
+      <jar destfile='diad.jar'>
+	 <manifest>
+	    <attribute name="Bubbles-start" value='edu.brown.cs.diadbb.bait.BarleyFactory' />
+	    <attribute name="Bubbles-palette" value='diadbb.palette' />
+	    <attribute name="Bubbles-resource" value='Barley.props' />
+	    <attribute name="Bubbles-depends" value='' />
+	 </manifest>
+	 <fileset dir='${DIAD}/java' includes='**/*.class' />
+	 <fileset dir='${PRO}/diadbb/java' includes='**/*.class' />
+	 <fileset dir='${DIAD}/resources' includes='*.xml' />
+	 <fileset dir='${DIAD}/resources' includes='*.proto' />
+<!--	 <fileset dir='${PRO}/ivy/java' includes='**/*.class' />                        -->
+	 <fileset dir='${PRO}/diadbb' includes='Barley.props' />
+	 <fileset dir='${PRO}/diadbb' includes='diadbb.palette' />
+      </jar>
+      <copy file='diad.jar' tofile='${PRO}/bubbles/dropins/diad.jar' verbose='true' />
+      <copy file='diad.jar' tofile='${PRO}/bubbles/dropins.export/diad.jar' verbose='true' />
+   </target>
+
+</project>
+
