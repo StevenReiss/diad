@@ -37,12 +37,18 @@ package edu.brown.cs.diad.dicontrol;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.w3c.dom.Element;
 
 import edu.brown.cs.diad.dicore.DiadException;
+import edu.brown.cs.diad.dicore.DiadRuntimeCallback;
+import edu.brown.cs.diad.dicore.DiadThread;
+import edu.brown.cs.diad.diruntime.DiruntimeManager;
 import edu.brown.cs.ivy.exec.IvyExec;
 import edu.brown.cs.ivy.file.IvyLog;
+import edu.brown.cs.ivy.mint.MintConstants.CommandArgs;
 import edu.brown.cs.ivy.xml.IvyXml;
 import edu.brown.cs.ivy.xml.IvyXmlReader;
 import edu.brown.cs.ivy.xml.IvyXmlWriter;
@@ -78,6 +84,8 @@ private File log_file;
 private DicontrolMonitor dicontrol_monitor;
 private File input_file;
 private boolean server_mode;
+private DiruntimeManager run_manager;
+private Map<DiadThread,DicontrolCandidate> debug_candidates;
 
 
 /********************************************************************************/
@@ -100,6 +108,10 @@ private DicontrolMain(String [] args)
    server_mode = false;
 
    dicontrol_monitor = null;
+   run_manager = new DiruntimeManager(this);  
+   
+   debug_candidates = new HashMap<>();
+   run_manager.addRuntimeCallbacvk(new RuntimeCallback());
 
    scanArgs(args);
 }
@@ -114,6 +126,8 @@ private DicontrolMain(String [] args)
 
 DicontrolMonitor getMessageServer()             { return dicontrol_monitor; }
 
+DiruntimeManager getRunManager()                { return run_manager; }
+
 void setupMessageServer(String mintid)
 {
    mint_id = mintid;
@@ -121,6 +135,16 @@ void setupMessageServer(String mintid)
 }
 
 
+/********************************************************************************/
+/*                                                                              */
+/*      Send messages and responses                                             */
+/*                                                                              */
+/********************************************************************************/
+
+public Element sendBubblesMessage(String cmd,CommandArgs args,String xml)
+{
+   return dicontrol_monitor.sendBubblesMessage(cmd,args,xml); 
+}
 
 /********************************************************************************/
 /*										*/
@@ -269,6 +293,35 @@ DiadCommand setupDiadCommand(Element xml) throws DiadException
 
 
 /********************************************************************************/
+/*                                                                              */
+/*      Handle runtime callbacks                                                */
+/*                                                                              */
+/********************************************************************************/
+
+private final class RuntimeCallback implements DiadRuntimeCallback {
+   
+@Override public void threadStateChanged(DiadThread thrd)
+{
+   DicontrolCandidate dc = debug_candidates.get(thrd);
+   if (dc != null) {
+      if (thrd.isRunning() || thrd.isTerminated()) {
+         dc.terminate(); 
+         debug_candidates.remove(thrd);
+       }
+    }
+   else if (thrd.isStopped()) {
+      dc = new DicontrolCandidate(thrd);
+      debug_candidates.put(thrd,dc);
+      dc.start(); 
+    }
+}
+   
+}       // end of inner class DiadRuntimeCallback
+
+
+
+
+/********************************************************************************/
 /*										*/
 /*	Setup bedrock for debugging						*/
 /*										*/
@@ -320,7 +373,8 @@ void setupBedrock(String workspace,String mint)
 	  }
 	 catch (InterruptedException e) { }
 	 if (dicontrol_monitor.pingEclipse()) {
-	    dicontrol_monitor.sendBubblesMessage("LOGLEVEL","LEVEL='DEBUG'",null);
+            CommandArgs a1 = new CommandArgs("LEVEL","DEBUG");
+	    dicontrol_monitor.sendBubblesMessage("LOGLEVEL",a1,null);
 	    dicontrol_monitor.sendBubblesMessage("ENTER",null,null);
 	    return;
 	  }

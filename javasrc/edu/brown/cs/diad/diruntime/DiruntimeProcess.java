@@ -1,25 +1,38 @@
 /********************************************************************************/
 /*                                                                              */
-/*              DicontrolProcess.java                                           */
+/*              DiruntimeProcess.java                                           */
 /*                                                                              */
-/*      Represents a user debug process                                         */
+/*       Runtime model of a process being debugged                              */
 /*                                                                              */
 /********************************************************************************/
-/*      Copyright 2011 Brown University -- Steven P. Reiss                    */
+/*	Copyright 2025 Brown University -- Steven P. Reiss		      */
 /*********************************************************************************
- *  Copyright 2011, Brown University, Providence, RI.                            *
- *                                                                               *
- *                        All Rights Reserved                                    *
- *                                                                               *
- * This program and the accompanying materials are made available under the      *
- * terms of the Eclipse Public License v1.0 which accompanies this distribution, *
- * and is available at                                                           *
- *      http://www.eclipse.org/legal/epl-v10.html                                *
- *                                                                               *
+ *  Copyright 2025, Brown University, Providence, RI.				 *
+ *										 *
+ *			  All Rights Reserved					 *
+ *										 *
+ *  Permission to use, copy, modify, and distribute this software and its	 *
+ *  documentation for any purpose other than its incorporation into a		 *
+ *  commercial product is hereby granted without fee, provided that the 	 *
+ *  above copyright notice appear in all copies and that both that		 *
+ *  copyright notice and this permission notice appear in supporting		 *
+ *  documentation, and that the name of Brown University not be used in 	 *
+ *  advertising or publicity pertaining to distribution of the software 	 *
+ *  without specific, written prior permission. 				 *
+ *										 *
+ *  BROWN UNIVERSITY DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS		 *
+ *  SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND		 *
+ *  FITNESS FOR ANY PARTICULAR PURPOSE.  IN NO EVENT SHALL BROWN UNIVERSITY	 *
+ *  BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY 	 *
+ *  DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,		 *
+ *  WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS		 *
+ *  ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 	 *
+ *  OF THIS SOFTWARE.								 *
+ *										 *
  ********************************************************************************/
 
 
-package edu.brown.cs.diad.dicontrol;
+package edu.brown.cs.diad.diruntime;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +43,7 @@ import org.w3c.dom.Element;
 
 import edu.brown.cs.ivy.xml.IvyXml;
 
-class DicontrolProcess implements DicontrolConstants
+class DiruntimeProcess implements DiruntimeConstants
 {
 
 
@@ -40,10 +53,10 @@ class DicontrolProcess implements DicontrolConstants
 /*                                                                              */
 /********************************************************************************/
 
-private Map<String,DicontrolThread> thread_map; 
+private DiruntimeManager run_manager;
+private Map<String,DiruntimeThread> thread_map; 
 private String process_id;
 private boolean is_running;
-
 
 
 /********************************************************************************/
@@ -52,8 +65,9 @@ private boolean is_running;
 /*                                                                              */
 /********************************************************************************/
 
-DicontrolProcess(Element xml) 
+DiruntimeProcess(DiruntimeManager mgr,Element xml) 
 { 
+   run_manager = mgr;
    thread_map = new ConcurrentHashMap<>();
    process_id = IvyXml.getAttrString(xml,"PID");
    is_running = true;
@@ -67,10 +81,10 @@ DicontrolProcess(Element xml)
 /*                                                                              */
 /********************************************************************************/
 
-Iterable<DicontrolThread> getThreads()
+Iterable<DiruntimeThread> getThreads()
 {
-   List<DicontrolThread> rslt = new ArrayList<>();
-   for (DicontrolThread dt : thread_map.values()) {
+   List<DiruntimeThread> rslt = new ArrayList<>();
+   for (DiruntimeThread dt : thread_map.values()) {
       if (dt.getProcess() == this && !dt.isInternal() && !dt.isTerminated()) {
          rslt.add(dt);
        }
@@ -79,6 +93,7 @@ Iterable<DicontrolThread> getThreads()
    return rslt;
 }
 
+DiruntimeManager getManager()           { return run_manager; }
 
 String getId()                          { return process_id; }
 
@@ -115,10 +130,10 @@ void updateThread(Element xml)
    Element thrdxml = IvyXml.getChild(xml,"THREAD");
    if (thrdxml == null) return;
    String id = IvyXml.getAttrString(thrdxml,"ID");
-   DicontrolThread thrd = thread_map.get(id);
+   DiruntimeThread thrd = thread_map.get(id);
    
    if (thrd == null) {
-      thrd = new DicontrolThread(this,thrdxml); 
+      thrd = new DiruntimeThread(this,thrdxml); 
       thrd.update(thrdxml);
       thread_map.put(id,thrd);
     }
@@ -169,7 +184,7 @@ void updateThread(Element xml)
 }
 
 
-private boolean checkException(DicontrolThread td,Element thrd)
+private boolean checkException(DiruntimeThread td,Element thrd) 
 {
    boolean fnd = false;
    td.setException(null);
@@ -210,11 +225,10 @@ void resume()
 
 
 
-
-}       // end of class DicontrolProcess
-
+}       // end of class DiruntimeProcess
 
 
 
-/* end of DicontrolProcess.java */
+
+/* end of DiruntimeProcess.java */
 

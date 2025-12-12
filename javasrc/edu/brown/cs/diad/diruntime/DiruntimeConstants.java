@@ -1,8 +1,8 @@
 /********************************************************************************/
 /*										*/
-/*		DicontrolConstants.java 					*/
+/*		DiRuntimeConstants.java 					*/
 /*										*/
-/*	Constants for our Dynamic Intelligent Assistive Debugger		*/
+/*	Constants for maintaining run time model for DIAD debugger assistant	*/
 /*										*/
 /********************************************************************************/
 /*	Copyright 2025 Brown University -- Steven P. Reiss		      */
@@ -32,29 +32,78 @@
  ********************************************************************************/
 
 
+package edu.brown.cs.diad.diruntime;
 
-package edu.brown.cs.diad.dicontrol;
 
-import edu.brown.cs.diad.dicore.DiadConstants;
 
-public interface DicontrolConstants extends DiadConstants
+public interface DiruntimeConstants
 {
 
-enum CandidateState {
-   INITIAL,
-   NO_SYMPTOM,
-   NO_STACK,
-   SYMPTOM_FOUND,
-   STARTING_FRAME_FOUND,
-   EXECUTION_DONE,
+enum RunEventType {
+   NONE,
+   PROCESS,
+   THREAD,
+   TARGET,
+   CONSOLE
+}
+
+
+enum RunEventKind {
+   NONE,
+   RESUME,
+   SUSPEND,
+   CREATE,
+   TERMINATE,
+   CHANGE,
+   MODEL_SPECIFIC,
+   HOTCODE_SUCCESS,
+   HOTCODE_FAILURE,
+}
+
+
+enum RunThreadStateDetail {
+   NONE,
+   BREAKPOINT,
+   CLIENT_REQUEST,
+   EVALUATION,
+   EVALUATION_IMPLICIT,
+   STEP_END,
+   STEP_INTO,
+   STEP_OVER,
+   STEP_RETURN,
+   CONTENT
+}
+
+enum RunThreadState {
+   NONE,
+   NEW,
+   RUNNING,
+   BLOCKED,
+   DEADLOCKED,
+   WAITING,
+   TIMED_WAITING,
+   IDLE,
+   STOPPED,
+   EXCEPTION,
+   UNKNOWN,
    DEAD,
 }
 
 
-}	// end of interface DicontrolConstants
+
+enum RunThreadType {
+   UNKNOWN,
+   SYSTEM,
+   JAVA,
+   UI,
+   USER,
+}
+
+
+}	// end of interface DiRuntimeConstants
 
 
 
 
-/* end of DicontrolConstants.java */
+/* end of DiRuntimeConstants.java */
 

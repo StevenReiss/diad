@@ -1,9 +1,9 @@
 /********************************************************************************/
-/*										*/
-/*		DicontrolConstants.java 					*/
-/*										*/
-/*	Constants for our Dynamic Intelligent Assistive Debugger		*/
-/*										*/
+/*                                                                              */
+/*              DiadThread.java                                                 */
+/*                                                                              */
+/*      Global representation of a thread                                       */
+/*                                                                              */
 /********************************************************************************/
 /*	Copyright 2025 Brown University -- Steven P. Reiss		      */
 /*********************************************************************************
@@ -32,29 +32,23 @@
  ********************************************************************************/
 
 
+package edu.brown.cs.diad.dicore;
 
-package edu.brown.cs.diad.dicontrol;
 
-import edu.brown.cs.diad.dicore.DiadConstants;
 
-public interface DicontrolConstants extends DiadConstants
+public interface DiadThread
 {
 
-enum CandidateState {
-   INITIAL,
-   NO_SYMPTOM,
-   NO_STACK,
-   SYMPTOM_FOUND,
-   STARTING_FRAME_FOUND,
-   EXECUTION_DONE,
-   DEAD,
-}
+boolean isTerminated();
+boolean isStopped();
+boolean isRunning();
 
 
-}	// end of interface DicontrolConstants
+
+}       // end of interface DiadThread
 
 
 
 
-/* end of DicontrolConstants.java */
+/* end of DiadThread.java */
 

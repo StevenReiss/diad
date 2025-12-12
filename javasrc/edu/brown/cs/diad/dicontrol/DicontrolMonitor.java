@@ -22,6 +22,7 @@
 
 package edu.brown.cs.diad.dicontrol;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -36,6 +37,7 @@ import edu.brown.cs.ivy.mint.MintControl;
 import edu.brown.cs.ivy.mint.MintDefaultReply;
 import edu.brown.cs.ivy.mint.MintHandler;
 import edu.brown.cs.ivy.mint.MintMessage;
+import edu.brown.cs.ivy.mint.MintConstants.CommandArgs;
 import edu.brown.cs.ivy.mint.MintConstants.MintSyncMode;
 import edu.brown.cs.ivy.xml.IvyXml;
 import edu.brown.cs.ivy.xml.IvyXmlWriter;
@@ -50,7 +52,7 @@ class DicontrolMonitor implements DicontrolConstants
 /*										*/
 /********************************************************************************/
 
-private DicontrolMain	dicontrol_main;
+private DicontrolMain	diad_control;
 private MintControl	mint_control;
 private Map<String,EvalData> eval_handlers;
 
@@ -66,7 +68,7 @@ private static Random   random_gen = new Random();
 
 DicontrolMonitor(DicontrolMain gm,String mintid)
 {
-   dicontrol_main = gm;
+   diad_control = gm;
    eval_handlers = new HashMap<>();
    
    mint_control = MintControl.create(mintid,MintSyncMode.ONLY_REPLIES);
@@ -88,7 +90,7 @@ private String processCommand(String cmd,Element xml) throws DiadException
 {
    try (IvyXmlWriter xw = new IvyXmlWriter()) {
       xw.begin("RESULT");
-      DiadCommand dcmd = dicontrol_main.setupDiadCommand(xml);
+      DiadCommand dcmd = diad_control.setupDiadCommand(xml);
       if (dcmd.isImmediate()) { 
          dcmd.process(xw);
        }
@@ -238,18 +240,36 @@ boolean pingEclipse()
 }
 
 
-void sendBubblesMessage(String cmd,String arg,MintDefaultReply rply)
+Element sendBubblesMessage(String cmd,CommandArgs args,String cnts)
 {
-   String msg = "<BUBBLES DO='" + cmd + "'";
-   if (arg != null) msg += " " + arg;
-   msg += " />";
+   MintDefaultReply rply = new MintDefaultReply();
+   IvyXmlWriter xw = new IvyXmlWriter();
+   xw.begin("BUBBLES");
+   xw.field("DO",cmd);
+   if (args != null) {
+      for (Map.Entry<String,Object> ent : args.entrySet()) {
+	 xw.field(ent.getKey(),ent.getValue());
+       }
+    }
+   if (cnts != null) {
+      xw.xmlText(cnts);
+    }
+   xw.end("BUBBLES");
+   
+   String msg = xw.toString();
+   xw.close();
+   
    IvyLog.logD("DICONTROL","Send to bubbles: " + msg);
 
-   int fgs = MintControl.MINT_MSG_NO_REPLY;
-   if (rply != null) fgs = MintControl.MINT_MSG_FIRST_NON_NULL;
-
-   mint_control.send(msg,rply,fgs);
+   mint_control.send(msg,rply,MintControl.MINT_MSG_FIRST_NON_NULL);
+   
+   Element rslt = rply.waitForXml(60000);
+   
+   IvyLog.logD("DICONTROL","Reply from bubbles: " + IvyXml.convertXmlToString(rslt));
+   
+   return rslt;
 }
+
 
 private final class ExitHandler implements MintHandler {
 
@@ -296,7 +316,6 @@ protected class IDEHandler implements MintHandler {
             case "FILEERRORS" :
             case "PRIVATEERROR" :
             case "AUTOBUILDDONE" :
-            case "EDIT" :
             case "LAUNCHCONFIGEVENT" :
             case "NAMES" :
             case "ENDNAMES" :
@@ -305,16 +324,25 @@ protected class IDEHandler implements MintHandler {
             case "FILECHANGE" :
             case "PROJECTDATA" :
             case "PROJECTOPEN" :
+               break;
+            case "EDIT" :
+               msg.replyTo();
+               File f = new File(IvyXml.getAttrString(e,"FILE"));
+               diad_control.getRunManager().noteFileEdited(f);  
+               break;
             case "RESOURCE" :
+               for (Element re : IvyXml.children(e,"DELTA")) {
+                  diad_control.getRunManager().handleResourceChange(re);
+                }
                break;
             case "CONSOLE" :
             case "BREAKEVENT" :
                msg.replyTo();
                break;
             case "RUNEVENT" :
-               long when = IvyXml.getAttrLong(e,"TIME");
                for (Element re : IvyXml.children(e,"RUNEVENT")) {
-                  IvyLog.logD("DICONTROL","Handle run event " + when + " " + re);
+                  IvyLog.logD("DICONTROL","Handle run event " + re);
+                  diad_control.getRunManager().handleRunEvent(re);  
                 }
                break;
             case "PING" :
