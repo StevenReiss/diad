@@ -42,10 +42,11 @@ import java.util.Map;
 
 import org.w3c.dom.Element;
 
+import edu.brown.cs.diad.dicore.DiadStackFrame;
 import edu.brown.cs.ivy.file.IvyFormat;
 import edu.brown.cs.ivy.xml.IvyXml;
 
-class DiruntimeFrame implements DiruntimeConstants
+class DiruntimeFrame implements DiruntimeConstants, DiadStackFrame
 {
 
 
@@ -118,17 +119,17 @@ DiruntimeFrame(Element xml)
 /*                                                                              */
 /********************************************************************************/
 
-public String getFrameId()                      { return frame_id; }
-public String getClassName()                    { return class_name; }
-public String getMethodName()                   { return method_name; }
-public String getMethodSignature()              { return method_signature; }
-public String getFormatSignature()              { return format_signature; }
-public int getLineNumber()                      { return line_number; }
-public File getSourceFile()                     { return source_file; }
-public boolean isUserFrame()                    { return is_userframe; }
+@Override public String getFrameId()                   { return frame_id; }
+@Override public String getClassName()                 { return class_name; }
+@Override public String getMethodName()                { return method_name; }
+@Override public String getMethodSignature()           { return method_signature; }
+@Override public String getFormatSignature()           { return format_signature; }
+@Override public int getLineNumber()                   { return line_number; }
+@Override public File getSourceFile()                  { return source_file; }
+@Override public boolean isUserFrame()                 { return is_userframe; }
 
-public Collection<String> getLocals()           { return frame_variables.keySet(); }
-public DiruntimeVariable getLocal(String nm)     { return frame_variables.get(nm); }
+@Override public Collection<String> getLocals()         { return frame_variables.keySet(); }
+@Override public DiruntimeVariable getLocal(String nm)  { return frame_variables.get(nm); } 
 
 
 

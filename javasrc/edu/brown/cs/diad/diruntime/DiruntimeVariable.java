@@ -36,9 +36,10 @@ package edu.brown.cs.diad.diruntime;
 
 import org.w3c.dom.Element;
 
+import edu.brown.cs.diad.dicore.DiadLocalVariable;
 import edu.brown.cs.ivy.xml.IvyXml;
 
-class DiruntimeVariable implements DiruntimeConstants
+class DiruntimeVariable implements DiruntimeConstants, DiadLocalVariable
 {
 
 
@@ -87,13 +88,13 @@ DiruntimeVariable(Element xml)
 /*                                                                              */
 /********************************************************************************/
 
-public String getName()                         { return var_name; }
+@Override public String getName()               { return var_name; }
 
-public String getType()                         { return var_type; }
+@Override public String getType()               { return var_type; }
 
-public String getKind()                         { return var_kind; }
+@Override public String getKind()               { return var_kind; }
 
-public String getValue()                        { return var_value; }
+@Override public String getValue()              { return var_value; }
 
 
 

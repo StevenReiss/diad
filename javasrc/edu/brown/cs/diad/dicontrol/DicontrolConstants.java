@@ -40,15 +40,7 @@ import edu.brown.cs.diad.dicore.DiadConstants;
 public interface DicontrolConstants extends DiadConstants
 {
 
-enum CandidateState {
-   INITIAL,
-   NO_SYMPTOM,
-   NO_STACK,
-   SYMPTOM_FOUND,
-   STARTING_FRAME_FOUND,
-   EXECUTION_DONE,
-   DEAD,
-}
+
 
 
 }	// end of interface DicontrolConstants

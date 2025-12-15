@@ -1,13 +1,13 @@
 /********************************************************************************/
 /*                                                                              */
-/*              DicoreConstants.java                                            */
+/*              DiadSymptom.java                                                */
 /*                                                                              */
-/*      General Constants for Dynamic Intelligent Assistive Debugger            */
+/*      Representation of a symptom                                                   */
 /*                                                                              */
 /********************************************************************************/
-/*      Copyright 2013 Brown University -- Steven P. Reiss                    */
+/*      Copyright 2025 Brown University -- Steven P. Reiss                    */
 /*********************************************************************************
- *  Copyright 2013, Brown University, Providence, RI.                            *
+ *  Copyright 2025, Brown University, Providence, RI.                            *
  *                                                                               *
  *                        All Rights Reserved                                    *
  *                                                                               *
@@ -35,52 +35,27 @@
 
 package edu.brown.cs.diad.dicore;
 
-import edu.brown.cs.ivy.xml.IvyXmlWriter;
+import edu.brown.cs.diad.dicore.DiadConstants.DiadSymptomType;
+import edu.brown.cs.diad.dicore.DiadConstants.DiadValueOperator;
 
-public interface DiadConstants
+public interface DiadSymptom
 {
 
+DiadSymptomType getSymptomType();
 
-interface DiadCommand {
-   void process(IvyXmlWriter xw);
-   String getCommandName();
-   boolean isImmediate();
-}
-
-
-
-enum DiadCandidateState {
-   INITIAL,
-   NO_SYMPTOM,
-   NO_STACK,
-   SYMPTOM_FOUND,
-   STARTING_FRAME_FOUND,
-   EXECUTION_DONE,
-   DEAD,
-}
-
-
-
-enum DiadSymptomType {
-   NONE,
-   EXCEPTION,
-   ASSERTION,
-   VARIABLE,
-   EXPRESSION,
-   LOCATION,
-   NOEXXCEPTION
-}
-
-enum DiadValueOperator {
-   EQL, NEQ, GTR, GEQ, LSS, LEQ,
-}
-
-
-
-}       // end of interface DicoreConstants
+String getSymptomItem();
+String getOriginalValue();
+String getTargetValue();
+DiadValueOperator getSymptomOperator(); 
+double getTargetPreccision();
 
 
 
 
-/* end of DicoreConstants.java */
+}       // end of interface DiadSymptom
+
+
+
+
+/* end of DiadSymptom.java */
 

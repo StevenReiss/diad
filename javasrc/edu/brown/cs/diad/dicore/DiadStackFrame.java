@@ -1,13 +1,13 @@
 /********************************************************************************/
 /*                                                                              */
-/*              DicoreConstants.java                                            */
+/*              DiadStackFrame.java                                             */
 /*                                                                              */
-/*      General Constants for Dynamic Intelligent Assistive Debugger            */
+/*      Representation of a stack frame                                         */
 /*                                                                              */
 /********************************************************************************/
-/*      Copyright 2013 Brown University -- Steven P. Reiss                    */
+/*      Copyright 2025 Brown University -- Steven P. Reiss                    */
 /*********************************************************************************
- *  Copyright 2013, Brown University, Providence, RI.                            *
+ *  Copyright 2025, Brown University, Providence, RI.                            *
  *                                                                               *
  *                        All Rights Reserved                                    *
  *                                                                               *
@@ -35,52 +35,29 @@
 
 package edu.brown.cs.diad.dicore;
 
-import edu.brown.cs.ivy.xml.IvyXmlWriter;
+import java.io.File;
+import java.util.Collection;
 
-public interface DiadConstants
+public interface DiadStackFrame
 {
+ 
+String getFrameId();
+String getClassName();
+String getMethodName();
+String getMethodSignature();
+String getFormatSignature();
+int getLineNumber();
+File getSourceFile();
+boolean isUserFrame();
+
+Collection<String> getLocals();
+DiadLocalVariable getLocal(String name);
 
 
-interface DiadCommand {
-   void process(IvyXmlWriter xw);
-   String getCommandName();
-   boolean isImmediate();
-}
-
-
-
-enum DiadCandidateState {
-   INITIAL,
-   NO_SYMPTOM,
-   NO_STACK,
-   SYMPTOM_FOUND,
-   STARTING_FRAME_FOUND,
-   EXECUTION_DONE,
-   DEAD,
-}
-
-
-
-enum DiadSymptomType {
-   NONE,
-   EXCEPTION,
-   ASSERTION,
-   VARIABLE,
-   EXPRESSION,
-   LOCATION,
-   NOEXXCEPTION
-}
-
-enum DiadValueOperator {
-   EQL, NEQ, GTR, GEQ, LSS, LEQ,
-}
-
-
-
-}       // end of interface DicoreConstants
+}       // end of interface DiadStackFrame
 
 
 
 
-/* end of DicoreConstants.java */
+/* end of DiadStackFrame.java */
 

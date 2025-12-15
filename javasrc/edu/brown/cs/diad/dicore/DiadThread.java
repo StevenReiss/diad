@@ -39,9 +39,15 @@ package edu.brown.cs.diad.dicore;
 public interface DiadThread
 {
 
+String getThreadName();
+
 boolean isTerminated();
 boolean isStopped();
 boolean isRunning();
+DiadStack getStack();
+boolean isInternal();
+String getExceptionType();
+
 
 
 

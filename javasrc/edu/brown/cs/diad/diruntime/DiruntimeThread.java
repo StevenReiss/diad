@@ -182,9 +182,11 @@ String getThreadId()
    return thread_id;
 }
 
-String getThreadName()
+@Override public String getThreadName()
 {
-   return thread_name;
+   if (thread_name == null) return thread_id;
+   
+   return thread_name; 
 }
 
 
@@ -198,7 +200,7 @@ RunThreadStateDetail getThreadStateDetail()
    return thread_detail;
 }
 
-String getExceptionType()
+@Override public String getExceptionType() 
 {
    return exception_type;
 }
@@ -213,7 +215,7 @@ DiruntimeProcess getProcess()
    return for_process;
 }
 
-boolean isInternal()
+@Override public boolean isInternal()
 {
    switch (thread_type) {
       case JAVA :
@@ -293,7 +295,7 @@ void setException(String exc) {
 /*                                                                              */
 /********************************************************************************/
 
-DiruntimeStack getStack()
+@Override public DiruntimeStack getStack()
 {
    if (call_stack == null) {
       CommandArgs args = new CommandArgs("THREAD",thread_id);

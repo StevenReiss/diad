@@ -1,13 +1,13 @@
 /********************************************************************************/
 /*                                                                              */
-/*              DicoreConstants.java                                            */
+/*              DiadLocalVariable.java                                          */
 /*                                                                              */
-/*      General Constants for Dynamic Intelligent Assistive Debugger            */
+/*      Information about a local variable                                      */
 /*                                                                              */
 /********************************************************************************/
-/*      Copyright 2013 Brown University -- Steven P. Reiss                    */
+/*      Copyright 2025 Brown University -- Steven P. Reiss                    */
 /*********************************************************************************
- *  Copyright 2013, Brown University, Providence, RI.                            *
+ *  Copyright 2025, Brown University, Providence, RI.                            *
  *                                                                               *
  *                        All Rights Reserved                                    *
  *                                                                               *
@@ -35,52 +35,21 @@
 
 package edu.brown.cs.diad.dicore;
 
-import edu.brown.cs.ivy.xml.IvyXmlWriter;
 
-public interface DiadConstants
+
+public interface DiadLocalVariable
 {
 
-
-interface DiadCommand {
-   void process(IvyXmlWriter xw);
-   String getCommandName();
-   boolean isImmediate();
-}
+String getName();
+String getType();
+String getKind();
+String getValue();
 
 
-
-enum DiadCandidateState {
-   INITIAL,
-   NO_SYMPTOM,
-   NO_STACK,
-   SYMPTOM_FOUND,
-   STARTING_FRAME_FOUND,
-   EXECUTION_DONE,
-   DEAD,
-}
-
-
-
-enum DiadSymptomType {
-   NONE,
-   EXCEPTION,
-   ASSERTION,
-   VARIABLE,
-   EXPRESSION,
-   LOCATION,
-   NOEXXCEPTION
-}
-
-enum DiadValueOperator {
-   EQL, NEQ, GTR, GEQ, LSS, LEQ,
-}
-
-
-
-}       // end of interface DicoreConstants
+}       // end of interface DiadLocalVariable
 
 
 
 
-/* end of DicoreConstants.java */
+/* end of DiadLocalVariable.java */
 

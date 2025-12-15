@@ -87,13 +87,13 @@ public DiruntimeManager(DicontrolMain ctrl)
 /*                                                                              */
 /********************************************************************************/
 
-public void addRuntimeCallbacvk(DiadRuntimeCallback cb)
+public void addRuntimeListener(DiadRuntimeCallback cb)
 {
    runtime_listeners.add(cb);
 }
 
 
-public void removeRuntimeCallbacvk(DiadRuntimeCallback cb)
+public void removeRuntimeListener(DiadRuntimeCallback cb)
 {
    runtime_listeners.remove(cb);
 }

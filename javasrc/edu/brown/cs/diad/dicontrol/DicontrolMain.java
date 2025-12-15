@@ -46,6 +46,7 @@ import edu.brown.cs.diad.dicore.DiadException;
 import edu.brown.cs.diad.dicore.DiadRuntimeCallback;
 import edu.brown.cs.diad.dicore.DiadThread;
 import edu.brown.cs.diad.diruntime.DiruntimeManager;
+import edu.brown.cs.diad.disource.DisourceFactory;
 import edu.brown.cs.ivy.exec.IvyExec;
 import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.mint.MintConstants.CommandArgs;
@@ -86,6 +87,8 @@ private File input_file;
 private boolean server_mode;
 private DiruntimeManager run_manager;
 private Map<DiadThread,DicontrolCandidate> debug_candidates;
+private DisourceFactory source_factory;
+ 
 
 
 /********************************************************************************/
@@ -111,8 +114,10 @@ private DicontrolMain(String [] args)
    run_manager = new DiruntimeManager(this);  
    
    debug_candidates = new HashMap<>();
-   run_manager.addRuntimeCallbacvk(new RuntimeCallback());
-
+   run_manager.addRuntimeListener(new RuntimeCallback());
+   
+   source_factory = new DisourceFactory(this);  
+   
    scanArgs(args);
 }
 
@@ -127,6 +132,8 @@ private DicontrolMain(String [] args)
 DicontrolMonitor getMessageServer()             { return dicontrol_monitor; }
 
 DiruntimeManager getRunManager()                { return run_manager; }
+
+DisourceFactory getSourceManager()              { return source_factory; }
 
 void setupMessageServer(String mintid)
 {
@@ -310,7 +317,7 @@ private final class RuntimeCallback implements DiadRuntimeCallback {
        }
     }
    else if (thrd.isStopped()) {
-      dc = new DicontrolCandidate(thrd);
+      dc = new DicontrolCandidate(DicontrolMain.this,thrd); 
       debug_candidates.put(thrd,dc);
       dc.start(); 
     }

@@ -39,9 +39,11 @@ import java.util.List;
 
 import org.w3c.dom.Element;
 
+import edu.brown.cs.diad.dicore.DiadStack;
+import edu.brown.cs.diad.dicore.DiadStackFrame;
 import edu.brown.cs.ivy.xml.IvyXml;
 
-class DiruntimeStack implements DiruntimeConstants
+class DiruntimeStack implements DiruntimeConstants, DiadStack
 {
 
 
@@ -51,7 +53,7 @@ class DiruntimeStack implements DiruntimeConstants
 /*                                                                              */
 /********************************************************************************/
 
-private List<DiruntimeFrame> stack_frames;
+private List<DiadStackFrame> stack_frames;
 
 
 /********************************************************************************/
@@ -77,21 +79,28 @@ DiruntimeStack(Element xml)
 /*                                                                              */
 /********************************************************************************/
 
-public List<DiruntimeFrame> getFrames()
+@Override public List<DiadStackFrame> getFrames()
 {
    return stack_frames;
 }
 
 
-public DiruntimeFrame getTopFrame()
+@Override public DiadStackFrame getUserFrame()
 {
-   for (DiruntimeFrame bsf : stack_frames) {
+   for (DiadStackFrame bsf : stack_frames) {
       if (bsf.isUserFrame()) return bsf;
     }
    
    return null;
 }
 
+
+@Override public DiadStackFrame getTopFrame() 
+{
+   if (stack_frames == null || stack_frames.isEmpty()) return null;
+   
+   return stack_frames.get(0);
+}
 
 
 }       // end of class DiruntimeStack
