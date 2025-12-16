@@ -92,7 +92,13 @@ private String processCommand(String cmd,Element xml) throws DiadException
       xw.begin("RESULT");
       DiadCommand dcmd = diad_control.setupDiadCommand(xml);
       if (dcmd.isImmediate()) { 
-         dcmd.process(xw);
+         try {
+            dcmd.process(xw);
+          }
+         catch (Throwable t) {
+            IvyLog.logE("DICONTROL","Problem prcoessing " +
+                  dcmd.getCommandName(),t);
+          }
        }
       else { 
          String rid = IvyXml.getAttrString(xml,"RID");

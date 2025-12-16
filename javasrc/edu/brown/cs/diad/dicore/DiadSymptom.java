@@ -47,7 +47,7 @@ String getSymptomItem();
 String getOriginalValue();
 String getTargetValue();
 DiadValueOperator getSymptomOperator(); 
-double getTargetPreccision();
+double getTargetPrecision();
 
 
 

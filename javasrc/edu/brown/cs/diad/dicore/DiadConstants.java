@@ -42,7 +42,7 @@ public interface DiadConstants
 
 
 interface DiadCommand {
-   void process(IvyXmlWriter xw);
+   void process(IvyXmlWriter xw) throws Exception;
    String getCommandName();
    boolean isImmediate();
 }
@@ -68,10 +68,12 @@ enum DiadSymptomType {
    VARIABLE,
    EXPRESSION,
    LOCATION,
-   NOEXXCEPTION
+   NO_EXCEPTION,
+   CAUGHT_EXCEPTION,
 }
 
 enum DiadValueOperator {
+   NONE,
    EQL, NEQ, GTR, GEQ, LSS, LEQ,
 }
 
