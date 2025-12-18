@@ -208,6 +208,7 @@ private final class CandidateThread extends Thread {
                case NO_SYMPTOM :
                   return;
                case SYMPTOM_FOUND :
+                  System.exit(0);
                   // find starting frame
                   break;
                case STARTING_FRAME_FOUND :

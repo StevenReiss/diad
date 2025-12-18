@@ -40,7 +40,7 @@ abstract class DicontrolCommand implements DicontrolConstants, DiadCommand
 /*                                                                              */
 /********************************************************************************/
 
-DicontrolCommand createCommand(DicontrolMain ctrl,Element xml)
+static DicontrolCommand createCommand(DicontrolMain ctrl,Element xml)
 {
    String cmd = IvyXml.getAttrString(xml,"DO");
    cmd = cmd.toUpperCase();
@@ -50,6 +50,10 @@ DicontrolCommand createCommand(DicontrolMain ctrl,Element xml)
          return new CommandPing(ctrl,xml);
       case "SETUPBUBBLES" :
           return new CommandSetupBubbles(ctrl,xml);
+      case "TEST" :
+         return new CommandTest(ctrl,xml);
+      case "DELAY" :
+         return new CommandDelay(ctrl,xml);
       case "EXIT" :
           return new CommandExit(ctrl,xml);
       default :
@@ -137,11 +141,66 @@ private static class CommandSetupBubbles extends DicontrolCommand {
       mint_name = IvyXml.getAttrString(xml,"MINT");
     }
    
-   @Override public void process(IvyXmlWriter xw) {
-      diad_control.setupBedrock(workspace_name,mint_name); 
+   @Override public void process(IvyXmlWriter xw) { 
+      diad_control.getTestManager().setupBedrock(workspace_name,mint_name); 
     }
 
 }       // end of inner class CommandSetupBubbles
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Command to run a test case                                              */
+/*                                                                              */
+/********************************************************************************/
+
+private static class CommandTest extends DicontrolCommand {
+
+   private String project_name;
+   private String launch_name;
+   private int  continue_count;
+   
+   CommandTest(DicontrolMain ctrl,Element xml) {
+      super(ctrl,xml);
+      project_name = IvyXml.getAttrString(xml,"PROJECT");
+      launch_name = IvyXml.getAttrString(xml,"LAUNCH");
+      continue_count = IvyXml.getAttrInt(xml,"CONTINUE",0);
+    }
+   
+   @Override public void process(IvyXmlWriter xw) {
+      diad_control.getTestManager().setupTest(project_name,launch_name,
+            continue_count);
+    }
+   
+}       // end of inner class CommandTest
+
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Delay command for use when testing                                      */
+/*                                                                              */
+/********************************************************************************/
+
+private static class CommandDelay extends DicontrolCommand {
+
+   private long delay_time;
+   
+   CommandDelay(DicontrolMain ctrl,Element xml) {
+      super(ctrl,xml);
+      delay_time = IvyXml.getAttrLong(xml,"TIME");
+      if (delay_time <= 0) delay_time = 1;
+    }
+   
+   @Override public void process(IvyXmlWriter xw) {
+      try {
+         Thread.sleep(delay_time);
+       }
+      catch (InterruptedException e) { }
+    }
+   
+}       // end of inner class CommandDelay
+
 
 
 /********************************************************************************/

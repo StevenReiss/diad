@@ -1,0 +1,5 @@
+<DIAD DO='PING' />
+<DIAD DO='SETUPBUBBLES' MINT='BUBBLES_spr_nanoxml' WORKSPACE='nanoxml' />
+<DIAD DO='TEST' PROJECT='nanoxml' LAUNCH='testParsing16' CONTINUE='0' />
+<DIAD DO='DELAY' TIME='3600000' />
+<DIAD DO='EXIT' />

@@ -30,6 +30,7 @@ import java.util.Random;
 import org.w3c.dom.Element;
 
 import edu.brown.cs.diad.dicore.DiadException;
+import edu.brown.cs.diad.ditest.DitestFactory;
 import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.mint.MintArguments;
 import edu.brown.cs.ivy.mint.MintConstants;
@@ -295,6 +296,105 @@ private final class BubblesPingHandler implements MintHandler {
 }	// end of inner class ExitHandler
 
 
+/********************************************************************************/
+/*                                                                              */
+/*      Send messages to FAIT                                                   */
+/*                                                                              */
+/********************************************************************************/
+
+public Element sendFaitMessage(String cmd,CommandArgs args,String cnts)
+{
+   MintDefaultReply rply = new MintDefaultReply();
+   IvyXmlWriter xw = new IvyXmlWriter();
+   xw.begin("FAIT");
+   xw.field("DO",cmd);
+   if (args != null) {
+      for (Map.Entry<String,Object> ent : args.entrySet()) {
+	 xw.field(ent.getKey(),ent.getValue());
+       }
+    }
+   if (cnts != null) {
+      xw.xmlText(cnts);
+    }
+   xw.end("FAIT");
+   String msg = xw.toString();
+   xw.close();
+   
+   IvyLog.logD("DICONTROL","Send to FAIT: " + msg);
+   
+   mint_control.send(msg,rply,MintConstants.MINT_MSG_FIRST_NON_NULL);
+   
+   Element rslt = rply.waitForXml(0);
+   
+   IvyLog.logD("DICONTROL","Reply from FAIT: " + IvyXml.convertXmlToString(rslt));
+   if (rslt == null && (cmd.equals("START") || cmd.equals("BEGIN"))) {
+      MintDefaultReply prply = new MintDefaultReply();
+      mint_control.send("<FAIT DO='PING' SID='*' />",rply,
+            MintControl.MINT_MSG_FIRST_NON_NULL);
+      String prslt = prply.waitForString(3000);
+      if (prslt == null) {
+	 diad_control.getTestManager().startFait();  
+	 rply = new MintDefaultReply();
+	 mint_control.send(msg,rply,MintConstants.MINT_MSG_FIRST_NON_NULL);
+	 rslt = rply.waitForXml(0);
+       }
+    }
+   
+   return rslt;
+}
+
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Send messages to SEEDE                                                  */
+/*                                                                              */
+/********************************************************************************/
+
+Element sendSeedeMessage(String id,String cmd,CommandArgs args,String cnts)
+{
+   MintDefaultReply rply = new MintDefaultReply();
+   IvyXmlWriter xw = new IvyXmlWriter();
+   xw.begin("SEEDE");
+   xw.field("DO",cmd);
+   
+   if (args == null) args = new CommandArgs();
+   if (id != null)  args.put("SID",id);
+   else if (args.get("SID") == null) args.put("SID","*");
+   for (Map.Entry<String,Object> ent : args.entrySet()) {
+      xw.field(ent.getKey(),ent.getValue());
+    }
+   
+   if (cnts != null) {
+      xw.xmlText(cnts);
+    }
+   
+   xw.end("SEEDE");
+   String msg = xw.toString();
+   xw.close();
+   
+   IvyLog.logD("DICONTROL","Send to SEEDE: " + msg);
+   
+   mint_control.send(msg,rply,MintConstants.MINT_MSG_FIRST_NON_NULL);
+   
+   Element rslt = rply.waitForXml(300000);
+   
+   IvyLog.logD("DICONTROL","Reply from SEEDE: " + IvyXml.convertXmlToString(rslt));
+   if (rslt == null && (cmd.equals("START") || cmd.equals("BEGIN"))) {
+      MintDefaultReply prply = new MintDefaultReply();
+      mint_control.send("<SEEDE DO='PING' SID='*' />",rply,MintConstants.MINT_MSG_FIRST_NON_NULL);
+      String prslt = prply.waitForString(3000);
+      if (prslt == null) {
+	 diad_control.getTestManager().startSeede();
+	 rply = new MintDefaultReply();
+	 mint_control.send(msg,rply,MintConstants.MINT_MSG_FIRST_NON_NULL);
+	 rslt = rply.waitForXml(0);
+       }
+    }
+   
+   return rslt;
+}
+
 
 /********************************************************************************/
 /*                                                                              */
@@ -346,10 +446,19 @@ protected class IDEHandler implements MintHandler {
                msg.replyTo();
                break;
             case "RUNEVENT" :
+               String resp = null;
                for (Element re : IvyXml.children(e,"RUNEVENT")) {
-                  IvyLog.logD("DICONTROL","Handle run event " + re);
-                  diad_control.getRunManager().handleRunEvent(re);  
+                  IvyLog.logD("DICONTROL","Handle run event " + 
+                        IvyXml.convertXmlToString(re));
+                  diad_control.getRunManager().handleRunEvent(re); 
+                  DitestFactory tester = diad_control.checkTestManager();  
+                  if (tester != null) {
+                     tester.handleRunEvent(re); 
+                     resp = "<OK/>";
+                   }
                 }
+               if (resp == null) msg.replyTo();
+               else msg.replyTo(resp);
                break;
             case "PING" :
             case "PING1" :

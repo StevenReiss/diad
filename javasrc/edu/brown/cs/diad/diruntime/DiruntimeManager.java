@@ -44,6 +44,7 @@ import org.w3c.dom.Element;
 
 import edu.brown.cs.diad.dicontrol.DicontrolMain;
 import edu.brown.cs.diad.dicore.DiadRuntimeCallback;
+import edu.brown.cs.diad.dicore.DiadThread;
 import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.mint.MintConstants.CommandArgs;
 import edu.brown.cs.ivy.swing.SwingEventListenerList;
@@ -98,6 +99,13 @@ public void removeRuntimeListener(DiadRuntimeCallback cb)
    runtime_listeners.remove(cb);
 }
 
+
+void fireThreadStateChanged(DiadThread th)
+{
+   for (DiadRuntimeCallback cb : runtime_listeners) {
+      cb.threadStateChanged(th);
+    }
+}
 
 
 /********************************************************************************/

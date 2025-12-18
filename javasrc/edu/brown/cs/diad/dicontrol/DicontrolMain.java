@@ -47,7 +47,7 @@ import edu.brown.cs.diad.dicore.DiadRuntimeCallback;
 import edu.brown.cs.diad.dicore.DiadThread;
 import edu.brown.cs.diad.diruntime.DiruntimeManager;
 import edu.brown.cs.diad.disource.DisourceFactory;
-import edu.brown.cs.ivy.exec.IvyExec;
+import edu.brown.cs.diad.ditest.DitestFactory;
 import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.mint.MintConstants.CommandArgs;
 import edu.brown.cs.ivy.xml.IvyXml;
@@ -88,6 +88,7 @@ private boolean server_mode;
 private DiruntimeManager run_manager;
 private Map<DiadThread,DicontrolCandidate> debug_candidates;
 private DisourceFactory source_factory;
+private DitestFactory test_factory;
  
 
 
@@ -116,7 +117,7 @@ private DicontrolMain(String [] args)
    debug_candidates = new HashMap<>();
    run_manager.addRuntimeListener(new RuntimeCallback());
    
-   source_factory = new DisourceFactory(this);  
+   source_factory = null; 
    
    scanArgs(args);
 }
@@ -135,10 +136,28 @@ DiruntimeManager getRunManager()                { return run_manager; }
 
 DisourceFactory getSourceManager()              { return source_factory; }
 
-void setupMessageServer(String mintid)
+DitestFactory getTestManager()
+{
+   if (test_factory ==  null) {
+      test_factory = new DitestFactory(this);
+    }
+   
+   return test_factory;
+}
+
+DitestFactory checkTestManager()
+{
+   return test_factory;
+}
+
+public String getMintId()                       { return mint_id; 
+}
+
+public void setupMessageServer(String mintid)
 {
    mint_id = mintid;
    dicontrol_monitor = new DicontrolMonitor(this,mint_id);
+   source_factory = new DisourceFactory(this);
 }
 
 
@@ -152,6 +171,30 @@ public Element sendBubblesMessage(String cmd,CommandArgs args,String xml)
 {
    return dicontrol_monitor.sendBubblesMessage(cmd,args,xml); 
 }
+
+
+public boolean pingEclipse()
+{
+   return dicontrol_monitor.pingEclipse();
+}
+
+
+public void pongEclipse()
+{
+   dicontrol_monitor.pongEclipse();
+}
+
+public Element sendFaitMessage(String cmd,CommandArgs args,String cnts)
+{
+   return dicontrol_monitor.sendFaitMessage(cmd,args,cnts); 
+}
+
+
+public Element sendSeedeMessage(String id,String cmd,CommandArgs args,String cnts)
+{
+   return dicontrol_monitor.sendSeedeMessage(id,cmd,args,cnts);
+}
+
 
 /********************************************************************************/
 /*										*/
@@ -294,7 +337,7 @@ private void processXmlFile(FileReader fr)
 
 DiadCommand setupDiadCommand(Element xml) throws DiadException
 {
-   return null;
+   return DicontrolCommand.createCommand(this,xml);
 }
 
 
@@ -334,69 +377,9 @@ private final class RuntimeCallback implements DiadRuntimeCallback {
 /*										*/
 /********************************************************************************/
 
-private static final String BROWN_ECLIPSE = "/u/spr/java-2024-09/eclipse/eclipse";
-private static final String BROWN_WS = "/u/spr/Eclipse/";
-private static final String HOME_MAC_ECLIPSE =
-   "/vol/Developer/java-2024-09/Eclipse.app/Contents/MacOS/eclipse";
-private static final String HOME_MAC_WS = "/Users/spr/Eclipse/";
-private static final String HOME_LINUX_ECLIPSE = "/pro/eclipse/java-2023-12/eclipse/eclipse";
-private static final String HOME_LINUX_WS = "/home/spr/Eclipse/";
 
-void setupBedrock(String workspace,String mint)
-{
-   IvyLog.logI("LIMBA","Starting bedrock/eclipse for debugging");
 
-   File ec1 = new File(BROWN_ECLIPSE);
-   File ec2 = new File(BROWN_WS);
-   if (!ec1.exists()) {
-      ec1 = new File(HOME_MAC_ECLIPSE);
-      ec2 = new File(HOME_MAC_WS);
-    }
-   if (!ec1.exists()) {
-      ec1 = new File(HOME_LINUX_ECLIPSE);
-      ec2 = new File(HOME_LINUX_WS);
-    }
-   if (!ec1.exists()) {
-      System.err.println("Can't find bubbles version of eclipse to run");
-      throw new Error("No eclipse");
-    }
-   ec2 = new File(ec2,workspace);
 
-   setupMessageServer(mint);
-
-   String cmd = ec1.getAbsolutePath();
-   cmd += " -application edu.brown.cs.bubbles.bedrock.application";
-   cmd += " -data " + ec2.getAbsolutePath();
-   cmd += " -nosplash";
-   cmd += " -vmargs -Dedu.brown.cs.bubbles.MINT=" + mint;
-   cmd += " -Xmx16000m";
-
-   IvyLog.logI("LIMBA","RUN: " + cmd);
-
-   try {
-      for (int i = 0; i < 250; ++i) {
-	 try {
-	    Thread.sleep(1000);
-	  }
-	 catch (InterruptedException e) { }
-	 if (dicontrol_monitor.pingEclipse()) {
-            CommandArgs a1 = new CommandArgs("LEVEL","DEBUG");
-	    dicontrol_monitor.sendBubblesMessage("LOGLEVEL",a1,null);
-	    dicontrol_monitor.sendBubblesMessage("ENTER",null,null);
-	    return;
-	  }
-	 if (i == 0) {
-	    new IvyExec(cmd);
-	    dicontrol_monitor.pongEclipse();
-	  }
-       }
-    }
-   catch (IOException e) {
-      IvyLog.logE("LIMBA","Problem with eclipse",e);
-    }
-
-   throw new Error("Problem running Eclipse: " + cmd);
-}
 
 
 

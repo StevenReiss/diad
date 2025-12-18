@@ -32,6 +32,8 @@
      <pathelement location='${DIAD}/javasrc' />
      <fileset dir='${DIADLIB}' includes='*.jar' />
      <fileset dir='${IVYLIB}' includes='ivy.jar' />
+     <fileset dir='${IVYLIB}' includes='junit.jar' />
+     <fileset dir='${IVYLIB}' includes='asm.jar' />
      <fileset dir='${PRO}/ivy/lib/eclipsejar' includes='*.jar' />
   </path>
 

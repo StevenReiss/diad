@@ -281,6 +281,8 @@ void setThreadState(RunThreadState state,RunThreadStateDetail detail)
    thread_state = state;
    thread_detail = detail;
    // stack_data = null;
+   
+   for_process.getManager().fireThreadStateChanged(this); 
 }
 
 
