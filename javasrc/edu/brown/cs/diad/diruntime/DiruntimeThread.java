@@ -43,6 +43,7 @@ import edu.brown.cs.diad.dicore.DiadThread;
 import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.mint.MintConstants.CommandArgs;
 import edu.brown.cs.ivy.xml.IvyXml;
+import edu.brown.cs.ivy.xml.IvyXmlWriter;
 
 class DiruntimeThread implements DiadThread, DiruntimeConstants
 {
@@ -177,7 +178,7 @@ DiruntimeManager getManager()
 }
 
 
-String getThreadId()
+@Override public String getThreadId()
 {
    return thread_id;
 }
@@ -313,6 +314,28 @@ void setException(String exc) {
     }
    
    return call_stack;
+}
+
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Output methods                                                          */
+/*                                                                              */
+/********************************************************************************/
+
+@Override public void outputXml(IvyXmlWriter xw)
+{
+   xw.begin("THREAD");
+   xw.field("ID",thread_id);
+   xw.field("NAME",thread_name);
+   xw.field("TYPE",thread_type);
+   xw.field("STATE",thread_state);
+   xw.field("DETAIL",thread_detail);
+   if (exception_type != null) xw.field("EXCEPTIOM",exception_type);
+   xw.field("FRAMECOUNT",num_frames);
+   xw.field("PROCESS",for_process.getId());
+   xw.end("THREAD");
 }
 
 

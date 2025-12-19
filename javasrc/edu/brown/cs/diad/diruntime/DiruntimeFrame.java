@@ -45,6 +45,7 @@ import org.w3c.dom.Element;
 import edu.brown.cs.diad.dicore.DiadStackFrame;
 import edu.brown.cs.ivy.file.IvyFormat;
 import edu.brown.cs.ivy.xml.IvyXml;
+import edu.brown.cs.ivy.xml.IvyXmlWriter;
 
 class DiruntimeFrame implements DiruntimeConstants, DiadStackFrame
 {
@@ -65,9 +66,6 @@ private String format_signature;
 private Map<String,DiruntimeVariable> frame_variables;  
 private int     line_number;
 private boolean is_userframe;
-
-
-
 
 
 /********************************************************************************/
@@ -131,6 +129,27 @@ DiruntimeFrame(Element xml)
 @Override public Collection<String> getLocals()         { return frame_variables.keySet(); }
 @Override public DiruntimeVariable getLocal(String nm)  { return frame_variables.get(nm); } 
 
+
+
+/********************************************************************************/
+/*                                                                              */
+/*     Output methods                                                           */
+/*                                                                              */
+/********************************************************************************/
+
+@Override public void outputXml(IvyXmlWriter xw)
+{
+   xw.begin("FRAME");
+   xw.field("ID",frame_id);
+   xw.field("CLASS",class_name);
+   xw.field("METHOD",method_name);
+   xw.field("LINE",line_number);
+   xw.field("FILE",source_file.getPath());
+   xw.field("USER",is_userframe);
+   xw.textElement("SIGNATURE",method_signature);
+   xw.textElement("FORMATTED",format_signature);
+   xw.end("FRAME");
+}
 
 
 

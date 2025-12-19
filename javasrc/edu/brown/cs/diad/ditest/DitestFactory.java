@@ -23,12 +23,9 @@
 package edu.brown.cs.diad.ditest;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 import java.util.StringTokenizer;
 
 import org.junit.Assert;
@@ -186,16 +183,6 @@ public boolean startFait()
    File wd = new File(System.getProperty("user.home"));
    File logf = new File(wd,"fait.log");
    
-   File f3 = new File(wd,".bubbles");
-   File f4 = new File(f3,"Diad.props");
-   Properties bp = new Properties();
-   try (InputStream in = new FileInputStream(f4)) {
-      bp.loadFromXML(in);
-    }
-   catch (IOException e) {
-      IvyLog.logE("DITEST","Problem reading properties",e);
-    }
-   
    List<String> args = new ArrayList<>();
    args.add(IvyExecQuery.getJavaPath());
    
@@ -203,10 +190,10 @@ public boolean startFait()
    File faitjar = new File(f2,"fait.jar");
    
    args.add("-cp");
-   String xcp = bp.getProperty("Rose.fait.class.path");
+   String xcp = diad_control.getProperty("Diad.fait.class.path");
    if (xcp == null) {
       xcp = System.getProperty("java.class.path");
-      String ycp = bp.getProperty("Rose.fait.add.path");
+      String ycp = diad_control.getProperty("Diad.fait.add.path");
       if (ycp != null) xcp = ycp + File.pathSeparator + xcp;
     }
    else {
@@ -349,16 +336,6 @@ public boolean startSeede()
    File logf = new File(wd,"seede.log");
    boolean isnew = false;
    
-   File f3 = new File(wd,".bubbles");
-   File f4 = new File(f3,"Diad.props");
-   Properties bp = new Properties();
-   try (InputStream in = new FileInputStream(f4)) {
-      bp.loadFromXML(in);
-    }
-   catch (IOException e) {
-      IvyLog.logE("DITEST","Problem reading properties",e);
-    }
-   
    List<String> args = new ArrayList<String>();
    args.add(IvyExecQuery.getJavaPath());
    
@@ -371,10 +348,10 @@ public boolean startSeede()
    File seedejar = new File(f2,"seede.jar");
    
    args.add("-cp");
-   String xcp = bp.getProperty("Rose.seede.class.path");
+   String xcp = diad_control.getProperty("Diad.seede.class.path"); 
    if (xcp == null) {
       xcp = System.getProperty("java.class.path");
-      String ycp = bp.getProperty("Rose.seede.add.path");
+      String ycp = diad_control.getProperty("Diad.seede.add.path");
       if (ycp != null) xcp = ycp + File.pathSeparator + xcp;
     }
    else {

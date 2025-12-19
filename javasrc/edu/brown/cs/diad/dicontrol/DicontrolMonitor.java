@@ -208,18 +208,44 @@ private class CommandProcessor extends Thread {
 
 boolean sendPing()
 {
-   try (IvyXmlWriter xw = new IvyXmlWriter()) {
-      xw.begin("DIADREPLY");
-      xw.field("DO","PING");
-      xw.end("DIADREPLY");
-      MintDefaultReply mdr = new MintDefaultReply();
-      mint_control.send(xw.toString(),mdr,
-	    MintConstants.MINT_MSG_FIRST_NON_NULL);
-      String s = mdr.waitForString();
-      if (s != null) return true;
-    }
+   Element rslt = sendDiadMessage("PING",null,null);
+   if (rslt != null) return true;
+   
    return false;
 }
+
+
+Element sendDiadMessage(String cmd,CommandArgs args,String cnts)
+{
+   MintDefaultReply rply = new MintDefaultReply();
+   String msg = null;
+   
+   try (IvyXmlWriter xw = new IvyXmlWriter()) {
+      xw.begin("DIADREPLY");
+      xw.field("DO",cmd);
+      if (args != null) {
+         for (Map.Entry<String,Object> ent : args.entrySet()) {
+            xw.field(ent.getKey(),ent.getValue());
+          }
+       }
+      if (cnts != null) {
+         xw.xmlText(cnts);
+       }
+      xw.end("DIADREPLY");
+      msg = xw.toString();
+    }
+   
+   IvyLog.logD("DICONTROL","Send DIAD message: " + msg);
+   
+   mint_control.send(msg,rply,MintControl.MINT_MSG_FIRST_NON_NULL);
+   
+   Element rslt = rply.waitForXml(60000);
+   
+   IvyLog.logD("DICONTROL","Reply from message: " + IvyXml.convertXmlToString(rslt));
+   
+   return rslt;
+}
+
 
 
 /********************************************************************************/
@@ -231,6 +257,7 @@ boolean sendPing()
 void pongEclipse()
 {
    mint_control.register("<BEDROCK TYPE='PING' />",new BubblesPingHandler());
+   Runtime.getRuntime().addShutdownHook(new EclipseStopper());
 }
 
 
@@ -294,6 +321,20 @@ private final class BubblesPingHandler implements MintHandler {
     }
 
 }	// end of inner class ExitHandler
+
+
+private final class EclipseStopper extends Thread {
+
+   EclipseStopper() {
+      super("DIAD Eclipse Stopper");
+    }
+   
+   @Override public void run() {
+      sendBubblesMessage("EXIT",null,null);
+    }
+   
+}       // end of inner class EclipseStopper
+
 
 
 /********************************************************************************/

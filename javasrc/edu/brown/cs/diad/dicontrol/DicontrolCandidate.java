@@ -22,6 +22,13 @@
 
 package edu.brown.cs.diad.dicontrol;
 
+import java.io.File;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import edu.brown.cs.diad.dianalysis.DianalysisFactory;
 import edu.brown.cs.diad.dicore.DiadCandidateCallback;
 import edu.brown.cs.diad.dicore.DiadStack;
 import edu.brown.cs.diad.dicore.DiadStackFrame;
@@ -29,6 +36,7 @@ import edu.brown.cs.diad.dicore.DiadSymptom;
 import edu.brown.cs.diad.dicore.DiadThread;
 import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.swing.SwingEventListenerList;
+import edu.brown.cs.ivy.xml.IvyXmlWriter;
 
 class DicontrolCandidate implements DicontrolConstants
 {
@@ -45,8 +53,13 @@ private DiadThread      for_thread;
 private DiadStackFrame  for_frame;
 private DiadCandidateState  candidate_state; 
 private DiadSymptom     candidate_symptom;
+private String          candidate_id;
 private SwingEventListenerList<DiadCandidateCallback> candidate_listeners;
 private CandidateThread candidate_processor;
+private Set<File>       candidate_files;
+
+private static AtomicInteger candidate_counter = new AtomicInteger(0);
+
 
 
 /********************************************************************************/
@@ -63,6 +76,8 @@ DicontrolCandidate(DicontrolMain ctrl,DiadThread thrd)
    candidate_symptom = null;
    candidate_listeners = new SwingEventListenerList<>(DiadCandidateCallback.class);
    candidate_processor = null;
+   candidate_id = "DIAD_ " + candidate_counter.incrementAndGet();
+   candidate_files = new HashSet<>();
 }
 
 
@@ -75,6 +90,7 @@ DicontrolCandidate(DicontrolMain ctrl,DiadThread thrd)
 DiadThread getThread()                          { return for_thread; }
 DiadCandidateState getState()                   { return candidate_state; }
 DiadSymptom getSymptom()                        { return candidate_symptom; }
+String getId()                                  { return candidate_id; }
 
 void addCandidateListener(DiadCandidateCallback cb)
 {
@@ -138,7 +154,10 @@ void setSymptom(DiadSymptom symp)
    // set symptom if possible and restart
 }
 
-
+void addFiles(Collection<File> files)
+{
+   // add to files, if any new files, restart
+}
 
 
 void terminate()
@@ -158,6 +177,24 @@ private synchronized void stopProcessing()
       catch (InterruptedException e) { }  
     }
    candidate_processor = null;
+}
+
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Output methods                                                          */
+/*                                                                              */
+/********************************************************************************/
+
+void outputXml(IvyXmlWriter xw) 
+{
+   xw.begin("CANDIDATE");
+   xw.field("ID",candidate_id);
+   xw.field("STATE",candidate_state);
+   for_thread.outputXml(xw);
+   for_frame.outputXml(xw);
+   xw.end("CANDIDATE");
 }
 
 
@@ -206,10 +243,23 @@ private final class CandidateThread extends Thread {
                case DEAD :
                case NO_STACK :
                case NO_SYMPTOM :
+               case NO_ANALYSIS :
+               case NO_START_FRAME :
                   return;
                case SYMPTOM_FOUND :
-                  System.exit(0);
-                  // find starting frame
+                  DianalysisFactory anal = diad_control.getAnalysisManager();
+                  DiadAnalysisFileMode md = diad_control.getProperty("Diad.file.mode",
+                        DiadAnalysisFileMode.FAIT_FILES);
+                  anal.addFiles(md,candidate_files,for_thread);  
+                  if (anal.waitForAnalysis()) {
+                     setState(DiadCandidateState.ANALYSIS_DONE);
+                   }
+                  else {
+                     setState(DiadCandidateState.NO_ANALYSIS);
+                   }
+                  break;
+               case ANALYSIS_DONE :
+                  // find starting frame *ROSE ValidateStartLocator)
                   break;
                case STARTING_FRAME_FOUND :
                   // start execution
@@ -229,6 +279,9 @@ private final class CandidateThread extends Thread {
        }
     }
 }
+
+
+
 
 
 }       // end of class DicontrolCandidate

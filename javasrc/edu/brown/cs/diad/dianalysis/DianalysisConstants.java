@@ -1,13 +1,13 @@
 /********************************************************************************/
 /*                                                                              */
-/*              DicoreConstants.java                                            */
+/*              DianalsysisConstants.java                                       */
 /*                                                                              */
-/*      General Constants for Dynamic Intelligent Assistive Debugger            */
+/*      Constants for flow analysis within DIAD using FAIT                      */
 /*                                                                              */
 /********************************************************************************/
-/*      Copyright 2013 Brown University -- Steven P. Reiss                    */
+/*      Copyright 2025 Brown University -- Steven P. Reiss                    */
 /*********************************************************************************
- *  Copyright 2013, Brown University, Providence, RI.                            *
+ *  Copyright 2025, Brown University, Providence, RI.                            *
  *                                                                               *
  *                        All Rights Reserved                                    *
  *                                                                               *
@@ -33,75 +33,20 @@
 
 
 
-package edu.brown.cs.diad.dicore;
+package edu.brown.cs.diad.dianalysis;
 
-import edu.brown.cs.ivy.xml.IvyXmlWriter;
 
-public interface DiadConstants
+
+public interface DianalysisConstants
 {
 
 
-interface DiadCommand {
-   void process(IvyXmlWriter xw) throws Exception;
-   String getCommandName();
-   boolean isImmediate();
-}
 
 
-
-enum DiadCandidateState {
-   INITIAL,
-   NO_SYMPTOM,
-   NO_STACK,
-   NO_ANALYSIS,
-   NO_START_FRAME,
-   SYMPTOM_FOUND,
-   ANALYSIS_DONE,
-   STARTING_FRAME_FOUND,
-   EXECUTION_DONE,
-   DEAD,
-}
-
-
-
-enum DiadSymptomType {
-   NONE,
-   EXCEPTION,
-   ASSERTION,
-   VARIABLE,
-   EXPRESSION,
-   LOCATION,
-   NO_EXCEPTION,
-   CAUGHT_EXCEPTION,
-}
-
-enum DiadValueOperator {
-   NONE,
-   EQL, NEQ, GTR, GEQ, LSS, LEQ,
-}
-
-
-enum DiadAnalysisState {
-   NONE,
-   INITIAL,
-   PENDING,
-   FILES,
-   READY,
-}
-
-enum DiadAnalysisFileMode {
-   ALL_FILES,
-   COMPUTED_FILES,
-   STACK_FILES,
-   FAIT_FILES,
-   USER_FILES,
-}
-
-
-}       // end of interface DicoreConstants
+}       // end of interface DianalsysisConstants
 
 
 
 
-/* end of DicoreConstants.java */
+/* end of DianalsysisConstants.java */
 

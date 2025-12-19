@@ -35,13 +35,18 @@
 package edu.brown.cs.diad.dicontrol;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Properties;
 
 import org.w3c.dom.Element;
 
+import edu.brown.cs.diad.dianalysis.DianalysisFactory;
 import edu.brown.cs.diad.dicore.DiadException;
 import edu.brown.cs.diad.dicore.DiadRuntimeCallback;
 import edu.brown.cs.diad.dicore.DiadThread;
@@ -89,6 +94,8 @@ private DiruntimeManager run_manager;
 private Map<DiadThread,DicontrolCandidate> debug_candidates;
 private DisourceFactory source_factory;
 private DitestFactory test_factory;
+private DianalysisFactory analysis_factory;
+private Properties  diad_properties;
  
 
 
@@ -107,6 +114,23 @@ private DicontrolMain(String [] args)
    String home = System.getProperty("user.home");
    File f1 = new File(home);
    log_file = new File(f1,"diad.log");
+   File f2 = new File(f1,".bubbles");
+   File f3 = new File(f2,"Diad.props");
+   diad_properties = new Properties();
+   try {
+      InputStream ins = getClass().getClassLoader().getResourceAsStream("Diad.properties");
+      if (ins != null) diad_properties.loadFromXML(ins);
+    }
+   catch (IOException e) {
+      IvyLog.logE("DICONTROL","Problem loading system properties");
+    }
+   try (InputStream ins1 = new FileInputStream(f3)) {
+      diad_properties.loadFromXML(ins1);
+    }
+   catch (FileNotFoundException e) { }
+   catch (IOException e) {
+      IvyLog.logE("DICONTROL","Problem loading user properties");
+    }
    
    input_file = null;
    server_mode = false;
@@ -117,7 +141,8 @@ private DicontrolMain(String [] args)
    debug_candidates = new HashMap<>();
    run_manager.addRuntimeListener(new RuntimeCallback());
    
-   source_factory = null; 
+   source_factory = null;
+   analysis_factory = null;
    
    scanArgs(args);
 }
@@ -135,6 +160,8 @@ DicontrolMonitor getMessageServer()             { return dicontrol_monitor; }
 DiruntimeManager getRunManager()                { return run_manager; }
 
 DisourceFactory getSourceManager()              { return source_factory; }
+
+DianalysisFactory getAnalysisManager()          { return analysis_factory; }
 
 DitestFactory getTestManager()
 {
@@ -158,7 +185,34 @@ public void setupMessageServer(String mintid)
    mint_id = mintid;
    dicontrol_monitor = new DicontrolMonitor(this,mint_id);
    source_factory = new DisourceFactory(this);
+   analysis_factory = new DianalysisFactory(this);  
 }
+
+
+public String getProperty(String id)
+{
+   return diad_properties.getProperty(id);
+}
+
+
+@SuppressWarnings("unchecked")
+public <T extends Enum<T>> T getProperty(String id,T dflt)
+{
+   Enum<?> v = dflt;
+   String s = getProperty(id);
+   if (s == null || s.isEmpty()) return null;
+   Enum<?> [] vals = dflt.getClass().getEnumConstants();
+   if (vals == null) return null;
+   for (Enum<?> v1 : vals) {
+      if (v1.name().equalsIgnoreCase(s)) {
+         v = v1;
+         break;
+       }
+    }
+   return (T) v;
+}
+
+
 
 
 /********************************************************************************/
@@ -195,6 +249,10 @@ public Element sendSeedeMessage(String id,String cmd,CommandArgs args,String cnt
    return dicontrol_monitor.sendSeedeMessage(id,cmd,args,cnts);
 }
 
+public Element sendDiadMessage(String cmd,CommandArgs args,String xml)
+{
+   return dicontrol_monitor.sendDiadMessage(cmd,args,xml); 
+}
 
 /********************************************************************************/
 /*										*/

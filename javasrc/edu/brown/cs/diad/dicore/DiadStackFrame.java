@@ -38,6 +38,8 @@ package edu.brown.cs.diad.dicore;
 import java.io.File;
 import java.util.Collection;
 
+import edu.brown.cs.ivy.xml.IvyXmlWriter;
+
 public interface DiadStackFrame
 {
  
@@ -52,6 +54,8 @@ boolean isUserFrame();
 
 Collection<String> getLocals();
 DiadLocalVariable getLocal(String name);
+
+void outputXml(IvyXmlWriter xw);
 
 
 }       // end of interface DiadStackFrame

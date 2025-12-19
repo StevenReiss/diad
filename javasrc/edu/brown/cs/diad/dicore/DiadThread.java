@@ -34,19 +34,21 @@
 
 package edu.brown.cs.diad.dicore;
 
-
+import edu.brown.cs.ivy.xml.IvyXmlWriter;
 
 public interface DiadThread
 {
 
 String getThreadName();
-
+String getThreadId();
 boolean isTerminated();
 boolean isStopped();
 boolean isRunning();
 DiadStack getStack();
 boolean isInternal();
 String getExceptionType();
+
+void outputXml(IvyXmlWriter xw);
 
 
 
