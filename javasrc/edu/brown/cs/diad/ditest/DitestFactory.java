@@ -149,6 +149,7 @@ public void setupBedrock(String workspace,String mint)
 	    diad_control.sendBubblesMessage("ENTER",null,null);
             startFait();
             startSeede();
+            diad_control.bubblesReady(); 
 	    return;
 	  }
 	 if (i == 0) {

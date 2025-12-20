@@ -57,6 +57,7 @@ private String          candidate_id;
 private SwingEventListenerList<DiadCandidateCallback> candidate_listeners;
 private CandidateThread candidate_processor;
 private Set<File>       candidate_files;
+private DiadAnalysisFileMode file_mode;
 
 private static AtomicInteger candidate_counter = new AtomicInteger(0);
 
@@ -78,6 +79,8 @@ DicontrolCandidate(DicontrolMain ctrl,DiadThread thrd)
    candidate_processor = null;
    candidate_id = "DIAD_ " + candidate_counter.incrementAndGet();
    candidate_files = new HashSet<>();
+   file_mode = diad_control.getProperty("Diad.file.mode",
+         DiadAnalysisFileMode.FAIT_FILES);
 }
 
 
@@ -159,6 +162,11 @@ void addFiles(Collection<File> files)
    // add to files, if any new files, restart
 }
 
+void setFileMode(DiadAnalysisFileMode mode)
+{
+   file_mode = mode;
+   // restart analysis
+}
 
 void terminate()
 {
@@ -230,14 +238,13 @@ private final class CandidateThread extends Thread {
                      new DicontrolSymptomFinder(diad_control,for_thread,
                            stk,for_frame);
                   DiadSymptom sym = finder.findSymptom();
-                  if (!isInterrupted()) {
-                     if (sym != null) {
-                        candidate_symptom = sym;
-                        setState(DiadCandidateState.SYMPTOM_FOUND);
-                      }
-                     else {
-                        setState(DiadCandidateState.NO_SYMPTOM);
-                      }
+                  if (checkInterrupted()) break;
+                  if (sym != null) {
+                     candidate_symptom = sym;
+                     setState(DiadCandidateState.SYMPTOM_FOUND);
+                   }
+                  else {
+                     setState(DiadCandidateState.NO_SYMPTOM);
                    }
                   break;
                case DEAD :
@@ -245,13 +252,16 @@ private final class CandidateThread extends Thread {
                case NO_SYMPTOM :
                case NO_ANALYSIS :
                case NO_START_FRAME :
+               case INTERUPTED : 
                   return;
                case SYMPTOM_FOUND :
                   DianalysisFactory anal = diad_control.getAnalysisManager();
-                  DiadAnalysisFileMode md = diad_control.getProperty("Diad.file.mode",
-                        DiadAnalysisFileMode.FAIT_FILES);
-                  anal.addFiles(md,candidate_files,for_thread);  
-                  if (anal.waitForAnalysis()) {
+                  if (checkInterrupted()) break;
+                  anal.addFiles(file_mode,candidate_files,for_thread);  
+                  if (checkInterrupted()) break;
+                  Boolean fg = anal.waitForAnalysis(); 
+                  if (fg == null || checkInterrupted()) break;
+                  if (fg) {
                      setState(DiadCandidateState.ANALYSIS_DONE);
                    }
                   else {
@@ -277,6 +287,14 @@ private final class CandidateThread extends Thread {
             return;
           }
        }
+    }
+   
+   private boolean checkInterrupted() {
+      if (isInterrupted()) {
+         setState(DiadCandidateState.INTERUPTED); 
+         return true;
+       }
+      return false;
     }
 }
 

@@ -76,6 +76,7 @@ DicontrolMonitor(DicontrolMain gm,String mintid)
    mint_control.register("<BUBBLES DO='EXIT' />",new ExitHandler());
    mint_control.register("<DIAD DO='_VAR_0' />",new CommandHandler());
    mint_control.register("<BEDROCK TYPE='_VAR_0' />",new IDEHandler());
+   mint_control.register("<FAITEXEC TYPE='_VAR_0' />",new FaitHandler());
    
    IvyLog.logD("DICONTROL","Listening for messages on " + mintid);
 }
@@ -349,11 +350,18 @@ public Element sendFaitMessage(String cmd,CommandArgs args,String cnts)
    IvyXmlWriter xw = new IvyXmlWriter();
    xw.begin("FAIT");
    xw.field("DO",cmd);
-   if (args != null) {
-      for (Map.Entry<String,Object> ent : args.entrySet()) {
-	 xw.field(ent.getKey(),ent.getValue());
-       }
+   
+   if (args == null) {
+      args = new CommandArgs("SID","*");
     }
+   else if (args.get("SID") == null) {
+      args.put("SID","*");
+    }
+   
+   for (Map.Entry<String,Object> ent : args.entrySet()) {
+      xw.field(ent.getKey(),ent.getValue());
+    }
+   
    if (cnts != null) {
       xw.xmlText(cnts);
     }
@@ -535,6 +543,41 @@ protected class IDEHandler implements MintHandler {
     }
 
 }	// end of inner class IDEHandler
+
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Handle FAIT messages                                                    */
+/*                                                                              */
+/********************************************************************************/
+
+private final class FaitHandler implements MintHandler {
+   
+   @Override public void receive(MintMessage msg,MintArguments args) {
+      IvyLog.logD("DICONTROL","Fait message: " + msg.getText());
+      String type = args.getArgument(0);
+      Element xml = msg.getXml();
+      String rslt = null;
+      try {
+         switch (type) {
+            case "ANALYSIS" :
+               diad_control.getAnalysisManager().handleAnalysis(xml);  
+               break;
+            default :
+               IvyLog.logE("DICONTROL","Unknown command " + type + " from Fait");
+               break;
+            case "ERROR" :
+               throw new Error("Fait error: " + msg.getText());
+          }
+       }
+      catch (Throwable e) {
+         IvyLog.logE("DICONTROL","Error processing command",e);
+       }
+      msg.replyTo(rslt);
+    }
+   
+}       // end of inner class FaitHandler
 
 
 

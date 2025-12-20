@@ -30,6 +30,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Random;
 import java.util.Set;
 
 import org.eclipse.jdt.core.dom.CompilationUnit;
@@ -38,6 +39,7 @@ import org.eclipse.jdt.core.dom.PackageDeclaration;
 import org.w3c.dom.Element;
 
 import edu.brown.cs.diad.dicontrol.DicontrolMain;
+import edu.brown.cs.diad.dicore.DiadStackFrame;
 import edu.brown.cs.diad.dicore.DiadThread;
 import edu.brown.cs.diad.dicore.DiadConstants.DiadAnalysisFileMode;
 import edu.brown.cs.diad.dicore.DiadConstants.DiadAnalysisState;
@@ -62,6 +64,7 @@ private DicontrolMain   diad_control;
 private Set<File>       loaded_files;
 private boolean         done_allfiles;
 private DiadAnalysisState analysis_state;
+private String          session_id;
 
 
 
@@ -76,7 +79,20 @@ public DianalysisFactory(DicontrolMain ctrl)
    diad_control = ctrl;
    loaded_files = new HashSet<>();
    done_allfiles = false;
-   analysis_state = DiadAnalysisState.INITIAL;
+   analysis_state = DiadAnalysisState.NONE;
+   session_id = null;
+   
+   Random r = new Random();
+   String sid = "DIAD_" + r.nextInt(10000000);
+   CommandArgs args = new CommandArgs("SID",sid);
+   Element rslt = sendFaitMessage("BEGIN",args,null);
+   if (!IvyXml.isElement(rslt,"RESULT")) {
+      analysis_state = DiadAnalysisState.NONE;
+    }
+   Element sess = IvyXml.getChild(rslt,"SESSION");
+   sid = IvyXml.getAttrString(sess,"ID",sid);
+   if (sid != null) session_id = sid;
+   startAnalysis();
 }
 
 
@@ -91,6 +107,8 @@ public void addFiles(DiadAnalysisFileMode mode,Collection<File> files,DiadThread
 { 
    Set<File> use = new HashSet<>();
    Set<File> add = null;
+   
+   IvyLog.logD("DIANALYSIS","Add files for " + thrd.getThreadName() + " " + mode);
    
    switch (mode) {
       case ALL_FILES :
@@ -113,7 +131,7 @@ public void addFiles(DiadAnalysisFileMode mode,Collection<File> files,DiadThread
     }
    
    if (files != null) use.addAll(files);
-   if (add != null) use.addAll(files);
+   if (add != null) use.addAll(add);
    
    Set<File> nset = new HashSet<>();
    for (File f : use) {
@@ -133,9 +151,9 @@ public void addFiles(DiadAnalysisFileMode mode,Collection<File> files,DiadThread
       ++ct;
     }
    if (ct > 0) {
-      loaded_files.addAll(files);
+      loaded_files.addAll(nset);
       String cnts = buf.toString();
-      Element xw = diad_control.sendFaitMessage("ADDFILE",null,cnts);
+      Element xw = sendFaitMessage("ADDFILE",null,cnts);
       if (IvyXml.isElement(xw,"RESULT")) {
 	 if (IvyXml.getAttrBool(xw,"ADDED")) {
             analysis_state = DiadAnalysisState.PENDING;
@@ -149,24 +167,80 @@ public void addFiles(DiadAnalysisFileMode mode,Collection<File> files,DiadThread
        }
     }
    else {
-      IvyLog.logD("DIANALYSIS","No files to add for " + thrd.getThreadName() + " "
-            + mode);
+      IvyLog.logD("DIANALYSIS","No files to add for " + thrd.getThreadName() + " " +
+            mode);
     }
 }
 
 
 /********************************************************************************/
 /*                                                                              */
-/*      Wait for analysis\                                                      */
+/*      Wait for analysis                                                       */
 /*                                                                              */
 /********************************************************************************/
 
-public synchronized boolean waitForAnalysis()
+private void startAnalysis()
 {
-   long start = System.currentTimeMillis();
+   if (analysis_state == DiadAnalysisState.NONE) {
+      analysis_state = DiadAnalysisState.PENDING;
+      CommandArgs aargs = new CommandArgs("REPORT","FULL_STATS",
+            "ID",session_id);
+      int nth = diad_control.getProperty("Diad.fait.threads",4); 
+      if (nth > 0) aargs.put("THREADS",nth);
+      Element arslt = sendFaitMessage("ANALYZE",aargs,null);
+      if (!IvyXml.isElement(arslt,"RESULT")) {
+         analysis_state = DiadAnalysisState.FAIL;
+         IvyLog.logE("DIANALYSIS","Fait analysis failed " + 
+               IvyXml.convertXmlToString(arslt));
+       }
+    }
+}
+
+
+
+private Element sendFaitMessage(String cmd,CommandArgs args,String cnts)
+{
+   if (session_id != null) {
+      if (args == null) args = new CommandArgs();
+      if (args.get("SID") == null) args.put("SID",session_id);
+    }
+   
+   Element rslt = diad_control.sendFaitMessage(cmd,args,cnts);
+   
+   return rslt;
+}
+
+
+
+public synchronized void handleAnalysis(Element xml)
+{
+   IvyLog.logD("DIANALYSIS","Analysis received: " + IvyXml.convertXmlToString(xml));
+   
+   String id = IvyXml.getAttrString(xml,"ID");
+   if (session_id == null || !session_id.equals(id)) return;
+   
+   boolean started = IvyXml.getAttrBool(xml,"STARTED");
+   boolean aborted = IvyXml.getAttrBool(xml,"ABORTED");
+   
+   if (started || aborted) {
+      analysis_state = DiadAnalysisState.PENDING;
+    }
+   else {
+      analysis_state = DiadAnalysisState.READY;
+    }
+   
+   notifyAll();
+}
+
+
+
+
+public synchronized Boolean waitForAnalysis()
+{
    for ( ; ; ) {
       switch (analysis_state) {
          case NONE :
+         case FAIL : 
             return false;
          case PENDING :
             break;
@@ -176,7 +250,9 @@ public synchronized boolean waitForAnalysis()
       try {
          wait(10000);
        }
-      catch (InterruptedException e) { }
+      catch (InterruptedException e) {
+         return null;
+       }
     }
 }
 
@@ -187,56 +263,16 @@ public synchronized boolean waitForAnalysis()
 /*                                                                              */
 /********************************************************************************/
 
-
-private File getFileForClass(String cls)
-{
-   Set<String> files = new HashSet<>();
-   files.add(cls);
-   Set<File> rslt = new HashSet<>();
-   File dir = findFilesForClasses(files,rslt);
-   for (File f : rslt) {
-      return f;
-    }
-   if (dir == null) return null;
-   int idx = cls.lastIndexOf(".");
-   String fnm = cls.substring(idx+1) + ".java";
-   File frslt = new File(dir,fnm);
-   return frslt;
-}
-
-
-
 private Set<File> findStackFiles(DiadThread thrd)
 {
    Set<File> rslt = new HashSet<>();
    if (thrd == null) return rslt;
-   String threadid = thrd.getThreadId();
    
-   CommandArgs args = new CommandArgs("THREAD",threadid);
-   // REPLACE USING DiadThread methods
-// Element r = sendBubblesXmlReply("GETSTACKFRAMES",null,args,null);
-   Element sf = IvyXml.getChild(r,"STACKFRAMES");
-   for (Element th : IvyXml.children(sf,"THREAD")) {
-      String id = IvyXml.getAttrString(th,"ID");
-      if (threadid == null || threadid.equals(id)) {
-	 for (Element frm : IvyXml.children(th,"STACKFRAME")) {
-	    String fnm = IvyXml.getAttrString(frm,"FILE");
-	    if (fnm != null) {
-	       File f = new File(fnm);
-               try {
-                  f = f.getCanonicalFile();
-                }
-               catch (IOException e) {
-                  IvyLog.logE("Problem getting canonical file " + f,e);
-                }
-               if (f.getPath().startsWith("/pro")) {
-                  IvyLog.logD("DIANALYSIS","Canonical path added: " + f);
-                }
-	       if (f.exists()) {
-		  rslt.add(f);
-		}
-	     }
-	  }
+   for (DiadStackFrame frm : thrd.getStack().getFrames()) {
+      File f = frm.getSourceFile();
+      if (frm.isUserFrame() && f.exists()) {
+         f = IvyFile.getCanonical(f);
+         rslt.add(f);
        }
     }
    
@@ -250,32 +286,18 @@ private Set<File> findStackFiles(DiadThread thrd)
 private Set<File> findComputedFiles(DiadThread thrd)
 {
    if (thrd == null) return findAllSourceFiles();
-   String threadid = thrd.getThreadId();
    Set<File> rslt = new HashSet<>();
    Set<File> roots = new HashSet<>();
    
-   CommandArgs args = new CommandArgs("THREAD",threadid);
-// Element r = sendBubblesXmlReply("GETSTACKFRAMES",null,args,null);
-   // REPLACE USING thrd methods
-   Element sf = IvyXml.getChild(r,"STACKFRAMES");
-   for (Element th : IvyXml.children(sf,"THREAD")) {
-      String id = IvyXml.getAttrString(th,"ID");
-      if (threadid == null || threadid.equals(id)) {
-         boolean fnd = false;
-	 for (Element frm : IvyXml.children(th,"STACKFRAME")) {
-            String fty = IvyXml.getAttrString(frm,"FILETYPE");
-            if (!fty.equals("JAVAFILE")) {
-               if (!fnd) continue;
-               break;
-             }
-	    String fnm = IvyXml.getAttrString(frm,"FILE");
-            if (fnm == null) break;
-            int lno = IvyXml.getAttrInt(frm,"LINENO");
-            File f = new File(fnm);
-            if (!f.exists() || lno < 0) continue;
-            roots.add(f);
-	  }
-       }
+   for (DiadStackFrame frm : thrd.getStack().getFrames()) {
+       if (frm.isUserFrame()) {
+          File f = frm.getSourceFile();
+          int lno = frm.getLineNumber();
+          if (lno > 0 && f.exists()) {
+             f = IvyFile.getCanonical(f);
+             roots.add(f);
+           }
+        }
     }
    
    findFilesForUnits(roots,rslt);
@@ -288,57 +310,19 @@ private Set<File> findComputedFiles(DiadThread thrd)
 private Set<File> findFaitFiles(DiadThread thrd) throws RuntimeException
 {
    Set<File> base = findAllSourceFiles();
-   if (base.size() < 40) return base;
+   if (base == null || base.size() < 40) return base;
    
    if (thrd == null) return base;
-   String threadid = thrd.getThreadId();
-   
-   CommandArgs bargs = null;
-   Element frslt = diad_control.sendFaitMessage("BEGIN",bargs,null);
-   if (!IvyXml.isElement(frslt,"RESULT")) {
-      throw new RuntimeException("BEGIN for session failed");
-    }
-   
-   if (analysis_state == analysis_state.NONE) {
-      analysis_state = analysis_state.PENDING; 
-      CommandArgs aargs = new CommandArgs("REPORT","SOURCE");
-      aargs.put("REPORT","FULL_STATS");
-      int nth = getFaitThreads();
-      if (nth > 0) aargs.put("THREADS",nth);
-      Element arslt = diad_control.sendFaitMessage("ANALYZE",aargs,null);
-      if (!IvyXml.isElement(arslt,"RESULT")) {
-         analysis_state = analysis_state.NONE;
-         throw new RuntimeException("ANALYZE for session failed");
-       }
-      waitForAnalysis();
-      analysis_state = analysis_state.FILES;
-    }
    
    Set<File> rslt = new HashSet<>();
    Set<String> mthds = new HashSet<>();
    
-   CommandArgs args = new CommandArgs("THREAD",threadid);
-   // REPLACE BY USING thrd.getStack();
-   Element sf = IvyXml.getChild(r,"STACKFRAMES");
-   for (Element th : IvyXml.children(sf,"THREAD")) {
-      String id = IvyXml.getAttrString(th,"ID");
-      if (threadid == null || threadid.equals(id)) {
-         boolean fnd = false;
-	 for (Element frm : IvyXml.children(th,"STACKFRAME")) {
-            String fty = IvyXml.getAttrString(frm,"FILETYPE");
-            if (fty == null || !fty.equals("JAVAFILE")) {
-               if (!fnd) continue;
-               break;
-             }
-	    String fnm = IvyXml.getAttrString(frm,"FILE");
-            if (fnm == null) break;
-            int lno = IvyXml.getAttrInt(frm,"LINENO");
-            File f = new File(fnm);
-            if (!f.exists() || lno < 0) continue;
-            String snm = IvyXml.getAttrString(frm,"SIGNATURE");
-            String mnm = IvyXml.getAttrString(frm,"METHOD");
-            mthds.add(mnm+snm);
-	  }
+   for (DiadStackFrame frm : thrd.getStack().getFrames()) {
+      File f = frm.getSourceFile();
+      if (frm.isUserFrame() && frm.getLineNumber() > 0 && f.exists()) {
+         String snm = frm.getMethodName();
+         String mnm = frm.getMethodSignature();
+         mthds.add(mnm+snm);
        }
     }
    
@@ -346,7 +330,7 @@ private Set<File> findFaitFiles(DiadThread thrd) throws RuntimeException
    for (String s : mthds) {
       xw.textElement("METHOD",s);
     }
-   Element clsxml = diad_control.sendFaitMessage("FILEQUERY",null,xw.toString());
+   Element clsxml = sendFaitMessage("FILEQUERY",null,xw.toString());
    xw.close();
    Set<String> clsset = new HashSet<>();
    for (Element celt : IvyXml.children(clsxml,"CLASS")) {
@@ -561,6 +545,7 @@ private Set<File> getProjectSourceFiles(String proj)
 	    catch (IOException e) {
 	       continue;
 	     }
+            IvyLog.logD("DIANALYSIS","Add source file " + f2);
 	    rslt.add(f2);
 	  }
        }

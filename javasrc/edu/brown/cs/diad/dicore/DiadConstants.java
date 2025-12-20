@@ -60,6 +60,7 @@ enum DiadCandidateState {
    STARTING_FRAME_FOUND,
    EXECUTION_DONE,
    DEAD,
+   INTERUPTED,
 }
 
 
@@ -83,10 +84,10 @@ enum DiadValueOperator {
 
 enum DiadAnalysisState {
    NONE,
-   INITIAL,
    PENDING,
    FILES,
    READY,
+   FAIL,
 }
 
 enum DiadAnalysisFileMode {

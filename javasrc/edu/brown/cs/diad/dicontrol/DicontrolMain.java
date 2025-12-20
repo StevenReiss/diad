@@ -184,6 +184,11 @@ public void setupMessageServer(String mintid)
 {
    mint_id = mintid;
    dicontrol_monitor = new DicontrolMonitor(this,mint_id);
+  
+}
+
+public void bubblesReady()
+{
    source_factory = new DisourceFactory(this);
    analysis_factory = new DianalysisFactory(this);  
 }
@@ -200,7 +205,7 @@ public <T extends Enum<T>> T getProperty(String id,T dflt)
 {
    Enum<?> v = dflt;
    String s = getProperty(id);
-   if (s == null || s.isEmpty()) return null;
+   if (s == null || s.isEmpty()) return dflt;
    Enum<?> [] vals = dflt.getClass().getEnumConstants();
    if (vals == null) return null;
    for (Enum<?> v1 : vals) {
@@ -210,6 +215,20 @@ public <T extends Enum<T>> T getProperty(String id,T dflt)
        }
     }
    return (T) v;
+}
+
+
+public int getProperty(String id,int dflt)
+{
+   String s = getProperty(id);
+   if (s == null || s.isEmpty()) return dflt;
+   
+   try {
+      return Integer.parseInt(s);
+    } 
+   catch (NumberFormatException e) { }
+   
+   return dflt;
 }
 
 
@@ -323,6 +342,7 @@ private void process()
 
    if (mint_id != null) {
       setupMessageServer(mint_id);
+      bubblesReady();
     }
    
    if (input_file != null) {
@@ -420,6 +440,7 @@ private final class RuntimeCallback implements DiadRuntimeCallback {
    else if (thrd.isStopped()) {
       dc = new DicontrolCandidate(DicontrolMain.this,thrd); 
       debug_candidates.put(thrd,dc);
+      dc.addCandidateListener(new DicontrolUpdater(DicontrolMain.this,dc));
       dc.start(); 
     }
 }
