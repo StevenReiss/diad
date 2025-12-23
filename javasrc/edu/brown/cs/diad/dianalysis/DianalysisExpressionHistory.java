@@ -1,8 +1,8 @@
 /********************************************************************************/
 /*                                                                              */
-/*              DicontrolSymptom.java                                           */
+/*              DianalysisExpressionHistory.java                                */
 /*                                                                              */
-/*      Implementation of a symptom                                             */
+/*      Find starting points for expression having wrong value                  */
 /*                                                                              */
 /********************************************************************************/
 /*      Copyright 2025 Brown University -- Steven P. Reiss                    */
@@ -20,14 +20,17 @@
 
 
 
-package edu.brown.cs.diad.dicontrol;
+package edu.brown.cs.diad.dianalysis;
 
+import org.w3c.dom.Element;
+
+import edu.brown.cs.diad.dicore.DiadException;
 import edu.brown.cs.diad.dicore.DiadSymptom;
-import edu.brown.cs.diad.dicore.DiadConstants.DiadSymptomType;
-import edu.brown.cs.diad.dicore.DiadConstants.DiadValueOperator;
+import edu.brown.cs.diad.dicore.DiadThread;
+import edu.brown.cs.ivy.mint.MintConstants.CommandArgs;
 import edu.brown.cs.ivy.xml.IvyXmlWriter;
 
-class DicontrolSymptom implements DiadSymptom
+class DianalysisExpressionHistory extends DianalysisHistory
 {
 
 
@@ -37,12 +40,8 @@ class DicontrolSymptom implements DiadSymptom
 /*                                                                              */
 /********************************************************************************/
 
-private DiadSymptomType symptom_type;
-private String symptom_item;
-private String original_value;
-private String target_value;
-private DiadValueOperator value_operator;
-private double target_precision;
+private String expression_name;
+private String current_value;
 
 
 
@@ -52,68 +51,67 @@ private double target_precision;
 /*                                                                              */
 /********************************************************************************/
 
-DicontrolSymptom(DiadSymptomType type) 
-{
-   this(type,null);
-}
-
-
-DicontrolSymptom(DiadSymptomType type,String item)
-{
-   symptom_type = type;
-   symptom_item = item;
-   original_value = null;
-   target_value = null;
-   value_operator = DiadValueOperator.NONE; 
-   target_precision = 1e-5;
+DianalysisExpressionHistory(DianalysisFactory fac,DiadSymptom symp,DiadThread thrd)
+{ 
+   super(fac,symp,thrd);
+   expression_name = symp.getSymptomItem();
+   current_value = symp.getOriginalValue();
+//    shouldbe_value = prob.getTargetValue();
 }
 
 
 /********************************************************************************/
 /*                                                                              */
-/*      Access methods                                                          */
+/*      Process expression query                                                */
 /*                                                                              */
 /********************************************************************************/
 
-@Override public DiadSymptomType getSymptomType()       { return symptom_type; }
-
-@Override public String getSymptomItem()                { return symptom_item; }
-
-@Override public String getOriginalValue()              { return original_value; }
-
-@Override public String getTargetValue()                { return target_value; }
-
-@Override public DiadValueOperator getSymptomOperator() { return value_operator; }
-
-@Override public double getTargetPrecision()            { return target_precision; } 
-
-@Override public void setOriginalValue(String v)
+@Override protected void process(IvyXmlWriter xw) throws DiadException 
 {
-   original_value = v;
+   Element hrslt = getHistoryData();
+   outputGraph(hrslt,xw);
 }
 
-@Override public void setTargetValue(String v)
-{
-   target_value = v;
-}
 
 
 /********************************************************************************/
 /*                                                                              */
-/*      Output methods                                                          */
+/*      Set up appropriate query                                                */
 /*                                                                              */
 /********************************************************************************/
 
-@Override public void outputXml(IvyXmlWriter xw)
+private Element getHistoryData()
 {
-   // TODO
+   getAnalysis().waitForAnalysis();
+   
+   CommandArgs args = new CommandArgs("QTYPE","EXPRESSION",
+         "CURRENT",current_value,
+         "TOKEN",expression_name);
+   args = addCommandArgs(args);
+   
+   String qxml = null;
+   if (getNodeContext() != null) { 
+      IvyXmlWriter xw = new IvyXmlWriter();
+      getNodeContext().outputXml("EXPRESSION",xw);
+      qxml = xw.toString();
+      xw.close();
+    }
+   String sxml = getXmlForStack();
+   if (qxml == null) qxml = sxml;
+   else if (sxml != null) qxml += sxml; 
+   
+   Element rslt = getAnalysis().sendFaitMessage("FLOWQUERY",args,qxml);
+   
+   return rslt;
 }
 
 
-}       // end of class DicontrolSymptom
+
+
+}       // end of class DianalysisExpressionHistory
 
 
 
 
-/* end of DicontrolSymptom.java */
+/* end of DianalysisExpressionHistory.java */
 

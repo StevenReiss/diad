@@ -36,10 +36,8 @@
 package edu.brown.cs.diad.dianalysis;
 
 
-
 public interface DianalysisConstants
 {
-
 
 
 

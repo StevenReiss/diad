@@ -269,6 +269,9 @@ private final class CandidateThread extends Thread {
                    }
                   break;
                case ANALYSIS_DONE :
+                  // find initial locations
+                  break; 
+               case INITIAL_LOCATIONS :
                   // find starting frame *ROSE ValidateStartLocator)
                   break;
                case STARTING_FRAME_FOUND :

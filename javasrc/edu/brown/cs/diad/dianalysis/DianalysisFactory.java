@@ -43,6 +43,7 @@ import edu.brown.cs.diad.dicore.DiadStackFrame;
 import edu.brown.cs.diad.dicore.DiadThread;
 import edu.brown.cs.diad.dicore.DiadConstants.DiadAnalysisFileMode;
 import edu.brown.cs.diad.dicore.DiadConstants.DiadAnalysisState;
+import edu.brown.cs.diad.disource.DisourceFactory;
 import edu.brown.cs.ivy.file.IvyFile;
 import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.jcomp.JcompAst;
@@ -94,6 +95,22 @@ public DianalysisFactory(DicontrolMain ctrl)
    if (sid != null) session_id = sid;
    startAnalysis();
 }
+
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Access methods                                                          */
+/*                                                                              */
+/********************************************************************************/
+
+DicontrolMain   getDiadControl()                        { return diad_control; }
+
+DisourceFactory getSourceManager()
+{
+   return diad_control.getSourceManager(); 
+}
+
 
 
 
@@ -198,7 +215,7 @@ private void startAnalysis()
 
 
 
-private Element sendFaitMessage(String cmd,CommandArgs args,String cnts)
+Element sendFaitMessage(String cmd,CommandArgs args,String cnts)
 {
    if (session_id != null) {
       if (args == null) args = new CommandArgs();

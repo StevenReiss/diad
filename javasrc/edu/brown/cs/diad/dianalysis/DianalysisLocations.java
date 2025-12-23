@@ -1,8 +1,8 @@
 /********************************************************************************/
 /*                                                                              */
-/*              DicontrolSymptom.java                                           */
+/*              DianalysisLocations.java                                        */
 /*                                                                              */
-/*      Implementation of a symptom                                             */
+/*      Handle fault localization using FAIT                                     */
 /*                                                                              */
 /********************************************************************************/
 /*      Copyright 2025 Brown University -- Steven P. Reiss                    */
@@ -20,14 +20,16 @@
 
 
 
-package edu.brown.cs.diad.dicontrol;
+package edu.brown.cs.diad.dianalysis;
 
+import java.util.Collection;
+
+import edu.brown.cs.diad.dicore.DiadLocation;
 import edu.brown.cs.diad.dicore.DiadSymptom;
-import edu.brown.cs.diad.dicore.DiadConstants.DiadSymptomType;
-import edu.brown.cs.diad.dicore.DiadConstants.DiadValueOperator;
-import edu.brown.cs.ivy.xml.IvyXmlWriter;
+import edu.brown.cs.diad.dicore.DiadThread;
+import edu.brown.cs.ivy.file.IvyLog;
 
-class DicontrolSymptom implements DiadSymptom
+class DianalysisLocations implements DianalysisConstants
 {
 
 
@@ -37,13 +39,10 @@ class DicontrolSymptom implements DiadSymptom
 /*                                                                              */
 /********************************************************************************/
 
-private DiadSymptomType symptom_type;
-private String symptom_item;
-private String original_value;
-private String target_value;
-private DiadValueOperator value_operator;
-private double target_precision;
-
+private DianalysisFactory for_analysis;
+private DiadSymptom for_symptom;
+private DiadThread  for_thread;
+ 
 
 
 /********************************************************************************/
@@ -51,69 +50,79 @@ private double target_precision;
 /*      Constructors                                                            */
 /*                                                                              */
 /********************************************************************************/
-
-DicontrolSymptom(DiadSymptomType type) 
+ 
+DianalysisLocations(DianalysisFactory anal,DiadSymptom sym,DiadThread thrd)
 {
-   this(type,null);
+   for_analysis = anal;
+   for_symptom = sym;
+   for_thread = thrd;
 }
 
-
-DicontrolSymptom(DiadSymptomType type,String item)
-{
-   symptom_type = type;
-   symptom_item = item;
-   original_value = null;
-   target_value = null;
-   value_operator = DiadValueOperator.NONE; 
-   target_precision = 1e-5;
-}
 
 
 /********************************************************************************/
 /*                                                                              */
-/*      Access methods                                                          */
+/*      Find initial locations                                                  */
 /*                                                                              */
 /********************************************************************************/
 
-@Override public DiadSymptomType getSymptomType()       { return symptom_type; }
-
-@Override public String getSymptomItem()                { return symptom_item; }
-
-@Override public String getOriginalValue()              { return original_value; }
-
-@Override public String getTargetValue()                { return target_value; }
-
-@Override public DiadValueOperator getSymptomOperator() { return value_operator; }
-
-@Override public double getTargetPrecision()            { return target_precision; } 
-
-@Override public void setOriginalValue(String v)
+Collection<DiadLocation> findInitialLocations()
 {
-   original_value = v;
+   DianalysisHistory hq = setupHistory();
+   
+   if (hq == null) {
+      IvyLog.logE("DIANALYSIS","No location history for " + for_symptom);
+      return null;
+    }
+   return null;
 }
 
-@Override public void setTargetValue(String v)
-{
-   target_value = v;
-}
 
 
 /********************************************************************************/
 /*                                                                              */
-/*      Output methods                                                          */
+/*      Translate symptom into a location and variables                         */
 /*                                                                              */
 /********************************************************************************/
 
-@Override public void outputXml(IvyXmlWriter xw)
+private DianalysisHistory setupHistory()
 {
-   // TODO
+   DianalysisHistory hq = null;
+   switch (for_symptom.getSymptomType()) {
+      case ASSERTION :
+         hq = new DianalysisAssertionHistory(for_analysis,
+               for_symptom,for_thread);
+         break;
+      case CAUGHT_EXCEPTION :
+         break;
+      case EXCEPTION :
+         hq = new DianalysisExceptionHistory(for_analysis,
+               for_symptom,for_thread);
+         break;
+      case EXPRESSION :
+         hq = new DianalysisExpressionHistory(for_analysis,
+               for_symptom,for_thread);
+         break;
+      case LOCATION :
+         // hq = new DianalysisLocationHistory(for_analysis,for_symptom,for_thread);
+         break;
+      case NONE :
+         break;
+      case NO_EXCEPTION :
+         break;
+      case VARIABLE :
+         // hq = new DianalysisVariableHistory(for_analysis,for_symptom,for_thread);
+         break;
+    }
+  
+   return hq;
 }
 
 
-}       // end of class DicontrolSymptom
+}       // end of class DianalysisLocations
 
 
 
 
-/* end of DicontrolSymptom.java */
+/* end of DianalysisLocations.java */
 

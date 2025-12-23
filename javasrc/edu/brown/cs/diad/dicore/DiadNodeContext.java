@@ -1,8 +1,8 @@
 /********************************************************************************/
 /*                                                                              */
-/*              DicontrolSymptom.java                                           */
+/*              DiadNodeContext.java                                            */
 /*                                                                              */
-/*      Implementation of a symptom                                             */
+/*      Source context                                                          */
 /*                                                                              */
 /********************************************************************************/
 /*      Copyright 2025 Brown University -- Steven P. Reiss                    */
@@ -20,14 +20,16 @@
 
 
 
-package edu.brown.cs.diad.dicontrol;
+package edu.brown.cs.diad.dicore;
 
-import edu.brown.cs.diad.dicore.DiadSymptom;
-import edu.brown.cs.diad.dicore.DiadConstants.DiadSymptomType;
-import edu.brown.cs.diad.dicore.DiadConstants.DiadValueOperator;
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.w3c.dom.Element;
+
+import edu.brown.cs.ivy.jcomp.JcompAst;
+import edu.brown.cs.ivy.xml.IvyXml;
 import edu.brown.cs.ivy.xml.IvyXmlWriter;
 
-class DicontrolSymptom implements DiadSymptom
+public class DiadNodeContext implements DiadConstants
 {
 
 
@@ -37,13 +39,15 @@ class DicontrolSymptom implements DiadSymptom
 /*                                                                              */
 /********************************************************************************/
 
-private DiadSymptomType symptom_type;
-private String symptom_item;
-private String original_value;
-private String target_value;
-private DiadValueOperator value_operator;
-private double target_precision;
-
+private int     start_offset;
+private int     end_offset;
+private String  node_type;
+private int     node_typeid;
+private String  after_location;
+private int     after_start;
+private int     after_end;
+private String  after_type;
+private int     after_typeid;
 
 
 /********************************************************************************/
@@ -52,21 +56,19 @@ private double target_precision;
 /*                                                                              */
 /********************************************************************************/
 
-DicontrolSymptom(DiadSymptomType type) 
+public DiadNodeContext(Element xml)
 {
-   this(type,null);
+   start_offset = IvyXml.getAttrInt(xml,"START");
+   end_offset = IvyXml.getAttrInt(xml,"END");
+   node_type = IvyXml.getAttrString(xml,"NODETYPE");
+   node_typeid = IvyXml.getAttrInt(xml,"NODETYPEID");
+   after_location = IvyXml.getAttrString(xml,"AFTER");
+   after_start = IvyXml.getAttrInt(xml,"AFTERSTART");
+   after_end = IvyXml.getAttrInt(xml,"AFTEREND");
+   after_type = IvyXml.getAttrString(xml,"AFTERTYPE");
+   after_typeid = IvyXml.getAttrInt(xml,"AFTERTYPEID");
 }
 
-
-DicontrolSymptom(DiadSymptomType type,String item)
-{
-   symptom_type = type;
-   symptom_item = item;
-   original_value = null;
-   target_value = null;
-   value_operator = DiadValueOperator.NONE; 
-   target_precision = 1e-5;
-}
 
 
 /********************************************************************************/
@@ -75,27 +77,20 @@ DicontrolSymptom(DiadSymptomType type,String item)
 /*                                                                              */
 /********************************************************************************/
 
-@Override public DiadSymptomType getSymptomType()       { return symptom_type; }
-
-@Override public String getSymptomItem()                { return symptom_item; }
-
-@Override public String getOriginalValue()              { return original_value; }
-
-@Override public String getTargetValue()                { return target_value; }
-
-@Override public DiadValueOperator getSymptomOperator() { return value_operator; }
-
-@Override public double getTargetPrecision()            { return target_precision; } 
-
-@Override public void setOriginalValue(String v)
+public ASTNode findAstNode(ASTNode base)
 {
-   original_value = v;
+   ASTNode root = base.getRoot();
+   ASTNode n = JcompAst.findNodeAtOffset(root,start_offset);
+   for (ASTNode p = n; p != null; p = p.getParent()) {
+      if (p.getNodeType() == node_typeid) {
+         int end = p.getStartPosition() + p.getLength();
+         if (Math.abs(end-end_offset) < 2) return p;
+       }
+    }
+   
+   return null;
 }
 
-@Override public void setTargetValue(String v)
-{
-   target_value = v;
-}
 
 
 /********************************************************************************/
@@ -104,16 +99,42 @@ DicontrolSymptom(DiadSymptomType type,String item)
 /*                                                                              */
 /********************************************************************************/
 
-@Override public void outputXml(IvyXmlWriter xw)
+public void outputXml(IvyXmlWriter xw)
 {
-   // TODO
+   outputXml("CONTEXT",xw);
 }
 
 
-}       // end of class DicontrolSymptom
+public void outputXml(String elt,IvyXmlWriter xw)
+{
+   if (elt != null) xw.begin(elt);
+   outputXmlFields(xw);
+   if (elt != null) xw.end(elt);
+}
+
+
+
+public void outputXmlFields(IvyXmlWriter xw)
+{
+   xw.field("START",start_offset);
+   xw.field("END",end_offset);
+   xw.field("NODETYPE",node_type);
+   xw.field("NODETYPEID",node_typeid);
+   if (after_location != null) {
+      xw.field("AFTER",after_location);
+      xw.field("AFTERSTART",after_start);
+      xw.field("AFTEREND",after_end);
+      xw.field("AFTERTYPE",after_type);
+      xw.field("AFTERTYPEID",after_typeid);
+    }
+}
+
+
+
+}       // end of class DiadNodeContext
 
 
 
 
-/* end of DicontrolSymptom.java */
+/* end of DiadNodeContext.java */
 

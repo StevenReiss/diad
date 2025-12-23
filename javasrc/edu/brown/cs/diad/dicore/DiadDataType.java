@@ -1,13 +1,13 @@
 /********************************************************************************/
 /*                                                                              */
-/*              DicoreConstants.java                                            */
+/*              DiadDataType.java                                               */
 /*                                                                              */
-/*      General Constants for Dynamic Intelligent Assistive Debugger            */
+/*      Run time data type                                                      */
 /*                                                                              */
 /********************************************************************************/
-/*      Copyright 2013 Brown University -- Steven P. Reiss                    */
+/*      Copyright 2025 Brown University -- Steven P. Reiss                    */
 /*********************************************************************************
- *  Copyright 2013, Brown University, Providence, RI.                            *
+ *  Copyright 2025, Brown University, Providence, RI.                            *
  *                                                                               *
  *                        All Rights Reserved                                    *
  *                                                                               *
@@ -35,76 +35,27 @@
 
 package edu.brown.cs.diad.dicore;
 
-import edu.brown.cs.ivy.xml.IvyXmlWriter;
+import java.util.Map;
 
-public interface DiadConstants
+public interface DiadDataType
 {
 
+String getName();
+boolean isBooleanType();
+boolean isNumericType();
+boolean isStringType();
+boolean isArrayType();
+boolean isObjectType();
+boolean isParameterizedType();
 
-interface DiadCommand {
-   void process(IvyXmlWriter xw) throws Exception;
-   String getCommandName();
-   boolean isImmediate();
-}
-
-
-
-enum DiadCandidateState {
-   INITIAL,
-   NO_SYMPTOM,
-   NO_STACK,
-   NO_ANALYSIS,
-   NO_START_FRAME,
-   SYMPTOM_FOUND,
-   INITIAL_LOCATIONS,
-   ANALYSIS_DONE,
-   STARTING_FRAME_FOUND,
-   EXECUTION_DONE,
-   DEAD,
-   INTERUPTED,
-}
+DiadDataType getBaseType();
+Map<String,DiadDataType> getFields();
 
 
-
-enum DiadSymptomType {
-   NONE,
-   EXCEPTION,
-   ASSERTION,
-   VARIABLE,
-   EXPRESSION,
-   LOCATION,
-   NO_EXCEPTION,
-   CAUGHT_EXCEPTION,
-}
-
-enum DiadValueOperator {
-   NONE,
-   EQL, NEQ, GTR, GEQ, LSS, LEQ,
-}
-
-
-enum DiadAnalysisState {
-   NONE,
-   PENDING,
-   FILES,
-   READY,
-   FAIL,
-}
-
-enum DiadAnalysisFileMode {
-   ALL_FILES,
-   COMPUTED_FILES,
-   STACK_FILES,
-   FAIT_FILES,
-   USER_FILES,
-}
-
-double DEFAULT_PRIORITY = 0.5;
-
-}       // end of interface DicoreConstants
+}       // end of interface DiadDataType
 
 
 
 
-/* end of DicoreConstants.java */
+/* end of DiadDataType.java */
 

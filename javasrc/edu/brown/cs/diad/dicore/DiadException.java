@@ -43,13 +43,13 @@ private static final long serialVersionUID = 1L;
 /*                                                                              */
 /********************************************************************************/
 
-DiadException(String msg)
+public DiadException(String msg)
 {
    super(msg);
 }
 
 
-DiadException(String msg,Throwable cause)
+public DiadException(String msg,Throwable cause)
 {
    super(msg,cause);
 }

@@ -40,6 +40,7 @@ import java.util.Map;
 import org.w3c.dom.Element;
 
 import edu.brown.cs.diad.dicore.DiadThread;
+import edu.brown.cs.diad.dicore.DiadValue;
 import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.mint.MintConstants.CommandArgs;
 import edu.brown.cs.ivy.xml.IvyXml;
@@ -316,6 +317,18 @@ void setException(String exc) {
    return call_stack;
 }
 
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Evaluation methods                                                      */
+/*                                                                              */
+/********************************************************************************/
+
+@Override public DiadValue evaluate(String expr)
+{
+   return null;
+}
 
 
 /********************************************************************************/

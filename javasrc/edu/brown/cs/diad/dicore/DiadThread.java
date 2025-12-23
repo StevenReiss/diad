@@ -48,6 +48,7 @@ DiadStack getStack();
 boolean isInternal();
 String getExceptionType();
 
+DiadValue evaluate(String expr);
 void outputXml(IvyXmlWriter xw);
 
 

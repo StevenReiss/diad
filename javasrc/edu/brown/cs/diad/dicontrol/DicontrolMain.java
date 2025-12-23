@@ -159,7 +159,7 @@ DicontrolMonitor getMessageServer()             { return dicontrol_monitor; }
 
 DiruntimeManager getRunManager()                { return run_manager; }
 
-DisourceFactory getSourceManager()              { return source_factory; }
+public DisourceFactory getSourceManager()       { return source_factory; }
 
 DianalysisFactory getAnalysisManager()          { return analysis_factory; }
 

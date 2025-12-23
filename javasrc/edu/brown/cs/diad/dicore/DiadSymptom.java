@@ -37,6 +37,7 @@ package edu.brown.cs.diad.dicore;
 
 import edu.brown.cs.diad.dicore.DiadConstants.DiadSymptomType;
 import edu.brown.cs.diad.dicore.DiadConstants.DiadValueOperator;
+import edu.brown.cs.ivy.xml.IvyXmlWriter;
 
 public interface DiadSymptom
 {
@@ -48,6 +49,11 @@ String getOriginalValue();
 String getTargetValue();
 DiadValueOperator getSymptomOperator(); 
 double getTargetPrecision();
+
+void setOriginalValue(String val);
+void setTargetValue(String val);
+
+void outputXml(IvyXmlWriter xw);  
 
 
 
