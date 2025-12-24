@@ -40,11 +40,11 @@ package edu.brown.cs.diad.dicore;
 public interface DiadValue
 {
 
-DiadValue getFieldValue(String name);
-void setFieldValue(String name,DiadValue value);
+DiadValue getFieldValue(String name) throws DiadException;
+void setFieldValue(String name,DiadValue value) throws DiadException;
 
-DiadValue getArrayElement(int idx);
-void setArrayElement(int idx,DiadValue value);
+DiadValue getArrayElement(int idx) throws DiadException;
+void setArrayElement(int idx,DiadValue value) throws DiadException;
 
 boolean isNull();
 boolean getBoolean();

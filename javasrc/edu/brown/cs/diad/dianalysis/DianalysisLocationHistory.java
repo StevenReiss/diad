@@ -34,6 +34,8 @@ import edu.brown.cs.diad.dicore.DiadSymptom;
 import edu.brown.cs.diad.dicore.DiadThread;
 import edu.brown.cs.diad.dicore.DiadValue;
 import edu.brown.cs.ivy.file.IvyLog;
+import edu.brown.cs.ivy.jcomp.JcompAstPattern;
+import edu.brown.cs.ivy.jcomp.JcompAstPattern.PatternMap;
 import edu.brown.cs.ivy.mint.MintConstants.CommandArgs;
 import edu.brown.cs.ivy.xml.IvyXmlWriter;
 
@@ -47,10 +49,10 @@ class DianalysisLocationHistory extends DianalysisHistory
 /*                                                                              */
 /********************************************************************************/
 
-private static BractAstPattern expr_pattern;
+private static JcompAstPattern expr_pattern;
 
 static {
-   expr_pattern = BractAstPattern.expression("Ex == Ey","Ex != Ey",
+   expr_pattern = JcompAstPattern.expression("Ex == Ey","Ex != Ey",
          "Ex.equals(Ey)","!Ex.equals(Ey)");
 }
 

@@ -45,6 +45,7 @@ import org.w3c.dom.Element;
 import edu.brown.cs.diad.dicontrol.DicontrolMain;
 import edu.brown.cs.diad.dicore.DiadRuntimeCallback;
 import edu.brown.cs.diad.dicore.DiadThread;
+import edu.brown.cs.diad.disource.DisourceFactory;
 import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.mint.MintConstants.CommandArgs;
 import edu.brown.cs.ivy.swing.SwingEventListenerList;
@@ -82,6 +83,7 @@ public DiruntimeManager(DicontrolMain ctrl)
 }
 
 
+
 /********************************************************************************/
 /*                                                                              */
 /*      Callback methods                                                        */
@@ -117,6 +119,19 @@ void fireThreadStateChanged(DiadThread th)
 Element sendBubblesMessage(String cmd,CommandArgs args,String xml)
 {
    return diad_control.sendBubblesMessage(cmd,args,xml);
+}
+
+
+Element waitForEvaluation(String id)
+{
+   return diad_control.waitForEvaluation(id); 
+}
+
+String findProjectForFile(File f)
+{
+   if (f == null) return null;
+   DisourceFactory src = diad_control.getSourceManager();
+   return src.getProjectForFile(f);
 }
 
 

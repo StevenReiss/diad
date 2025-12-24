@@ -85,7 +85,7 @@ private static CompilationUnit last_unit = null;
 /*                                                                              */
 /********************************************************************************/
 
-public DiadLocation(DicontrolMain ctrl,Element xml)
+public DiadLocation(DicontrolMain ctrl,Element xml,String proj)
 {
    String fnm = IvyXml.getAttrString(xml,"FILE");
    for_file = new File(fnm);
@@ -96,7 +96,7 @@ public DiadLocation(DicontrolMain ctrl,Element xml)
       if (len > 0) end_offset = start_offset+len;
       else end_offset = start_offset+1;
     }
-   project_name = IvyXml.getAttrString(xml,"PROJECT");
+   project_name = IvyXml.getAttrString(xml,"PROJECT",proj);
    if (project_name == null && ctrl != null) {
       project_name = ctrl.getSourceManager().getProjectForFile(for_file);
     }

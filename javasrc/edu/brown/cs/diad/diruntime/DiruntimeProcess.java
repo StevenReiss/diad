@@ -35,6 +35,7 @@
 package edu.brown.cs.diad.diruntime;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -57,6 +58,8 @@ private DiruntimeManager run_manager;
 private Map<String,DiruntimeThread> thread_map; 
 private String process_id;
 private boolean is_running;
+private Map<String,DiruntimeType> type_map;
+private Map<String,DiruntimeValueData> unique_values;
 
 
 /********************************************************************************/
@@ -71,6 +74,8 @@ DiruntimeProcess(DiruntimeManager mgr,Element xml)
    thread_map = new ConcurrentHashMap<>();
    process_id = IvyXml.getAttrString(xml,"PID");
    is_running = true;
+   type_map = new HashMap<>();
+   unique_values = new HashMap<>();
 }
 
 
@@ -98,6 +103,63 @@ DiruntimeManager getManager()           { return run_manager; }
 String getId()                          { return process_id; }
 
 boolean isRunning()                     { return is_running; }
+
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Local type access methods                                               */
+/*                                                                              */
+/********************************************************************************/
+
+DiruntimeType findType(String typ)
+{ 
+   synchronized (type_map) {
+      DiruntimeType bt = type_map.get(typ);
+      if (bt != null) return bt;
+    }
+   
+   DiruntimeType nbt = DiruntimeType.createNewType(this,typ); 
+   
+   synchronized (type_map) {
+      DiruntimeType bt = type_map.putIfAbsent(typ,nbt);
+      if (bt != null) return bt;
+    }
+   
+   return nbt;
+}
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Manage unique values                                                    */
+/*                                                                              */
+/********************************************************************************/
+
+DiruntimeValueData getUniqueValue(DiruntimeValueData bvd)
+{
+   if (bvd == null) return null;
+   switch (bvd.getKind()) {
+      case OBJECT :
+      case ARRAY :
+         String dnm = bvd.getValue();
+	 if (dnm != null && dnm.length() > 0) {
+            synchronized (unique_values) {
+               DiruntimeValueData nsvd = unique_values.get(dnm);
+               if (nsvd != null) {
+                  bvd.merge(nsvd);
+                  bvd = nsvd;
+                }
+               else unique_values.put(dnm,bvd);
+             }
+	  }
+	 break; 
+      default :
+         break;
+    }
+   
+   return bvd;
+}
 
 
 

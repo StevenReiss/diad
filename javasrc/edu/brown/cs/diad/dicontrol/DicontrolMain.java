@@ -273,6 +273,13 @@ public Element sendDiadMessage(String cmd,CommandArgs args,String xml)
    return dicontrol_monitor.sendDiadMessage(cmd,args,xml); 
 }
 
+public Element waitForEvaluation(String id)
+{
+   return dicontrol_monitor.waitForEvaluation(id);
+}
+
+
+
 /********************************************************************************/
 /*										*/
 /*	Argument processing							*/
@@ -446,19 +453,6 @@ private final class RuntimeCallback implements DiadRuntimeCallback {
 }
    
 }       // end of inner class DiadRuntimeCallback
-
-
-
-
-/********************************************************************************/
-/*										*/
-/*	Setup bedrock for debugging						*/
-/*										*/
-/********************************************************************************/
-
-
-
-
 
 
 

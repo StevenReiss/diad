@@ -34,7 +34,7 @@
 
 package edu.brown.cs.diad.diruntime;
 
-
+import edu.brown.cs.diad.dicore.DiadValue;
 
 public interface DiruntimeConstants
 {
@@ -98,6 +98,20 @@ enum RunThreadType {
    UI,
    USER,
 }
+
+interface DiruntimeGenericValue { }
+
+
+interface DiruntimeDeferredValue extends DiruntimeGenericValue {
+   
+   DiadValue getValue();
+   
+}
+
+String HASH_CODE_FIELD = "@hashCode";
+String TO_STRING_FIELD = "@toString";
+String CURRENT_THREAD_FIELD = "@currentThread";
+String CURRENT_THREAD_NAME_FIELD = "@currentThreadName";
 
 
 }	// end of interface DiRuntimeConstants

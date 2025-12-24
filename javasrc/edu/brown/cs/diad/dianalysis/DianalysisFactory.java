@@ -63,6 +63,8 @@ public class DianalysisFactory implements DianalysisConstants
 
 private DicontrolMain   diad_control;
 private Set<File>       loaded_files;
+private Set<File>       added_flies;
+private Set<File>       seede_files;
 private boolean         done_allfiles;
 private DiadAnalysisState analysis_state;
 private String          session_id;
@@ -79,6 +81,9 @@ public DianalysisFactory(DicontrolMain ctrl)
 {
    diad_control = ctrl;
    loaded_files = new HashSet<>();
+   added_flies = new HashSet<>();
+   seede_files = null;
+   
    done_allfiles = false;
    analysis_state = DiadAnalysisState.NONE;
    session_id = null;

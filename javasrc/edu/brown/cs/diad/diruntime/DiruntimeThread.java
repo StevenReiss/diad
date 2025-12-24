@@ -36,9 +36,11 @@ package edu.brown.cs.diad.diruntime;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.w3c.dom.Element;
 
+import edu.brown.cs.diad.dicore.DiadStackFrame;
 import edu.brown.cs.diad.dicore.DiadThread;
 import edu.brown.cs.diad.dicore.DiadValue;
 import edu.brown.cs.ivy.file.IvyLog;
@@ -67,6 +69,8 @@ private int num_frames;
 private DiruntimeStack call_stack;
 
 private static final Map<String,RunThreadType> KNOWN_THREADS;
+private static AtomicInteger eval_counter = new AtomicInteger();
+
 
 static {
    KNOWN_THREADS = new HashMap<>();
@@ -292,6 +296,26 @@ void setException(String exc) {
    exception_type = exc;
 }
 
+DiruntimeType findType(String typ)
+{
+   return for_process.findType(typ);  
+}
+
+DiruntimeValueData getUniqueValue(DiruntimeValueData dvd)
+{
+   return for_process.getUniqueValue(dvd); 
+}
+
+DiruntimeType intType()
+{
+   return findType("int");
+}
+
+DiruntimeType stringType()
+{
+   return findType("java.lang.String");
+}
+
 
 /********************************************************************************/
 /*                                                                              */
@@ -327,8 +351,103 @@ void setException(String exc) {
 
 @Override public DiadValue evaluate(String expr)
 {
+   String eid = "DIAD_E_" + eval_counter.incrementAndGet();
+   // expr = "edu.brown.cs.seede.poppy.PoppyValue.register(" + expr + ")";
+   
+   DiadStackFrame frm = getStack().getUserFrame();
+   String proj = for_process.getManager().findProjectForFile(frm.getSourceFile());
+   CommandArgs args = new CommandArgs("THREAD",thread_id,
+	 "FRAME",frm.getFrameId(),"BREAK",false,"EXPR",expr,
+         "IMPLICIT",true,
+         "PROJECT",proj,
+	 "LEVEL",3,"ARRAY",-1,"REPLYID",eid);
+   args.put("SAVEID",eid);
+   Element xml = getManager().sendBubblesMessage("EVALUATE",args,null);
+   if (IvyXml.isElement(xml,"RESULT")) {
+      Element root = getManager().waitForEvaluation(eid); 
+      Element v = IvyXml.getChild(root,"EVAL");
+      Element v1 = IvyXml.getChild(v,"VALUE");
+      String assoc = expr;
+      if (args.get("SAVEID") != null) {
+	 assoc = "*" + args.get("SAVEID").toString();
+       }
+      DiruntimeValueData svd = new DiruntimeValueData(this,v1,assoc);
+      svd = getUniqueValue(svd);
+      return svd.getDiadValue(); 
+    }
    return null;
 }
+
+
+Element evaluateFields(String expr)
+{
+   DiadStackFrame frm = getStack().getUserFrame();
+   String proj = getManager().findProjectForFile(frm.getSourceFile());  
+   
+   CommandArgs args = new CommandArgs("FRAME",frm.getFrameId(),
+         "THREAD",thread_id,
+         "PROJECT",proj,
+         "DEPTH",1,"ARRAY",-1);
+   String var = "<VAR>" + IvyXml.xmlSanitize(expr) + "</VAR>";
+   Element xml = getManager().sendBubblesMessage("VARVAL",args,var);
+   if (IvyXml.isElement(xml,"RESULT")) {
+      return IvyXml.getChild(xml,"VALUE");
+    }
+   
+   return null;
+}
+
+
+
+DiruntimeValueData evaluateExpr(String expr)
+{
+   String eid = "DIAD_E_" + eval_counter.incrementAndGet();
+   // expr = "edu.brown.cs.seede.poppy.PoppyValue.register(" + expr + ")";
+   
+   DiadStackFrame frm = getStack().getUserFrame();
+   String proj = getManager().findProjectForFile(frm.getSourceFile());  
+   
+   CommandArgs args = new CommandArgs("THREAD",thread_id,
+	 "FRAME",frm.getFrameId(),"BREAK",false,"EXPR",expr,
+         "IMPLICIT",true,
+         "PROJECT",proj,
+	 "LEVEL",3,"ARRAY",-1,"REPLYID",eid);
+   args.put("SAVEID",eid);
+   Element xml = getManager().sendBubblesMessage("EVALUATE",args,null);
+   if (IvyXml.isElement(xml,"RESULT")) {
+      Element root = getManager().waitForEvaluation(eid);
+      Element v = IvyXml.getChild(root,"EVAL");
+      Element v1 = IvyXml.getChild(v,"VALUE");
+      String assoc = expr;
+      if (args.get("SAVEID") != null) {
+	 assoc = "*" + args.get("SAVEID").toString();
+       }
+      DiruntimeValueData svd = new DiruntimeValueData(this,v1,assoc);
+      svd = getUniqueValue(svd);
+      return svd;
+    }
+   return null;
+}
+
+
+DiruntimeValueData evaluateHashCode(String expr)
+{
+   DiadStackFrame frm = getStack().getUserFrame();
+   String proj = getManager().findProjectForFile(frm.getSourceFile());  
+   
+   CommandArgs args = new CommandArgs("FRAME",frm.getFrameId(),
+         "THREAD",thread_id,
+         "PROJECT",proj,
+         "DEPTH",1,"ARRAY",-1);
+   String var = "<VAR>" + IvyXml.xmlSanitize(expr) + "</VAR>";
+   Element xml = getManager().sendBubblesMessage("VARVAL",args,var);
+   if (IvyXml.isElement(xml,"RESULT")) {
+      return new DiruntimeValueData(this,IvyXml.getChild(xml,"VALUE"),null);
+    }
+   
+   return null;
+}
+
 
 
 /********************************************************************************/

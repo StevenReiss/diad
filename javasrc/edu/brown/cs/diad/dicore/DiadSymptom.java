@@ -35,6 +35,9 @@
 
 package edu.brown.cs.diad.dicore;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import edu.brown.cs.diad.dicore.DiadConstants.DiadSymptomType;
 import edu.brown.cs.diad.dicore.DiadConstants.DiadValueOperator;
 import edu.brown.cs.ivy.xml.IvyXmlWriter;
@@ -52,6 +55,23 @@ double getTargetPrecision();
 
 void setOriginalValue(String val);
 void setTargetValue(String val);
+
+default List<String> ignorePatterns() {
+   return new ArrayList<>();
+}
+default boolean ignoreMain() {
+   return false;
+}
+default boolean ignoreTests() {
+   return true;
+}
+default boolean ignoreDriver() {
+   return true;
+}
+
+default DiadLocation getBugLocation() {
+   return null;
+}
 
 void outputXml(IvyXmlWriter xw);  
 

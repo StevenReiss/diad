@@ -99,6 +99,10 @@ enum DiadAnalysisFileMode {
    USER_FILES,
 }
 
+enum DiadValueKind {
+   UNKNOWN, PRIMITIVE, STRING, CLASS, OBJECT, ARRAY
+}
+
 double DEFAULT_PRIORITY = 0.5;
 
 }       // end of interface DicoreConstants
