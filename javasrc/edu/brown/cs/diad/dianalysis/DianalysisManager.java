@@ -39,11 +39,13 @@ import org.eclipse.jdt.core.dom.PackageDeclaration;
 import org.w3c.dom.Element;
 
 import edu.brown.cs.diad.dicontrol.DicontrolMain;
+import edu.brown.cs.diad.dicore.DiadLocation;
 import edu.brown.cs.diad.dicore.DiadStackFrame;
+import edu.brown.cs.diad.dicore.DiadSymptom;
 import edu.brown.cs.diad.dicore.DiadThread;
 import edu.brown.cs.diad.dicore.DiadConstants.DiadAnalysisFileMode;
 import edu.brown.cs.diad.dicore.DiadConstants.DiadAnalysisState;
-import edu.brown.cs.diad.disource.DisourceFactory;
+import edu.brown.cs.diad.disource.DisourceManager;
 import edu.brown.cs.ivy.file.IvyFile;
 import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.jcomp.JcompAst;
@@ -51,7 +53,7 @@ import edu.brown.cs.ivy.mint.MintConstants.CommandArgs;
 import edu.brown.cs.ivy.xml.IvyXml;
 import edu.brown.cs.ivy.xml.IvyXmlWriter;
 
-public class DianalysisFactory implements DianalysisConstants
+public class DianalysisManager implements DianalysisConstants
 {
 
 
@@ -63,8 +65,6 @@ public class DianalysisFactory implements DianalysisConstants
 
 private DicontrolMain   diad_control;
 private Set<File>       loaded_files;
-private Set<File>       added_flies;
-private Set<File>       seede_files;
 private boolean         done_allfiles;
 private DiadAnalysisState analysis_state;
 private String          session_id;
@@ -77,12 +77,10 @@ private String          session_id;
 /*                                                                              */
 /********************************************************************************/
 
-public DianalysisFactory(DicontrolMain ctrl)
+public DianalysisManager(DicontrolMain ctrl)
 {
    diad_control = ctrl;
    loaded_files = new HashSet<>();
-   added_flies = new HashSet<>();
-   seede_files = null;
    
    done_allfiles = false;
    analysis_state = DiadAnalysisState.NONE;
@@ -111,12 +109,10 @@ public DianalysisFactory(DicontrolMain ctrl)
 
 DicontrolMain   getDiadControl()                        { return diad_control; }
 
-DisourceFactory getSourceManager()
+DisourceManager getSourceManager()
 {
    return diad_control.getSourceManager(); 
 }
-
-
 
 
 /********************************************************************************/
@@ -128,30 +124,10 @@ DisourceFactory getSourceManager()
 public void addFiles(DiadAnalysisFileMode mode,Collection<File> files,DiadThread thrd)
 { 
    Set<File> use = new HashSet<>();
-   Set<File> add = null;
    
    IvyLog.logD("DIANALYSIS","Add files for " + thrd.getThreadName() + " " + mode);
    
-   switch (mode) {
-      case ALL_FILES :
-         if (!done_allfiles){
-            add = findAllSourceFiles();
-            done_allfiles = true;
-          } 
-         break;
-      case COMPUTED_FILES:
-         add = findComputedFiles(thrd);
-         break;
-      case FAIT_FILES :
-         add = findFaitFiles(thrd);
-         break;
-      case STACK_FILES :
-         add = findStackFiles(thrd);
-         break;
-      case USER_FILES :
-         break;
-    }
-   
+   Set<File> add = getInitialFileSet(mode,thrd);
    if (files != null) use.addAll(files);
    if (add != null) use.addAll(add);
    
@@ -181,12 +157,6 @@ public void addFiles(DiadAnalysisFileMode mode,Collection<File> files,DiadThread
             analysis_state = DiadAnalysisState.PENDING;
 	  }
        }
-      synchronized (this) {
-         if (analysis_state == DiadAnalysisState.FILES) {
-            analysis_state = DiadAnalysisState.READY;
-            notifyAll();
-          }
-       }
     }
    else {
       IvyLog.logD("DIANALYSIS","No files to add for " + thrd.getThreadName() + " " +
@@ -194,6 +164,47 @@ public void addFiles(DiadAnalysisFileMode mode,Collection<File> files,DiadThread
     }
 }
 
+
+private Set<File> getInitialFileSet(DiadAnalysisFileMode mode,DiadThread thrd)
+{
+   Set<File> add = null;
+   
+   switch (mode) {
+      case ALL_FILES :
+         if (!done_allfiles){
+            add = findAllSourceFiles();
+            done_allfiles = true;
+          } 
+         break;
+      case COMPUTED_FILES:
+         add = findComputedFiles(thrd);
+         break;
+      case FAIT_FILES :
+         add = findFaitFiles(thrd);
+         break;
+      case STACK_FILES :
+         add = findStackFiles(thrd);
+         break;
+      case USER_FILES :
+         break;
+    }
+   
+   return add;
+}
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Find initial set of fault locations                                     */
+/*                                                                              */
+/********************************************************************************/
+
+public Collection<DiadLocation> findInitialLocations(DiadSymptom symp,DiadThread thrd)
+{
+   DianalysisLocations locs = new DianalysisLocations(this,symp,thrd);
+   
+   return locs.findInitialLocations();
+}
 
 /********************************************************************************/
 /*                                                                              */
@@ -218,6 +229,12 @@ private void startAnalysis()
     }
 }
 
+
+/********************************************************************************/
+/*                                                                              */
+/*      Send messages                                                           */
+/*                                                                              */
+/********************************************************************************/
 
 
 Element sendFaitMessage(String cmd,CommandArgs args,String cnts)
@@ -347,6 +364,8 @@ private Set<File> findFaitFiles(DiadThread thrd) throws RuntimeException
          mthds.add(mnm+snm);
        }
     }
+   
+   waitForAnalysis();
    
    IvyXmlWriter xw = new IvyXmlWriter();
    for (String s : mthds) {

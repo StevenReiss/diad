@@ -45,7 +45,7 @@ import edu.brown.cs.diad.dicore.DiadStack;
 import edu.brown.cs.diad.dicore.DiadStackFrame;
 import edu.brown.cs.diad.dicore.DiadSymptom;
 import edu.brown.cs.diad.dicore.DiadThread;
-import edu.brown.cs.diad.disource.DisourceFactory;
+import edu.brown.cs.diad.disource.DisourceManager;
 import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.jcomp.JcompAst;
 import edu.brown.cs.ivy.mint.MintConstants.CommandArgs;
@@ -62,7 +62,7 @@ abstract class DianalysisHistory implements DianalysisConstants
 /*                                                                              */
 /********************************************************************************/
 
-private DianalysisFactory for_analysis;
+private DianalysisManager for_analysis;
 private DiadSymptom for_symptom;
 private DiadThread  for_thread;
 private DiadStackFrame for_frame;
@@ -75,7 +75,7 @@ private DiadNodeContext node_context;
 /*                                                                              */
 /********************************************************************************/
 
-DianalysisHistory(DianalysisFactory fac,DiadSymptom symp,DiadThread thrd)
+DianalysisHistory(DianalysisManager fac,DiadSymptom symp,DiadThread thrd)
 {
    for_analysis = fac;
    for_symptom = symp;
@@ -92,12 +92,12 @@ DianalysisHistory(DianalysisFactory fac,DiadSymptom symp,DiadThread thrd)
 /*                                                                              */
 /********************************************************************************/
 
-protected DianalysisFactory getAnalysis()
+protected DianalysisManager getAnalysis()
 {
    return for_analysis;
 }
 
-protected DisourceFactory getSourceManager()
+protected DisourceManager getSourceManager()
 {
    return for_analysis.getSourceManager(); 
 }

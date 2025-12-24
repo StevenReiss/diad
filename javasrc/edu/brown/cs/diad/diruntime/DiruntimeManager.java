@@ -45,7 +45,7 @@ import org.w3c.dom.Element;
 import edu.brown.cs.diad.dicontrol.DicontrolMain;
 import edu.brown.cs.diad.dicore.DiadRuntimeCallback;
 import edu.brown.cs.diad.dicore.DiadThread;
-import edu.brown.cs.diad.disource.DisourceFactory;
+import edu.brown.cs.diad.disource.DisourceManager;
 import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.mint.MintConstants.CommandArgs;
 import edu.brown.cs.ivy.swing.SwingEventListenerList;
@@ -130,7 +130,7 @@ Element waitForEvaluation(String id)
 String findProjectForFile(File f)
 {
    if (f == null) return null;
-   DisourceFactory src = diad_control.getSourceManager();
+   DisourceManager src = diad_control.getSourceManager();
    return src.getProjectForFile(f);
 }
 

@@ -36,7 +36,7 @@ import edu.brown.cs.diad.dicore.DiadStack;
 import edu.brown.cs.diad.dicore.DiadStackFrame;
 import edu.brown.cs.diad.dicore.DiadSymptom;
 import edu.brown.cs.diad.dicore.DiadThread;
-import edu.brown.cs.diad.disource.DisourceFactory;
+import edu.brown.cs.diad.disource.DisourceManager;
 
 class DicontrolSymptomFinder implements DicontrolConstants
 {
@@ -101,7 +101,7 @@ DiadSymptom findSymptom()
        }
     }
    
-   DisourceFactory srcfac = diad_control.getSourceManager();
+   DisourceManager srcfac = diad_control.getSourceManager();
    ASTNode stmt = srcfac.getSourceNode(null,frm.getSourceFile(),
          0,frm.getLineNumber(),false,true);
    

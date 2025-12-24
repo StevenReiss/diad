@@ -46,12 +46,13 @@ import java.util.Properties;
 
 import org.w3c.dom.Element;
 
-import edu.brown.cs.diad.dianalysis.DianalysisFactory;
+import edu.brown.cs.diad.dianalysis.DianalysisManager;
 import edu.brown.cs.diad.dicore.DiadException;
 import edu.brown.cs.diad.dicore.DiadRuntimeCallback;
 import edu.brown.cs.diad.dicore.DiadThread;
+import edu.brown.cs.diad.diexecute.DiexecuteManager;
 import edu.brown.cs.diad.diruntime.DiruntimeManager;
-import edu.brown.cs.diad.disource.DisourceFactory;
+import edu.brown.cs.diad.disource.DisourceManager;
 import edu.brown.cs.diad.ditest.DitestFactory;
 import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.mint.MintConstants.CommandArgs;
@@ -92,9 +93,10 @@ private File input_file;
 private boolean server_mode;
 private DiruntimeManager run_manager;
 private Map<DiadThread,DicontrolCandidate> debug_candidates;
-private DisourceFactory source_factory;
+private DisourceManager source_factory;
 private DitestFactory test_factory;
-private DianalysisFactory analysis_factory;
+private DianalysisManager analysis_manager;
+private DiexecuteManager execute_manager;
 private Properties  diad_properties;
  
 
@@ -142,7 +144,8 @@ private DicontrolMain(String [] args)
    run_manager.addRuntimeListener(new RuntimeCallback());
    
    source_factory = null;
-   analysis_factory = null;
+   analysis_manager = null;
+   execute_manager = null;
    
    scanArgs(args);
 }
@@ -159,9 +162,11 @@ DicontrolMonitor getMessageServer()             { return dicontrol_monitor; }
 
 DiruntimeManager getRunManager()                { return run_manager; }
 
-public DisourceFactory getSourceManager()       { return source_factory; }
+public DisourceManager getSourceManager()       { return source_factory; }
 
-DianalysisFactory getAnalysisManager()          { return analysis_factory; }
+DianalysisManager getAnalysisManager()          { return analysis_manager; }
+
+DiexecuteManager getExecuteManager()            { return execute_manager; }
 
 DitestFactory getTestManager()
 {
@@ -189,8 +194,9 @@ public void setupMessageServer(String mintid)
 
 public void bubblesReady()
 {
-   source_factory = new DisourceFactory(this);
-   analysis_factory = new DianalysisFactory(this);  
+   source_factory = new DisourceManager(this);
+   analysis_manager = new DianalysisManager(this);  
+   execute_manager = new DiexecuteManager(this);
 }
 
 

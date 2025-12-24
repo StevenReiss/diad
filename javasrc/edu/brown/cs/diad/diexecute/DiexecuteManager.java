@@ -1,8 +1,8 @@
 /********************************************************************************/
 /*                                                                              */
-/*              DianalysisExpressionHistory.java                                */
+/*              DiexecuteManager.java                                           */
 /*                                                                              */
-/*      Find starting points for expression having wrong value                  */
+/*      Manager for execution access through SEEDE                              */
 /*                                                                              */
 /********************************************************************************/
 /*      Copyright 2025 Brown University -- Steven P. Reiss                    */
@@ -20,17 +20,17 @@
 
 
 
-package edu.brown.cs.diad.dianalysis;
+package edu.brown.cs.diad.diexecute;
 
-import org.w3c.dom.Element;
+import java.util.Collection;
 
-import edu.brown.cs.diad.dicore.DiadException;
+import edu.brown.cs.diad.dicontrol.DicontrolMain;
+import edu.brown.cs.diad.dicore.DiadLocation;
+import edu.brown.cs.diad.dicore.DiadStackFrame;
 import edu.brown.cs.diad.dicore.DiadSymptom;
 import edu.brown.cs.diad.dicore.DiadThread;
-import edu.brown.cs.ivy.mint.MintConstants.CommandArgs;
-import edu.brown.cs.ivy.xml.IvyXmlWriter;
 
-class DianalysisExpressionHistory extends DianalysisHistory
+public class DiexecuteManager implements DiexecuteConstants
 {
 
 
@@ -40,9 +40,7 @@ class DianalysisExpressionHistory extends DianalysisHistory
 /*                                                                              */
 /********************************************************************************/
 
-private String expression_name;
-private String current_value;
-
+private DicontrolMain   diad_control;;
 
 
 /********************************************************************************/
@@ -51,67 +49,42 @@ private String current_value;
 /*                                                                              */
 /********************************************************************************/
 
-DianalysisExpressionHistory(DianalysisManager fac,DiadSymptom symp,DiadThread thrd)
-{ 
-   super(fac,symp,thrd);
-   expression_name = symp.getSymptomItem();
-   current_value = symp.getOriginalValue();
-//    shouldbe_value = prob.getTargetValue();
-}
-
-
-/********************************************************************************/
-/*                                                                              */
-/*      Process expression query                                                */
-/*                                                                              */
-/********************************************************************************/
-
-@Override protected void process(IvyXmlWriter xw) throws DiadException 
+public DiexecuteManager(DicontrolMain ctrl)
 {
-   Element hrslt = getHistoryData();
-   outputGraph(hrslt,xw);
+   diad_control = ctrl;
 }
 
 
 
 /********************************************************************************/
 /*                                                                              */
-/*      Set up appropriate query                                                */
+/*      Access methods                                                          */
 /*                                                                              */
 /********************************************************************************/
 
-private Element getHistoryData()
+DicontrolMain getDiadControl()                  { return diad_control; }
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      <comment here>                                                          */
+/*                                                                              */
+/********************************************************************************/
+
+public DiadStackFrame getStartingFrame(DiadSymptom symp,DiadThread thrd,
+      Collection<DiadLocation> faults)
 {
-   getAnalysis().waitForAnalysis();
+   DiexecuteStartFinder fndr = new DiexecuteStartFinder(this,
+         thrd,faults);  
    
-   CommandArgs args = new CommandArgs("QTYPE","EXPRESSION",
-         "CURRENT",current_value,
-         "TOKEN",expression_name);
-   args = addCommandArgs(args);
-   
-   String qxml = null;
-   if (getNodeContext() != null) { 
-      IvyXmlWriter xw = new IvyXmlWriter();
-      getNodeContext().outputXml("EXPRESSION",xw);
-      qxml = xw.toString();
-      xw.close();
-    }
-   String sxml = getXmlForStack();
-   if (qxml == null) qxml = sxml;
-   else if (sxml != null) qxml += sxml; 
-   
-   Element rslt = getAnalysis().sendFaitMessage("FLOWQUERY",args,qxml);
-   
-   return rslt;
+   return fndr.findStartingFrame(); 
 }
 
 
-
-
-}       // end of class DianalysisExpressionHistory
+}       // end of class DiexecuteManager
 
 
 
 
-/* end of DianalysisExpressionHistory.java */
+/* end of DiexecuteManager.java */
 

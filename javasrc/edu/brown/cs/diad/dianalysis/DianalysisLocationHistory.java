@@ -64,7 +64,7 @@ static {
 /*                                                                              */
 /********************************************************************************/
 
-DianalysisLocationHistory(DianalysisFactory fac,DiadSymptom symp,DiadThread thrd)
+DianalysisLocationHistory(DianalysisManager fac,DiadSymptom symp,DiadThread thrd)
 {
    super(fac,symp,thrd);
 }

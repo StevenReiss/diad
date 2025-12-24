@@ -28,12 +28,14 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import edu.brown.cs.diad.dianalysis.DianalysisFactory;
+import edu.brown.cs.diad.dianalysis.DianalysisManager;
 import edu.brown.cs.diad.dicore.DiadCandidateCallback;
+import edu.brown.cs.diad.dicore.DiadLocation;
 import edu.brown.cs.diad.dicore.DiadStack;
 import edu.brown.cs.diad.dicore.DiadStackFrame;
 import edu.brown.cs.diad.dicore.DiadSymptom;
 import edu.brown.cs.diad.dicore.DiadThread;
+import edu.brown.cs.diad.diexecute.DiexecuteManager;
 import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.swing.SwingEventListenerList;
 import edu.brown.cs.ivy.xml.IvyXmlWriter;
@@ -53,6 +55,8 @@ private DiadThread      for_thread;
 private DiadStackFrame  for_frame;
 private DiadCandidateState  candidate_state; 
 private DiadSymptom     candidate_symptom;
+private Collection<DiadLocation> location_set;
+private DiadStackFrame  start_frame;
 private String          candidate_id;
 private SwingEventListenerList<DiadCandidateCallback> candidate_listeners;
 private CandidateThread candidate_processor;
@@ -75,10 +79,12 @@ DicontrolCandidate(DicontrolMain ctrl,DiadThread thrd)
    for_thread = thrd;
    candidate_state = DiadCandidateState.INITIAL; 
    candidate_symptom = null;
+   location_set = null;
    candidate_listeners = new SwingEventListenerList<>(DiadCandidateCallback.class);
    candidate_processor = null;
    candidate_id = "DIAD_ " + candidate_counter.incrementAndGet();
    candidate_files = new HashSet<>();
+   start_frame = null;
    file_mode = diad_control.getProperty("Diad.file.mode",
          DiadAnalysisFileMode.FAIT_FILES);
 }
@@ -220,6 +226,10 @@ private final class CandidateThread extends Thread {
     }
    
    @Override public void run() {
+      DianalysisManager anal = diad_control.getAnalysisManager();
+      DiexecuteManager exec = diad_control.getExecuteManager();
+      DiadSymptom symptom = null;
+      
       for ( ; ; ) {
          try {
             switch (candidate_state) {
@@ -237,10 +247,10 @@ private final class CandidateThread extends Thread {
                   DicontrolSymptomFinder finder =
                      new DicontrolSymptomFinder(diad_control,for_thread,
                            stk,for_frame);
-                  DiadSymptom sym = finder.findSymptom();
+                  symptom = finder.findSymptom();
                   if (checkInterrupted()) break;
-                  if (sym != null) {
-                     candidate_symptom = sym;
+                  if (symptom != null) {
+                     candidate_symptom = symptom;
                      setState(DiadCandidateState.SYMPTOM_FOUND);
                    }
                   else {
@@ -255,7 +265,6 @@ private final class CandidateThread extends Thread {
                case INTERUPTED : 
                   return;
                case SYMPTOM_FOUND :
-                  DianalysisFactory anal = diad_control.getAnalysisManager();
                   if (checkInterrupted()) break;
                   anal.addFiles(file_mode,candidate_files,for_thread);  
                   if (checkInterrupted()) break;
@@ -269,13 +278,36 @@ private final class CandidateThread extends Thread {
                    }
                   break;
                case ANALYSIS_DONE :
-                  // find initial locations
+                  location_set = null;
+                  if (checkInterrupted()) break;
+                  Collection<DiadLocation> locs = anal.findInitialLocations(
+                        candidate_symptom,for_thread);
+                  if (checkInterrupted()) break;
+                  if (locs == null ||locs.isEmpty()) {
+                     setState(DiadCandidateState.NO_LOCATIONS); 
+                   } 
+                  else {
+                     location_set = locs;
+                     setState(DiadCandidateState.INITIAL_LOCATIONS);
+                   }
                   break; 
                case INITIAL_LOCATIONS :
-                  // find starting frame *ROSE ValidateStartLocator)
-                  break;
+                  start_frame = null;
+                  if (checkInterrupted()) break;
+                  start_frame = exec.getStartingFrame(candidate_symptom,
+                        for_thread,location_set);
+                  if (checkInterrupted()) break;
+                  if (start_frame == null) {
+                     setState(DiadCandidateState.NO_START_FRAME);
+                   }
+                  else {
+                     setState(DiadCandidateState.STARTING_FRAME_FOUND);
+                   }
+                  return;
                case STARTING_FRAME_FOUND :
-                  // start execution
+                  // get initial seede execution that matches fault
+                  // ValidateContext.setupBaseExecution (ValidateFactory.createValidate)
+                  // return a DiadValidator (ValidateContext)
                   break;
                case EXECUTION_DONE :
                   // candidate has been processed
@@ -291,6 +323,7 @@ private final class CandidateThread extends Thread {
           }
        }
     }
+   
    
    private boolean checkInterrupted() {
       if (isInterrupted()) {

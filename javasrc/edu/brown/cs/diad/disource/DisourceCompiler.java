@@ -63,7 +63,7 @@ class DisourceCompiler implements DisourceConstants
 /********************************************************************************/
 
 private DicontrolMain   diad_control;
-private DisourceFactory source_factory;
+private DisourceManager source_factory;
 private Map<SourceFile,JcompProject> project_map;
 private Map<String,JcodeFactory> binary_map;
 private Map<File,SourceFile>	file_map;
@@ -76,7 +76,7 @@ private JcompControl		jcomp_control;
 /*										*/
 /********************************************************************************/
 
-DisourceCompiler(DicontrolMain sm,DisourceFactory fac)
+DisourceCompiler(DicontrolMain sm,DisourceManager fac)
 {
    diad_control = sm;
    source_factory = fac;

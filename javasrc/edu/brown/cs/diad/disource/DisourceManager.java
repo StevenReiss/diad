@@ -34,7 +34,7 @@ import edu.brown.cs.ivy.file.IvyFile;
 import edu.brown.cs.ivy.mint.MintConstants.CommandArgs;
 import edu.brown.cs.ivy.xml.IvyXml;
 
-public class DisourceFactory implements DisourceConstants
+public class DisourceManager implements DisourceConstants
 {
 
 
@@ -57,7 +57,7 @@ private String          default_project;
 /*                                                                              */
 /********************************************************************************/
 
-public DisourceFactory(DicontrolMain ctrl)
+public DisourceManager(DicontrolMain ctrl)
 {
    diad_control = ctrl;
    project_map = new HashMap<>();

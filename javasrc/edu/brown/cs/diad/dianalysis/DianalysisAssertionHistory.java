@@ -62,7 +62,7 @@ private static int THIS_INDEX = 999999;
 /*                                                                              */
 /********************************************************************************/
 
-DianalysisAssertionHistory(DianalysisFactory fac,DiadSymptom symp,DiadThread thrd)
+DianalysisAssertionHistory(DianalysisManager fac,DiadSymptom symp,DiadThread thrd)
 {
   super(fac,symp,thrd);
 }

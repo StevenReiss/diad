@@ -77,7 +77,7 @@ private String exception_type;
 /*                                                                              */
 /********************************************************************************/
 
-DianalysisExceptionHistory(DianalysisFactory fac,DiadSymptom symp,DiadThread thrd)
+DianalysisExceptionHistory(DianalysisManager fac,DiadSymptom symp,DiadThread thrd)
 {
    super(fac,symp,thrd);
    

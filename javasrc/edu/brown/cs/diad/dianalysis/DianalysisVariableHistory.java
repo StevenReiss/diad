@@ -54,7 +54,7 @@ private String shouldbe_value;
 /*                                                                              */
 /********************************************************************************/
 
-DianalysisVariableHistory(DianalysisFactory anal,DiadSymptom symp,DiadThread thrd)
+DianalysisVariableHistory(DianalysisManager anal,DiadSymptom symp,DiadThread thrd)
 {
    super(anal,symp,thrd);
    variable_name = symp.getSymptomItem();
