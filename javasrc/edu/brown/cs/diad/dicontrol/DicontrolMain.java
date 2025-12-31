@@ -164,7 +164,7 @@ DiruntimeManager getRunManager()                { return run_manager; }
 
 public DisourceManager getSourceManager()       { return source_factory; }
 
-DianalysisManager getAnalysisManager()          { return analysis_manager; }
+public DianalysisManager getAnalysisManager()   { return analysis_manager; }
 
 DiexecuteManager getExecuteManager()            { return execute_manager; }
 
@@ -233,6 +233,47 @@ public int getProperty(String id,int dflt)
       return Integer.parseInt(s);
     } 
    catch (NumberFormatException e) { }
+   
+   return dflt;
+}
+
+
+public long getProperty(String id,long dflt)
+{
+   String s = getProperty(id);
+   if (s == null || s.isEmpty()) return dflt;
+   
+   try {
+      return Long.parseLong(s);
+    } 
+   catch (NumberFormatException e) { }
+   
+   return dflt;
+}
+
+
+public double getProperty(String id,double dflt)
+{
+   String s = getProperty(id);
+   if (s == null || s.isEmpty()) return dflt;
+   
+   try {
+      return Double.parseDouble(s);
+    } 
+   catch (NumberFormatException e) { }
+   
+   return dflt;
+}
+
+
+
+public boolean getProperty(String id,boolean dflt)
+{
+   String s = getProperty(id);
+   if (s == null || s.isEmpty()) return dflt;
+   
+   if ("tTyY1".indexOf(s.charAt(0)) >= 0) return true;
+   else if ("fFnN0".indexOf(s.charAt(0)) >= 0) return false;
    
    return dflt;
 }

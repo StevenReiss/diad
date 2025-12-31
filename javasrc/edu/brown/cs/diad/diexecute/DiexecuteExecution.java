@@ -1,8 +1,8 @@
 /********************************************************************************/
 /*                                                                              */
-/*              DiexecuteManager.java                                           */
+/*              DiexecuteExecution.java                                         */
 /*                                                                              */
-/*      Manager for execution access through SEEDE                              */
+/*      Representation of a SEEDE execution                                     */
 /*                                                                              */
 /********************************************************************************/
 /*      Copyright 2025 Brown University -- Steven P. Reiss                    */
@@ -22,23 +22,15 @@
 
 package edu.brown.cs.diad.diexecute;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-
 import org.w3c.dom.Element;
 
 import edu.brown.cs.diad.dicontrol.DicontrolMain;
-import edu.brown.cs.diad.dicore.DiadLocation;
-import edu.brown.cs.diad.dicore.DiadStackFrame;
-import edu.brown.cs.diad.dicore.DiadSymptom;
-import edu.brown.cs.diad.dicore.DiadThread;
-import edu.brown.cs.diad.dicore.DiadTrace;
+import edu.brown.cs.diad.dicore.DiadRepair;
 import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.mint.MintConstants.CommandArgs;
 import edu.brown.cs.ivy.xml.IvyXml;
 
-        public class DiexecuteManager implements DiexecuteConstants
+class DiexecuteExecution implements DiexecuteConstants
 {
 
 
@@ -48,8 +40,14 @@ import edu.brown.cs.ivy.xml.IvyXml;
 /*                                                                              */
 /********************************************************************************/
 
-private DicontrolMain   diad_control;;
-private Map<String,DiexecuteExecution> exec_map;
+
+enum ExecState { INITIAL, PENDING, READY };
+
+private String          session_id;
+private DiexecuteTrace  seede_result;
+private ExecState       exec_state;
+private DiexecuteBaseExecution for_context;
+
 
 
 /********************************************************************************/
@@ -58,10 +56,12 @@ private Map<String,DiexecuteExecution> exec_map;
 /*                                                                              */
 /********************************************************************************/
 
-public DiexecuteManager(DicontrolMain ctrl)
+DiexecuteExecution(String sid,DiexecuteBaseExecution ctx,DiadRepair repair)
 {
-   diad_control = ctrl;
-   exec_map = new HashMap<>();
+   session_id = sid;
+   for_context = ctx;
+   seede_result = null;
+   exec_state = ExecState.INITIAL;
 }
 
 
@@ -72,98 +72,110 @@ public DiexecuteManager(DicontrolMain ctrl)
 /*                                                                              */
 /********************************************************************************/
 
-DicontrolMain getDiadControl()                  { return diad_control; }
+String getSessionId()                          { return session_id; }
 
-
-/********************************************************************************/
-/*                                                                              */
-/*      Find the starting frame for execution                                   */
-/*                                                                              */
-/********************************************************************************/
-
-public DiadStackFrame getStartingFrame(DiadSymptom symp,DiadThread thrd,
-      Collection<DiadLocation> faults)
+long getExecutionTime()
 {
-   DiexecuteStartFinder fndr = new DiexecuteStartFinder(this,
-         thrd,faults);  
-   
-   return fndr.findStartingFrame(); 
+   if (exec_state != ExecState.READY || seede_result == null) return 0;
+   return seede_result.getExecutionTime();
 }
 
+DiexecuteBaseExecution getContext()             { return for_context; }
 
-
-/********************************************************************************/
-/*                                                                              */
-/*      Create the base execution                                               */
-/*                                                                              */
-/********************************************************************************/
-
-DiadTrace createBaseExecution(DiadSymptom symp,DiadThread thrd,DiadStackFrame start)
-{
-   DiexecuteBaseExecution fndr = new DiexecuteBaseExecution(this,
-         symp,thrd,start);
-   
-   return fndr.createBaseExecution();
-}
+DiadRepair getRepair()                          { return null; }
 
 
 
 /********************************************************************************/
 /*                                                                              */
-/*      Handle seede messages                                                   */
+/*      Start method                                                            */
 /*                                                                              */
 /********************************************************************************/
 
-Element sendSeedeMessage(String sid,String cmd,CommandArgs args,String cnts)
+void start(DiexecuteManager vfac)
 {
-   return diad_control.sendSeedeMessage(sid,cmd,args,cnts);
-}
-
-void register(DiexecuteExecution ve)
-{
-   exec_map.put(ve.getSessionId(),ve);
-}
-
-
-void unregister(String ssid)
-{
-   exec_map.remove(ssid);
-}
-
-
-public String handleSeedeMessage(String typ,String id,Element xml)
-{
-   String rslt = null;
-   
-   DiexecuteExecution ve = exec_map.get(id);
-   if (ve != null) {
-      switch (typ) {
-         case "EXEC" :
-            ve.handleResult(xml);
-            break;
-         case "RESET" :
-            ve.handleReset();
-            break;
-         case "INPUT" :
-            rslt = ve.handleInput(IvyXml.getAttrString(xml,"FILE"));
-            break;
-         case "INITIALVALUE" :
-            rslt = ve.handleInitialValue(IvyXml.getAttrString(xml,"WHAT"));
-            break;
-         default :
-            IvyLog.logE("DIEXECUTE","Unknown seede command " + typ);
-            break;
-       }
+   synchronized (this) {
+      seede_result = null;
+      exec_state = ExecState.PENDING;
     }
    
-   return rslt;
+   vfac.register(this); 
+   
+   DicontrolMain diad = vfac.getDiadControl();
+   long mxtime = diad.getProperty("Diad.max.seede.steps",MAX_SEEDE_STEPS);
+   int mxdepth = diad.getProperty("Diad.max.seede.depth",MAX_SEEDE_DEPTH); 
+   CommandArgs args = new CommandArgs("EXECID",session_id,
+         "CONTINUOUS",false,"MAXTIME",mxtime,"MAXDEPTH",mxdepth);
+   Element r1 = diad.sendSeedeMessage(session_id,"EXEC",args,null);
+   if (!IvyXml.isElement(r1,"RESULT")) {
+      IvyLog.logD("DIEXECUTE","Exec setup returned: " +
+            IvyXml.convertXmlToString(r1));  
+      exec_state = ExecState.READY;
+      return;
+    }
 }
 
 
-}       // end of class DiexecuteManager
+
+/********************************************************************************/
+/*                                                                              */
+/*      Update methods                                                          */
+/*                                                                              */
+/********************************************************************************/
+
+synchronized void handleResult(Element xml)
+{
+   seede_result = new DiexecuteTrace(xml,for_context.getThread());  
+   exec_state = ExecState.READY;
+   notifyAll();
+}
+
+
+synchronized void handleReset()
+{
+   seede_result = null;
+   exec_state = ExecState.PENDING;
+}
+
+
+synchronized String handleInput(String file)
+{
+   return null; 
+}
+
+
+synchronized String handleInitialValue(String what)
+{
+   return null;
+}
+
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Get result                                                              */
+/*                                                                              */
+/********************************************************************************/
+
+DiexecuteTrace getSeedeResult()
+{
+   synchronized (this) {
+      while (exec_state != ExecState.READY) {
+         try {
+            wait(3000);
+          }
+         catch (InterruptedException e) { }
+       }
+      return seede_result;
+    }
+}
+
+
+
+}       // end of class DiexecuteExecution
 
 
 
 
-/* end of DiexecuteManager.java */
+/* end of DiexecuteExecution.java */
 

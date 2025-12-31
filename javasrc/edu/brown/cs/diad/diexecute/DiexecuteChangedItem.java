@@ -1,8 +1,8 @@
 /********************************************************************************/
 /*                                                                              */
-/*              DiexecuteManager.java                                           */
+/*              DiexecuteChagnedItem.java                                       */
 /*                                                                              */
-/*      Manager for execution access through SEEDE                              */
+/*      Data to handle finding changes.  Note this is immutable                 */
 /*                                                                              */
 /********************************************************************************/
 /*      Copyright 2025 Brown University -- Steven P. Reiss                    */
@@ -22,23 +22,9 @@
 
 package edu.brown.cs.diad.diexecute;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import edu.brown.cs.ivy.jcomp.JcompSymbol;
 
-import org.w3c.dom.Element;
-
-import edu.brown.cs.diad.dicontrol.DicontrolMain;
-import edu.brown.cs.diad.dicore.DiadLocation;
-import edu.brown.cs.diad.dicore.DiadStackFrame;
-import edu.brown.cs.diad.dicore.DiadSymptom;
-import edu.brown.cs.diad.dicore.DiadThread;
-import edu.brown.cs.diad.dicore.DiadTrace;
-import edu.brown.cs.ivy.file.IvyLog;
-import edu.brown.cs.ivy.mint.MintConstants.CommandArgs;
-import edu.brown.cs.ivy.xml.IvyXml;
-
-        public class DiexecuteManager implements DiexecuteConstants
+class DiexecuteChangedItem implements DiexecuteConstants
 {
 
 
@@ -48,8 +34,11 @@ import edu.brown.cs.ivy.xml.IvyXml;
 /*                                                                              */
 /********************************************************************************/
 
-private DicontrolMain   diad_control;;
-private Map<String,DiexecuteExecution> exec_map;
+private JcompSymbol     ref_value;
+private boolean         is_changed;
+private boolean         is_relevant;
+
+
 
 
 /********************************************************************************/
@@ -58,10 +47,28 @@ private Map<String,DiexecuteExecution> exec_map;
 /*                                                                              */
 /********************************************************************************/
 
-public DiexecuteManager(DicontrolMain ctrl)
+DiexecuteChangedItem(JcompSymbol js)
 {
-   diad_control = ctrl;
-   exec_map = new HashMap<>();
+   ref_value = js;
+   is_changed = false;
+   is_relevant = false;
+}
+
+
+DiexecuteChangedItem(JcompSymbol js,DiexecuteChangedItem base)
+{
+   ref_value = js;
+   is_relevant = base.is_relevant;
+   is_changed = true;
+}
+
+
+
+private DiexecuteChangedItem(DiexecuteChangedItem base,JcompSymbol js,boolean ch,boolean rl)
+{
+   ref_value = (js == null ? base.ref_value : js);
+   is_changed = base.is_changed | ch;
+   is_relevant = base.is_relevant | rl;
 }
 
 
@@ -72,98 +79,91 @@ public DiexecuteManager(DicontrolMain ctrl)
 /*                                                                              */
 /********************************************************************************/
 
-DicontrolMain getDiadControl()                  { return diad_control; }
+JcompSymbol getReference()                      { return ref_value; }
+boolean isChanged()                             { return is_changed; }
+boolean isRelevant()                            { return is_relevant; }
+
 
 
 /********************************************************************************/
 /*                                                                              */
-/*      Find the starting frame for execution                                   */
+/*      Update methods                                                          */
 /*                                                                              */
 /********************************************************************************/
 
-public DiadStackFrame getStartingFrame(DiadSymptom symp,DiadThread thrd,
-      Collection<DiadLocation> faults)
+DiexecuteChangedItem changeReference(JcompSymbol js)
 {
-   DiexecuteStartFinder fndr = new DiexecuteStartFinder(this,
-         thrd,faults);  
-   
-   return fndr.findStartingFrame(); 
+   if (js == null || js == ref_value) return this;
+   return new DiexecuteChangedItem(this,js,false,false);
 }
 
 
 
+DiexecuteChangedItem setChanged()
+{
+   if (is_changed) return this;
+   return new DiexecuteChangedItem(this,null,true,false);
+}
+
+
+DiexecuteChangedItem setRelevant()
+{
+   if (is_relevant) return this;
+   return new DiexecuteChangedItem(this,null,false,true);
+}
+
+
 /********************************************************************************/
 /*                                                                              */
-/*      Create the base execution                                               */
+/*      Output methods                                                          */
 /*                                                                              */
 /********************************************************************************/
 
-DiadTrace createBaseExecution(DiadSymptom symp,DiadThread thrd,DiadStackFrame start)
+@Override public String toString()
 {
-   DiexecuteBaseExecution fndr = new DiexecuteBaseExecution(this,
-         symp,thrd,start);
-   
-   return fndr.createBaseExecution();
+   String s = ref_value.toString();
+   if (is_changed) s += "#";
+   if (is_relevant) s += "@";
+   return s;
 }
 
 
 
+
 /********************************************************************************/
 /*                                                                              */
-/*      Handle seede messages                                                   */
+/*      Equality methods                                                        */
 /*                                                                              */
 /********************************************************************************/
 
-Element sendSeedeMessage(String sid,String cmd,CommandArgs args,String cnts)
+@Override public int hashCode() 
 {
-   return diad_control.sendSeedeMessage(sid,cmd,args,cnts);
-}
-
-void register(DiexecuteExecution ve)
-{
-   exec_map.put(ve.getSessionId(),ve);
-}
-
-
-void unregister(String ssid)
-{
-   exec_map.remove(ssid);
+   int hc = ref_value.hashCode();
+   if (is_changed) hc += 100;
+   if (is_relevant) hc += 200;
+   return hc;
 }
 
 
-public String handleSeedeMessage(String typ,String id,Element xml)
-{
-   String rslt = null;
-   
-   DiexecuteExecution ve = exec_map.get(id);
-   if (ve != null) {
-      switch (typ) {
-         case "EXEC" :
-            ve.handleResult(xml);
-            break;
-         case "RESET" :
-            ve.handleReset();
-            break;
-         case "INPUT" :
-            rslt = ve.handleInput(IvyXml.getAttrString(xml,"FILE"));
-            break;
-         case "INITIALVALUE" :
-            rslt = ve.handleInitialValue(IvyXml.getAttrString(xml,"WHAT"));
-            break;
-         default :
-            IvyLog.logE("DIEXECUTE","Unknown seede command " + typ);
-            break;
-       }
+
+
+@Override public boolean equals(Object o) {
+   if (o instanceof DiexecuteChangedItem) {
+      DiexecuteChangedItem vd = (DiexecuteChangedItem) o;
+      if (ref_value != vd.ref_value) return false; 
+      if (is_changed != vd.is_changed) return false;
+      if (is_relevant != vd.is_relevant) return false;
+      return true;
     }
-   
-   return rslt;
+   return false;
 }
 
 
-}       // end of class DiexecuteManager
+
+}       // end of class DiexecuteChagnedItem
 
 
 
 
-/* end of DiexecuteManager.java */
+/* end of DiexecuteChagnedItem.java */
 

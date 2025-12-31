@@ -1,0 +1,790 @@
+/********************************************************************************/
+/*                                                                              */
+/*              DiexecuteTrace.java                                             */
+/*                                                                              */
+/*      description of class                                                    */
+/*                                                                              */
+/********************************************************************************/
+/*      Copyright 2025 Brown University -- Steven P. Reiss                    */
+/*********************************************************************************
+ *  Copyright 2025, Brown University, Providence, RI.                            *
+ *                                                                               *
+ *                        All Rights Reserved                                    *
+ *                                                                               *
+ * This program and the accompanying materials are made available under the      *
+ * terms of the Eclipse Public License v1.0 which accompanies this distribution, *
+ * and is available at                                                           *
+ *      http://www.eclipse.org/legal/epl-v10.html                                *
+ *                                                                               *
+ ********************************************************************************/
+
+
+
+package edu.brown.cs.diad.diexecute;
+
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Stack;
+
+import org.w3c.dom.Element;
+
+import edu.brown.cs.diad.dicore.DiadDataType;
+import edu.brown.cs.diad.dicore.DiadException;
+import edu.brown.cs.diad.dicore.DiadLocalVariable;
+import edu.brown.cs.diad.dicore.DiadStack;
+import edu.brown.cs.diad.dicore.DiadStackFrame;
+import edu.brown.cs.diad.dicore.DiadThread;
+import edu.brown.cs.diad.dicore.DiadTrace;
+import edu.brown.cs.diad.dicore.DiadValue;
+import edu.brown.cs.ivy.xml.IvyXml;
+
+class DiexecuteTrace implements DiadTrace, DiexecuteConstants
+{
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Private Storage                                                         */
+/*                                                                              */
+/********************************************************************************/
+
+private Element         seede_result;
+private long            problem_time;
+private DiexecuteCall    problem_context;
+private Map<Integer,Element> id_map;
+private DiadThread       for_thread;
+private Map<Element,DiexecuteCall> call_map;
+private String          session_id;
+
+
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Constructors                                                            */
+/*                                                                              */
+/********************************************************************************/
+
+DiexecuteTrace(Element rslt,DiadThread thrd)
+{
+   seede_result = IvyXml.getChild(rslt,"CONTENTS");
+   session_id = IvyXml.getAttrString(rslt,"ID");
+   problem_time = -1;
+   problem_context = null;
+   for_thread = thrd;
+   call_map = new HashMap<>();
+   setupIdMap();
+}
+
+
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Access methods                                                          */
+/*                                                                              */
+/********************************************************************************/
+
+@Override public long getSymptomTime()   
+{
+   return problem_time;
+}
+
+
+@Override public DiexecuteCall getSymptomContext()
+{
+   return problem_context;
+}
+
+
+@Override public DiexecuteCall getRootContext() 
+{
+   Element runner = getRunner();
+   
+   return getCallForContext(IvyXml.getChild(runner,"CONTEXT"));
+}
+
+
+DiexecuteCall getCallForContext(Element ctx)
+{
+   if (ctx == null) return null;
+   
+   synchronized (call_map) {
+      DiexecuteCall vc = call_map.get(ctx);
+      if (vc == null) {
+         vc = new DiexecuteCall(this,ctx);
+         call_map.put(ctx,vc);
+       }
+      return vc;
+    }
+}
+
+
+DiadThread getThread()
+{
+   return for_thread;
+}
+
+
+
+@Override public DiexecuteValue getException()
+{
+   DiexecuteCall prob = getSymptomContext();
+   if (prob != null) {
+      DiexecuteVariable thr = prob.getVariables().get("*THROWS*");
+      if (thr != null) {
+         List<DiexecuteValue> vals = thr.getValues(this);
+         return vals.get(0);
+       }
+    }
+   
+   Element runner = getRunner();
+   Element ret = IvyXml.getChild(runner,"RETURN");
+   String reason = IvyXml.getAttrString(ret,"REASON");
+   if (reason == null) return null;
+   if (reason.equals("EXCEPTION")) {
+      return new DiexecuteValue(IvyXml.getChild(ret,"VALUE"));
+    }
+   
+   return null;
+}
+
+
+
+boolean isReturn()
+{
+   Element runner = getRunner();
+   Element ret = IvyXml.getChild(runner,"RETURN");
+   String reason = IvyXml.getAttrString(ret,"REASON");
+   return reason.equals("RETURN");
+}
+
+
+boolean isCompilerError()
+{
+   Element runner = getRunner();
+   Element ret = IvyXml.getChild(runner,"RETURN");
+   String reason = IvyXml.getAttrString(ret,"REASON");
+   return reason == null || 
+         reason.equals("COMPILER_ERROR") || 
+         reason.equals("ERROR");
+}
+
+
+
+@Override public DiexecuteValue getReturnValue()
+{
+   Element runner = getRunner();
+   Element ret = IvyXml.getChild(runner,"RETURN");
+   String reason = IvyXml.getAttrString(ret,"REASON");
+   if (reason == null) return null;
+   if (reason.equals("RETURN")) {
+      Element rval = IvyXml.getChild(ret,"VALUE");
+      if (rval == null) return null;
+      return new DiexecuteValue(rval);
+    }
+   
+   return null;
+}
+
+
+long getExceptionTime()
+{
+   DiexecuteCall prob = getSymptomContext();
+   if (prob != null) {
+      DiexecuteVariable thr = prob.getVariables().get("*THROWS*");
+      if (thr != null) {
+         long when = prob.getEndTime();
+         List<DiexecuteValue> vals = thr.getValues(this);
+         for (DiexecuteValue vv : vals) {
+            if (vv.getStartTime() > 0 && vv.getStartTime() < when) when = vv.getStartTime();
+          }
+         return when;
+       }
+    }
+   
+   Element runner = getRunner();
+   Element ret = IvyXml.getChild(runner,"RETURN");
+   String reason = IvyXml.getAttrString(ret,"REASON");
+   if (reason != null && reason.equals("EXCEPTION")) {
+      DiexecuteCall vc = getRootContext();
+      return vc.getEndTime();
+    }
+   
+   return -1;
+}
+
+long getExecutionTime()
+{
+   return IvyXml.getAttrLong(seede_result,"TICKS");
+}
+
+
+private Element getRunner()
+{
+   if (for_thread !=  null) {
+      String tidx = for_thread.getThreadId();
+      for (Element runner : IvyXml.children(seede_result,"RUNNER")) {
+         String tid = IvyXml.getAttrString(runner,"THREAD");
+         if (!tid.equals(tidx)) continue;
+         return runner;
+       }
+    }
+   
+   Element runner = IvyXml.getChild(seede_result,"RUNNER");
+   return runner;
+}
+
+
+
+@Override public Map<String,DiadTraceVariable> getGlobalVariables()
+{
+   Map<String,DiadTraceVariable> rslt = new LinkedHashMap<>();
+   Element glbls = IvyXml.getChild(seede_result,"GLOBALS");
+   for (Element e : IvyXml.children(glbls,"VARIABLE")) {
+      String nm = IvyXml.getAttrString(e,"NAME");
+      rslt.put(nm,new DiexecuteVariable(e));
+    }
+   
+   return rslt;
+}
+
+
+@Override public String getSessionId()
+{
+   return session_id; 
+}
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Find the point in the execution corresponding to the thread             */
+/*                                                                              */
+/********************************************************************************/
+
+void setupForLaunch(DiadThread thread)
+{
+   if (problem_time >= 0 || seede_result == null) return;
+   for_thread = thread;
+
+   String tidx = for_thread.getThreadId();   
+   Stack<String> stack = new Stack<>();
+   for (Element runner : IvyXml.children(seede_result,"RUNNER")) {
+      String tid = IvyXml.getAttrString(runner,"THREAD");
+      if (!tid.equals(tidx)) continue;
+      findProblemTime(IvyXml.getChild(runner,"CONTEXT"),thread,stack);
+    }
+}
+
+
+
+void findProblemTime(Element ctx,DiadThread thread,Stack<String> stack)
+{
+   String mthd = IvyXml.getAttrString(ctx,"METHOD");
+   stack.push(normalizeName(mthd));
+   
+   if (checkStack(thread,stack)) {
+      findContextTime(ctx,thread);
+    }
+   else {
+      for (Element subctx : IvyXml.children(ctx,"CONTEXT")) {
+         findProblemTime(subctx,thread,stack);
+       }
+    }
+   
+   stack.pop();
+}
+
+
+
+private boolean checkStack(DiadThread thread,Stack<String> stack)
+{
+   DiadStack stk = thread.getStack();
+   String base = stack.get(0);
+   List<DiadStackFrame> frms = stk.getFrames();
+   for (int i = frms.size()-1; i >= 0; --i) {
+      DiadStackFrame frame = frms.get(i);
+      String sgn = frame.getFormatSignature();
+      String id = frame.getClassName() + "." + frame.getMethodName() + sgn;
+      id = normalizeName(id);
+      if (id.equals(base)) {
+         return checkStack(thread,stack,i);
+       }
+    }
+   return false;
+}
+
+
+
+private String normalizeName(String mthd)
+{
+   StringBuffer buf = new StringBuffer();
+   int lvl = 0;
+   for (int i = 0; i < mthd.length(); ++i) {
+      char c = mthd.charAt(i);
+      if (c == '<') {
+         ++lvl;
+         continue;
+       }
+      else if (c == '>') {
+         --lvl;
+         continue;
+       }
+      else if (lvl > 0) continue;
+      else if (c == '$') c = '.';
+      buf.append(c);
+    }
+   return buf.toString();
+}
+
+
+private boolean checkStack(DiadThread thread,Stack<String> stack,int start)
+{ 
+   DiadStack stk = thread.getStack(); 
+   DiadStackFrame topframe = stk.getTopFrame();
+   List<DiadStackFrame> frms = stk.getFrames();
+   for (int i = start; i >= 0; --i) {
+      DiadStackFrame frm = frms.get(i);
+      String id = frm.getClassName() + "." + frm.getMethodName() + 
+            frm.getFormatSignature();
+      id = normalizeName(id);
+      if (start-i >= stack.size()) return false;
+      if (!id.equals(stack.get(start-i))) return false;
+      if (frm == topframe) return true;
+    }
+   return false;
+}
+
+
+
+private void findContextTime(Element ctx,DiadThread thread)
+{
+   Element linevar = null;
+   for (Element var : IvyXml.children(ctx,"VARIABLE")) {
+      String varname = IvyXml.getAttrString(var,"NAME");
+      if (varname.equals("*LINE*")) {
+         linevar = var;
+         break;
+       }
+    }
+   if (linevar == null) return;
+   
+   DiadStackFrame frame = thread.getStack().getTopFrame();
+   String lno = Integer.toString(frame.getLineNumber());
+   int lnoi = Integer.parseInt(lno);
+   long linetime = -1;
+   for (Element val : IvyXml.children(linevar,"VALUE")) {
+      long time = IvyXml.getAttrLong(val,"TIME");
+      if (time == 0) time = IvyXml.getAttrLong(ctx,"START"); 
+      if (linetime > 0) {
+         findContextTime(ctx,thread,lnoi,linetime,time-1);
+         linetime = -1;
+       }
+      if (lno.equals(IvyXml.getText(val))) {
+         linetime = time;
+       }
+    }
+   if (linetime > 0) {
+      findContextTime(ctx,thread,lnoi,linetime,IvyXml.getAttrLong(ctx,"END"));
+    }
+}
+
+
+
+private void findContextTime(Element ctx,DiadThread thread,int line,long from,long to)
+{
+   // check local variables in the context vs those of the thread
+   DiadStackFrame frame = thread.getStack().getTopFrame();
+   for (String var : frame.getLocals()) {
+      DiadLocalVariable local = frame.getLocal(var);
+      Element varelt = findVariableInContext(ctx,var,line);
+      if (varelt != null) {
+         long prev = -1;
+         Element prevval = null;
+         boolean found = false;
+         int foundct = 0;
+         for (Element valelt : IvyXml.children(varelt,"VALUE")) {
+            long time = IvyXml.getAttrLong(valelt,"TIME");
+            if (prev > 0) {
+               if (time >= from && prev <= to) {
+                  Boolean fg = compareVariable(local,prevval,
+                        thread,from,to);
+                  if (fg != null) {
+                     ++foundct;
+                     found |= fg;
+                   }
+                }
+             }
+            prev = time;
+            prevval = dereference(valelt);
+          }
+         if (prev > 0) {
+            long time = IvyXml.getAttrLong(ctx,"END");
+            if (time >= from && prev <= to) {
+               Boolean fg = compareVariable(local,prevval,
+                     thread,from,to);
+               if (fg != null) {
+                  ++foundct;
+                  found |= fg;
+                }
+             }
+          }
+         else if (prev == -1) {
+            Boolean fg = compareVariable(local,prevval,
+                  thread,from,to);
+            if (fg != null) {
+               ++foundct;
+               found |= fg;
+             }
+          }
+         if (foundct > 0 && !found)
+            return;
+       }
+    }
+   
+   if (problem_time > 0 && problem_context !=  null) {
+      // see if this context is better than saved context
+    }
+   
+   problem_time = from;
+   problem_context = getCallForContext(ctx);
+}
+
+
+private Element findVariableInContext(Element ctx,String nm,int lno)
+{
+   Element best = null;
+   int bestln = -1;
+   for (Element varelt : IvyXml.children(ctx,"VARIABLE")) {
+      String varnam = IvyXml.getAttrString(varelt,"NAME");
+      if (varnam.equals(nm)) {
+         int vln = IvyXml.getAttrInt(varelt,"LINE");
+         if (vln > lno) continue;
+         if (best == null || vln > bestln) {
+            bestln = vln;
+            best = varelt;
+          }
+       }
+    }
+   
+   return best;
+}
+
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Compare variables in execution with those in thread                     */
+/*                                                                              */
+/********************************************************************************/
+
+private Boolean compareVariable(DiadLocalVariable local,Element valelt,
+      DiadThread thread,long from,long to)
+{
+   switch (local.getKind()) {
+      case "PRIMITIVE" :
+         String typ = IvyXml.getAttrString(valelt,"TYPE");
+         String valtxt = IvyXml.getText(valelt);
+         String lclval = local.getValue();
+         switch (typ) {
+            case "boolean" :
+               if (valtxt.equals("0") && lclval.equals("false")) return true;
+               if (valtxt.equals("1") && lclval.equals("true")) return true;
+               return false;
+            case "double" :
+            case "float" :
+               if (lclval.equals(valtxt)) return true;
+               try {
+                  double v1 = Double.valueOf(lclval);
+                  double v2 = Double.valueOf(valtxt);
+                  if (Math.abs(v1-v2) < 0.0000001) return true;
+                }
+               catch (NumberFormatException e) { }
+               return false;
+            case "char" :
+               int c1 = 0;
+               String s1 = lclval;
+               if (s1 != null && s1.length() > 0) c1 = s1.charAt(0); 
+               int c2 = Integer.parseInt(valtxt);
+               return c1 == c2;
+            default :
+               return lclval.equals(valtxt);
+          }
+      case "STRING" :
+         valtxt = IvyXml.getText(valelt);
+         String ltxt = local.getValue();
+         if (ltxt == null && valtxt == null) return true;
+         if (ltxt == null || valtxt == null)
+            return false;
+         boolean fg = ltxt.equals(valtxt);
+         if (fg) return true;
+         // UTF-16 strings are not correct when reported from bedrock
+         if (ltxt.getBytes().length != ltxt.length()) return null;
+         return false;
+      case "ARRAY" :
+         if (local.getType().equals("null")) {
+            if (IvyXml.getAttrBool(valelt,"NULL")) return true;
+            return false;
+          }   
+         return compareArray(local,valelt,thread,from,to);
+      case "OBJECT" :
+         if (local.getType().equals("null") || local.getType().equals("*ANY*")) {
+            if (IvyXml.getAttrBool(valelt,"NULL")) return true;
+            return false;
+          }
+         else if (local.getType().equals("java.lang.Class")) {
+            return true;
+          }
+         return compareObject(local,valelt,thread,from,to);
+      case "CLASS" :
+         System.err.println("CHECK HERE compare CLASS");
+         break;
+      default :
+         break;
+    }
+   
+   return null;
+}
+
+
+
+private Boolean compareObject(DiadLocalVariable local,Element valelt0,
+      DiadThread thread,long from,long to)
+{
+   Element valelt = dereference(valelt0);
+   if (local.getType().equals("null")) {
+      if (IvyXml.getAttrBool(valelt,"NULL")) return true;
+      return false;
+    }
+   
+   String ltyp = local.getType();
+   String vtype = IvyXml.getAttrString(valelt,"TYPE");
+   if (!ltyp.equals(vtype)) {
+      int idx = ltyp.indexOf("<");
+      if (idx > 0) {
+         ltyp = ltyp.substring(0,idx);
+         if (!ltyp.equals(vtype)) return false;
+       }
+    }
+   
+   DiadValue localval = thread.evaluate(local.getName());
+   if (localval == null) return null;
+   
+   int ct = 0;
+   for (Element fldelt : IvyXml.children(valelt,"FIELD")) {
+      String nm = IvyXml.getAttrString(fldelt,"NAME");
+      if (nm.startsWith("@")) continue;
+      try {
+         DiadValue fldval = localval.getFieldValue(nm);
+         if (fldval == null) continue;
+         Boolean fg = checkValueAtTime(fldval,fldelt,
+               thread,from,to);
+         if (fg == null) continue;
+         if (!fg) return false;
+         ++ct;  // if matched
+       }
+      catch (DiadException e) { }
+    }
+   
+   if (ct > 0) return true;
+   
+   return null;
+}
+
+
+
+private Boolean compareArray(DiadLocalVariable local,Element valelt0,
+      DiadThread thread,long from,long to)
+{
+   Element valelt = dereference(valelt0);
+   if (local.getType().equals("null")) {
+      if (IvyXml.getAttrBool(valelt,"NULL")) return true;
+      return false;
+    }
+   
+   String s1 = normalizeName(local.getType());
+   String s2 = normalizeName(IvyXml.getAttrString(valelt,"TYPE"));
+   if (!s1.equals(s2)) return false;
+   
+// DiadValue localval = thread.evaluate(local.getName());
+// int ctxsz = IvyXml.getAttrInt(valelt,"SIZE");
+   
+   // check number of elements
+   // loop for each element
+   
+   return null;
+}
+
+
+
+private Boolean checkValueAtTime(DiadValue actval,Element valctx,
+      DiadThread thread,long from,long to)
+{
+   long prev = -1;
+   Element prevval = null;
+   int foundct = 0;
+   boolean found = false;
+   for (Element valelt : IvyXml.children(valctx,"VALUE")) {
+      long time = IvyXml.getAttrLong(valelt,"TIME");
+      if (prev >= 0) {
+         if (time >= from && prev <= to) {
+            Boolean fg = compareValueAtTime(actval,prevval,thread,from,to);
+            if (fg != null) {
+               ++foundct;
+               found |= fg;
+             }
+          }
+       }
+      prev = time;
+      prevval = valelt;
+    }
+   if (prev > 0 && prev <= to) {
+      if (prev <= to) {
+         Boolean fg = compareValueAtTime(actval,prevval,thread,from,to);
+         if (fg != null) {
+            ++foundct;
+            found |= fg;
+          }
+       }
+    }
+   else if (prev == -1) {
+      Boolean fg = compareValueAtTime(actval,prevval,thread,from,to);
+      if (fg != null) {
+         ++foundct;
+         found |= fg;
+       }   
+    }
+   
+   if (foundct > 0 && !found) return false;
+   if (found) return true;
+   
+   return null;
+}
+
+
+
+private Boolean compareValueAtTime(DiadValue actval,Element valctx,DiadThread thread,long from,long to)
+{
+   String ctxval = IvyXml.getText(valctx);
+   String ctxtyp = IvyXml.getAttrString(valctx,"TYPE");
+   DiadDataType typ = actval.getDataType();
+   
+   if (actval.isNull()) {
+      return IvyXml.getAttrBool(valctx,"NULL");
+    }
+   if (ctxval == null) ctxval = "";
+   
+   // handle primitive types
+   switch (typ.getName()) {
+      case "boolean" :
+         if (actval.getBoolean()) return ctxval.equals("1");
+         else return ctxval.equals("0");
+      case "int" :
+      case "long" :
+      case "short" :
+      case "byte" :
+      case "char" :
+         try {
+            long l = Long.parseLong(ctxval);
+            return l == actval.getInt();
+          }
+         catch (NumberFormatException e) { }
+         return null;
+      case "double" :
+      case "float" :
+         return null;
+      case "java.lang.String" :
+         if (ctxtyp.equals("java.lang.String")) {
+            return actval.getString().equals(ctxval);
+          }
+         break;
+    }
+   
+   String s1 = typ.getName(); 
+   int idx1 = s1.indexOf("<");
+   if (idx1 > 0) s1 = s1.substring(0,idx1);
+   String s2 = ctxtyp;
+   int idx2 = s2.indexOf("<");
+   if (idx2 > 0) s2 = s2.substring(0,idx2);
+   s1 = s1.replace("$",".");
+   
+   if (!s1.equals(s2)) {
+      if ((s1.endsWith("Set") || s1.endsWith("SetN")) &&
+            (s2.endsWith("Set") || s2.endsWith("SetN"))) {
+         return null; 
+       }
+      return false;
+    }
+   
+   // handle objects and arrays when nested -- ignore for now
+   
+   return null;
+} 
+
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Setup mapping for ID matching                                           */
+/*                                                                              */
+/********************************************************************************/
+
+private void setupIdMap()
+{
+   id_map = new HashMap<>();
+   for (Element valelt : IvyXml.elementsByTag(seede_result,"VALUE")) {
+      int id = IvyXml.getAttrInt(valelt,"ID");
+      if (id < 0) continue;
+      if (IvyXml.getAttrBool(valelt,"REF")) continue;
+      Element use = id_map.get(id);
+      if (use != null) continue;
+      id_map.put(id,valelt);
+    }
+}
+
+
+Element dereference(Element val)
+{
+   if (IvyXml.getAttrBool(val,"REF")) {
+      int id = IvyXml.getAttrInt(val,"ID");
+      return id_map.get(id);
+    }
+   
+   return val;
+}
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Location methods                                                        */
+/*                                                                              */
+/********************************************************************************/
+
+void getExecutedLocations(Set<String> rslt)
+{
+   DiexecuteCall vc = getRootContext();
+   if (vc != null) vc.getExecutedLocations(rslt);
+}
+
+/********************************************************************************/
+/*                                                                              */
+/*      Output methods                                                          */
+/*                                                                              */
+/********************************************************************************/
+
+@Override public String toString()
+{
+   return IvyXml.convertXmlToString(seede_result);
+}
+
+
+}       // end of class DiexecuteTrace
+
+
+
+
+/* end of DiexecuteTrace.java */
+

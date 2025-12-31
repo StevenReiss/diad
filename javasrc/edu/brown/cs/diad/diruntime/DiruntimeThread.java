@@ -34,16 +34,35 @@
 
 package edu.brown.cs.diad.diruntime;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.ClassInstanceCreation;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.ConstructorInvocation;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
+import org.eclipse.jdt.core.dom.SuperConstructorInvocation;
 import org.w3c.dom.Element;
 
+import edu.brown.cs.diad.dicontrol.DicontrolMain;
 import edu.brown.cs.diad.dicore.DiadStackFrame;
 import edu.brown.cs.diad.dicore.DiadThread;
 import edu.brown.cs.diad.dicore.DiadValue;
+import edu.brown.cs.diad.disource.DisourceManager;
+import edu.brown.cs.ivy.file.IvyFile;
 import edu.brown.cs.ivy.file.IvyLog;
+import edu.brown.cs.ivy.jcomp.JcompAst;
+import edu.brown.cs.ivy.jcomp.JcompSymbol;
 import edu.brown.cs.ivy.mint.MintConstants.CommandArgs;
 import edu.brown.cs.ivy.xml.IvyXml;
 import edu.brown.cs.ivy.xml.IvyXmlWriter;
@@ -351,10 +370,18 @@ DiruntimeType stringType()
 
 @Override public DiadValue evaluate(String expr)
 {
+   return evaluate(expr,null);
+}
+
+
+DiruntimeValue evaluate(String expr,DiadStackFrame frm)
+{       
    String eid = "DIAD_E_" + eval_counter.incrementAndGet();
    // expr = "edu.brown.cs.seede.poppy.PoppyValue.register(" + expr + ")";
    
-   DiadStackFrame frm = getStack().getUserFrame();
+   if (frm == null) {
+      frm = getStack().getUserFrame();
+    }
    String proj = for_process.getManager().findProjectForFile(frm.getSourceFile());
    CommandArgs args = new CommandArgs("THREAD",thread_id,
 	 "FRAME",frm.getFrameId(),"BREAK",false,"EXPR",expr,
@@ -448,6 +475,203 @@ DiruntimeValueData evaluateHashCode(String expr)
    return null;
 }
 
+
+/********************************************************************************/
+/*                                                                              */
+/*      Get parameter values from previous frame                                */
+/*                                                                              */
+/********************************************************************************/
+
+public Map<String,DiadValue> getParameterValues(DiadStackFrame basefrm)
+{
+   DiruntimeStack stk = getStack();
+   boolean usenext = false;
+   DiadStackFrame prev = null;
+   DiadStackFrame cur = null;
+   for (DiadStackFrame frm : stk.getFrames()) {
+      if (usenext) {
+         prev = frm;
+         break;
+       }
+      if (frm == basefrm) {
+         cur = frm;
+         usenext = true;
+       }
+    }
+   if (prev == null) return null;
+   
+   DicontrolMain diad = getManager().getDiadControl(); 
+   DisourceManager srcmgr = diad.getSourceManager();
+   // then find the method declaration of the caller
+   File f = cur.getSourceFile();
+   String proj = srcmgr.getProjectForFile(f);
+   ASTNode n = srcmgr.getSourceNode(proj,f,-1,cur.getLineNumber(),true,true);
+   MethodDeclaration mthd = null;
+   for (ASTNode m = n; m != null; m = m.getParent()) {
+      if (m instanceof MethodDeclaration) {
+	 mthd = (MethodDeclaration) m;
+	 break;
+       }
+    }
+   if (mthd == null) return null;
+   JcompSymbol msym = JcompAst.getDefinition(mthd);
+   
+   // then get parameter numbers for each parameter, 0 for this
+   Map<Integer,String> parms = new HashMap<>();
+   int idx = 1;
+   if (!msym.isStatic()) parms.put(0,"this");
+   for (Object o : mthd.parameters()) {
+      SingleVariableDeclaration svd = (SingleVariableDeclaration) o;
+      SimpleName sn = svd.getName();
+      String parmnm = sn.getIdentifier();
+      parms.put(idx,parmnm);
+      ++idx;
+    }
+   
+   // next find the AST for the caller
+   ASTNode past = getAstForFrame(prev,mthd);
+   if (past == null) return null; 
+   List<ASTNode> callargs = findMethodCallArgs(past,cur.getMethodName());
+   
+   // then for each argument (or this), evaluate the corresponding expression
+   
+   
+   Map<String,DiadValue> pvals = new HashMap<>();
+   for (int i = 0; i < callargs.size(); ++i) {
+      String nm = parms.get(i);
+      if (nm == null) continue;
+      String expr = callargs.get(i).toString();
+      DiruntimeValue bv = evaluate(expr,prev);
+      pvals.put(nm,bv);
+    }
+   
+   return pvals;
+}
+
+
+private ASTNode getAstForFrame(DiadStackFrame frm,ASTNode base)
+{
+   CommandArgs args = new CommandArgs("PATTERN",IvyXml.xmlSanitize(frm.getClassName()),
+	 "DEFS",true,"REFS",false,"FOR","TYPE");
+   Element cxml = getManager().sendBubblesMessage("PATTERNSEARCH",args,null);
+   File fnm = null;
+   String pnm = null;
+   for (Element lxml : IvyXml.elementsByTag(cxml,"MATCH")) {
+      fnm = new File(IvyXml.getAttrString(lxml,"FILE"));
+      Element ielt = IvyXml.getChild(lxml,"ITEM");
+      pnm = IvyXml.getAttrString(ielt,"PROJECT"); 
+    }
+   if (fnm == null || pnm == null) return null;
+   
+// value_project_name = pnm;
+   
+   try {
+      String text = IvyFile.loadFile(fnm);
+      CompilationUnit cu = JcompAst.parseSourceFile(text);
+      return findNode(cu,text,frm.getLineNumber());
+    }
+   catch (IOException e) {
+      return null;
+    }
+}
+
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Find AST node for a given line                                          */
+/*                                                                              */
+/********************************************************************************/
+
+protected ASTNode findNode(CompilationUnit cu,String text,int line)
+{
+   if (cu == null) return null;
+   int off = -1;
+   if (line > 0) {
+      off = cu.getPosition(line,0);
+      while (off < text.length()) {
+	 char c = text.charAt(off);
+	 if (!Character.isWhitespace(c)) break;
+	 ++off;
+       }
+    }
+   ASTNode node = JcompAst.findNodeAtOffset(cu,off);
+   return node;
+}
+
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Return the list of argument expressions                                 */
+/*                                                                              */
+/********************************************************************************/
+
+private List<ASTNode> findMethodCallArgs(ASTNode n,String mthd)
+{
+   String mnm = mthd;
+   int idx = mnm.indexOf("(");
+   if (idx > 0) mnm = mnm.substring(0,idx);
+   idx = mnm.lastIndexOf(".");
+   if (idx > 0) mnm = mnm.substring(idx+1);
+   
+   CallFinder cf = new CallFinder(mnm);
+   for (ASTNode p = n; p != null; p = p.getParent()) {
+      p.accept(cf);
+      List<ASTNode> args = cf.getCallArgs();
+      if (args != null) return args;
+      if (p instanceof MethodDeclaration) return null;
+    }
+   
+   return null;
+}
+
+
+private class CallFinder extends ASTVisitor {
+   
+   private String called_method;
+   private List<?> call_args;
+   private ASTNode this_arg;
+   
+   CallFinder(String cm) {
+      call_args = null;
+      called_method = cm;
+      this_arg = null;
+    }
+   
+   List<ASTNode> getCallArgs() {
+      if (call_args == null) return null;
+      List<ASTNode> rslt = new ArrayList<>();
+      rslt.add(this_arg);
+      for (Object o : call_args) {
+         rslt.add((ASTNode) o);
+       }
+      return rslt;
+    }
+   
+   @Override public void endVisit(MethodInvocation mi) {
+      if (mi.getName().getIdentifier().equals(called_method)) {
+         call_args = mi.arguments();
+         this_arg = mi.getExpression();
+         if (this_arg == null) {
+            ASTNode tn = mi.getAST().newThisExpression();
+            this_arg = tn;
+          }
+       }
+    }
+   
+   @Override public void endVisit(ConstructorInvocation ci) { }
+   
+   @Override public void endVisit(SuperConstructorInvocation ci) { }
+   
+   @Override public void endVisit(ClassInstanceCreation ci) {
+      if (ci.getType().toString().equals(called_method)) {
+         call_args = ci.arguments();
+         this_arg = ci.getExpression();
+       }
+    }
+
+}	// end of inner class CallFinder
 
 
 /********************************************************************************/

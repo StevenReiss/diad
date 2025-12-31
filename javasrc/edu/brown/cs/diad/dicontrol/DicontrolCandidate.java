@@ -143,7 +143,7 @@ void start()
    switch (candidate_state) {
       case INITIAL :
       case SYMPTOM_FOUND :
-      case EXECUTION_DONE :
+      case BASE_EXECUTION_DONE :
       case STARTING_FRAME_FOUND :
          candidate_processor = new CandidateThread();
          candidate_processor.start();
@@ -309,7 +309,7 @@ private final class CandidateThread extends Thread {
                   // ValidateContext.setupBaseExecution (ValidateFactory.createValidate)
                   // return a DiadValidator (ValidateContext)
                   break;
-               case EXECUTION_DONE :
+               case BASE_EXECUTION_DONE :
                   // candidate has been processed
                   return;
              }

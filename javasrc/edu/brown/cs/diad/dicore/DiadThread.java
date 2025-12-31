@@ -34,6 +34,8 @@
 
 package edu.brown.cs.diad.dicore;
 
+import java.util.Map;
+
 import edu.brown.cs.ivy.xml.IvyXmlWriter;
 
 public interface DiadThread
@@ -50,6 +52,8 @@ String getExceptionType();
 
 DiadValue evaluate(String expr);
 void outputXml(IvyXmlWriter xw);
+
+Map<String,DiadValue> getParameterValues(DiadStackFrame frm);
 
 
 

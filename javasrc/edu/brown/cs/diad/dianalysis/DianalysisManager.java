@@ -33,6 +33,7 @@ import java.util.Queue;
 import java.util.Random;
 import java.util.Set;
 
+import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.ImportDeclaration;
 import org.eclipse.jdt.core.dom.PackageDeclaration;
@@ -43,8 +44,10 @@ import edu.brown.cs.diad.dicore.DiadLocation;
 import edu.brown.cs.diad.dicore.DiadStackFrame;
 import edu.brown.cs.diad.dicore.DiadSymptom;
 import edu.brown.cs.diad.dicore.DiadThread;
+import edu.brown.cs.diad.dicore.DiadAssertionData;
 import edu.brown.cs.diad.dicore.DiadConstants.DiadAnalysisFileMode;
 import edu.brown.cs.diad.dicore.DiadConstants.DiadAnalysisState;
+import edu.brown.cs.diad.dicore.DiadConstants.DiadSymptomType;
 import edu.brown.cs.diad.disource.DisourceManager;
 import edu.brown.cs.ivy.file.IvyFile;
 import edu.brown.cs.ivy.file.IvyLog;
@@ -112,6 +115,47 @@ DicontrolMain   getDiadControl()                        { return diad_control; }
 DisourceManager getSourceManager()
 {
    return diad_control.getSourceManager(); 
+}
+
+public ASTNode getAssertionExpression(DiadSymptom symp)
+{
+   if (symp.getSymptomType() == DiadSymptomType.ASSERTION) {
+      DianalysisAssertionHistory query = new DianalysisAssertionHistory(this,symp,null);
+      DiadAssertionData ad = query.getAssertionData();
+      return ad.getExpression();
+    }
+   
+   return null;
+}
+
+
+public ASTNode getExceptionNode(DiadSymptom symp)
+{
+   if (symp.getSymptomType() == DiadSymptomType.EXCEPTION) {
+      DianalysisExceptionHistory query = new DianalysisExceptionHistory(this,symp,null);
+      return query.getExceptionNode();
+    }
+   
+   return null;
+}
+
+
+public ASTNode getExpressionContext(DiadSymptom symp)
+{
+   // symp.getNodeContext().findAstNode(base);
+   return null;
+}
+
+
+public Collection<File> getSeedeFiles(DiadThread thrd)
+{
+   Set<File> rslt = findStackFiles(thrd);
+   
+   for (File f : loaded_files) {
+      if (f.getName().endsWith("Excpetion.java")) continue;
+      rslt.add(f);
+    }
+   return rslt;
 }
 
 
@@ -205,6 +249,8 @@ public Collection<DiadLocation> findInitialLocations(DiadSymptom symp,DiadThread
    
    return locs.findInitialLocations();
 }
+
+
 
 /********************************************************************************/
 /*                                                                              */

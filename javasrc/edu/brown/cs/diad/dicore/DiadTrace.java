@@ -1,8 +1,8 @@
 /********************************************************************************/
 /*                                                                              */
-/*              DiexecuteConstants.java                                         */
+/*              DiadTrace.java                                                  */
 /*                                                                              */
-/*      Constants for SEEDE (execution) interface                               */
+/*      Representation of an execution trace                                    */
 /*                                                                              */
 /********************************************************************************/
 /*      Copyright 2025 Brown University -- Steven P. Reiss                    */
@@ -33,45 +33,64 @@
 
 
 
-package edu.brown.cs.diad.diexecute;
+package edu.brown.cs.diad.dicore;
 
+import java.io.File;
+import java.util.List;
+import java.util.Map;
 
-
-public interface DiexecuteConstants
+public interface DiadTrace extends DiadConstants
 {
 
 
-enum DiexecuteVariableType {
-   PARAMETER,
-   FIELD,
-   THIS_FIELD,
+long getSymptomTime();
+DiadTraceCall getSymptomContext();
+DiadTraceCall getRootContext();
+DiadTraceValue getException();
+DiadTraceValue getReturnValue();
+Map<String,DiadTraceVariable> getGlobalVariables();
+String getSessionId();
+
+
+interface DiadTraceCall {
+   File getFile();
+   String getMethod();
+   long getStartTime();
+   long getEndTime();
+   List<DiadTraceCall> getInnerTraceCalls();
+   DiadTraceVariable getLineNumbers();
+   Map<String,DiadTraceVariable> getTraceVariables();
+   DiadTraceCall getParentCall();
 }
 
-interface DiexecuteChangeVariable {
-   DiexecuteVariableType getVariableType();
+
+interface DiadTraceVariable {
    String getName();
+   List<DiadTraceValue> getTraceValues(DiadTrace rt);
+   DiadTraceValue getValueAtTime(DiadTrace tr,long time);
+   int getLineAtTime(long time);
 }
 
 
-int MAX_SEEDE_STEPS = 1000000;
-int MAX_SEEDE_DEPTH = 100;
+interface DiadTraceValue {
+   long getStartTime();
+   boolean isNull();
+   String getDataType();
+   Long getNumericValue();
+   int getLineValue();
+   String getValue();
+   DiadTraceValue getFieldValue(DiadTrace rt,String fld,long when);
+   DiadTraceValue getIndexValue(DiadTrace rt,int idx,long when);
+   String getId();
+   int getArrayLength();
+   String getEnum();
+   
+}
 
-double DEFAULT_SCORE = 0.25;
-
-int MAX_CHECKED_OK = 100;
-int MIN_CHECKED_OK = 60;
-long MAX_SEEDE_OK = 600000;
-long MIN_SEEDE_OK = 50000;
-int MAX_CHECKED = 350;
-long MAX_SEEDE_TOTAL = 10000000;
-double GOOD_SCORE = 0.7;
-
-
-
-}       // end of interface DiexecuteConstants
-
-
+}       // end of interface DiadTrace
 
 
-/* end of DiexecuteConstants.java */
+
+
+/* end of DiadTrace.java */
 

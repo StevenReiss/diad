@@ -30,6 +30,7 @@ import java.util.Random;
 import org.w3c.dom.Element;
 
 import edu.brown.cs.diad.dicore.DiadException;
+import edu.brown.cs.diad.diexecute.DiexecuteManager;
 import edu.brown.cs.diad.ditest.DitestFactory;
 import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.mint.MintArguments;
@@ -77,6 +78,7 @@ DicontrolMonitor(DicontrolMain gm,String mintid)
    mint_control.register("<DIAD DO='_VAR_0' />",new CommandHandler());
    mint_control.register("<BEDROCK TYPE='_VAR_0' />",new IDEHandler());
    mint_control.register("<FAITEXEC TYPE='_VAR_0' />",new FaitHandler());
+   mint_control.register("<SEEDEXEC TYPE='_VAR_0'' ID='_VAR_1'' />",new SeedeHandler());
    
    IvyLog.logD("DICONTROL","Listening for messages on " + mintid);
 }
@@ -573,6 +575,33 @@ private final class FaitHandler implements MintHandler {
        }
       catch (Throwable e) {
          IvyLog.logE("DICONTROL","Error processing command",e);
+       }
+      msg.replyTo(rslt);
+    }
+   
+}       // end of inner class FaitHandler
+
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Handle SEEDE messages                                                   */
+/*                                                                              */
+/********************************************************************************/
+
+private final class SeedeHandler implements MintHandler {
+
+   @Override public void receive(MintMessage msg,MintArguments args) {
+      IvyLog.logD("DICONTROL","Seede message: " + msg.getText());
+      DiexecuteManager exec = diad_control.getExecuteManager();
+      String rslt = null;
+      if (exec != null) {
+         try {
+            rslt = exec.handleSeedeMessage(args.getArgument(0),args.getArgument(1),msg.getXml()); 
+          }
+         catch (Throwable e) {
+            IvyLog.logE("DICONTROL","Error processing command",e);
+          }
        }
       msg.replyTo(rslt);
     }

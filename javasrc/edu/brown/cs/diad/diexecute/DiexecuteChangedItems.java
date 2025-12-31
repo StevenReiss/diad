@@ -1,8 +1,8 @@
 /********************************************************************************/
 /*                                                                              */
-/*              DiexecuteManager.java                                           */
+/*              DiexecuteChangedItems.java                                      */
 /*                                                                              */
-/*      Manager for execution access through SEEDE                              */
+/*      Handle finding changed items for a stack frame                          */
 /*                                                                              */
 /********************************************************************************/
 /*      Copyright 2025 Brown University -- Steven P. Reiss                    */
@@ -22,23 +22,20 @@
 
 package edu.brown.cs.diad.diexecute;
 
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-import org.w3c.dom.Element;
-
-import edu.brown.cs.diad.dicontrol.DicontrolMain;
-import edu.brown.cs.diad.dicore.DiadLocation;
+import edu.brown.cs.diad.dicore.DiadStack;
 import edu.brown.cs.diad.dicore.DiadStackFrame;
 import edu.brown.cs.diad.dicore.DiadSymptom;
 import edu.brown.cs.diad.dicore.DiadThread;
-import edu.brown.cs.diad.dicore.DiadTrace;
-import edu.brown.cs.ivy.file.IvyLog;
-import edu.brown.cs.ivy.mint.MintConstants.CommandArgs;
-import edu.brown.cs.ivy.xml.IvyXml;
+import edu.brown.cs.diad.dicore.DiadValue;
 
-        public class DiexecuteManager implements DiexecuteConstants
+class DiexecuteChangedItems implements DiexecuteConstants
 {
 
 
@@ -48,8 +45,12 @@ import edu.brown.cs.ivy.xml.IvyXml;
 /*                                                                              */
 /********************************************************************************/
 
-private DicontrolMain   diad_control;;
-private Map<String,DiexecuteExecution> exec_map;
+private DiexecuteManager exec_manager;
+private DiadThread	for_thread;
+private DiadStackFrame	start_frame;
+private DiadSymptom     for_symptom;
+private DiexecuteChangeData change_data;
+ 
 
 
 /********************************************************************************/
@@ -58,101 +59,86 @@ private Map<String,DiexecuteExecution> exec_map;
 /*                                                                              */
 /********************************************************************************/
 
-public DiexecuteManager(DicontrolMain ctrl)
+DiexecuteChangedItems(DiexecuteManager mgr,DiadThread thrd,DiadStackFrame frm,
+      DiadSymptom symp)
 {
-   diad_control = ctrl;
-   exec_map = new HashMap<>();
-}
-
-
-
-/********************************************************************************/
-/*                                                                              */
-/*      Access methods                                                          */
-/*                                                                              */
-/********************************************************************************/
-
-DicontrolMain getDiadControl()                  { return diad_control; }
-
-
-/********************************************************************************/
-/*                                                                              */
-/*      Find the starting frame for execution                                   */
-/*                                                                              */
-/********************************************************************************/
-
-public DiadStackFrame getStartingFrame(DiadSymptom symp,DiadThread thrd,
-      Collection<DiadLocation> faults)
-{
-   DiexecuteStartFinder fndr = new DiexecuteStartFinder(this,
-         thrd,faults);  
+   exec_manager = mgr;
+   for_thread = thrd;
+   start_frame = frm;
+   for_symptom = symp;
    
-   return fndr.findStartingFrame(); 
+   change_data = getChangedVariables();
 }
 
 
-
 /********************************************************************************/
 /*                                                                              */
-/*      Create the base execution                                               */
+/*      Find changed items                                                      */
 /*                                                                              */
 /********************************************************************************/
 
-DiadTrace createBaseExecution(DiadSymptom symp,DiadThread thrd,DiadStackFrame start)
+DiexecuteChangeData getChangedVariables()
 {
-   DiexecuteBaseExecution fndr = new DiexecuteBaseExecution(this,
-         symp,thrd,start);
+   DiexecuteChangeFinder fndr = new DiexecuteChangeFinder(exec_manager); 
+   return fndr.process(for_thread,for_symptom,start_frame); 
+}
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Processing methods -- all possible actions                              */
+/*                                                                              */
+/********************************************************************************/
+
+List<DiexecuteAction> getResetActions(DiexecuteManager mgr,DiexecuteExecution ve)
+{
+   DiadStack bs = for_thread.getStack();
+   DiadStackFrame startframe = null;
+   for (DiadStackFrame bsf : bs.getFrames()) {
+      if (bsf.getFrameId().equals(start_frame.getFrameId())) {
+         startframe = bsf;
+         break;
+       }
+    }
    
-   return fndr.createBaseExecution();
-}
-
-
-
-/********************************************************************************/
-/*                                                                              */
-/*      Handle seede messages                                                   */
-/*                                                                              */
-/********************************************************************************/
-
-Element sendSeedeMessage(String sid,String cmd,CommandArgs args,String cnts)
-{
-   return diad_control.sendSeedeMessage(sid,cmd,args,cnts);
-}
-
-void register(DiexecuteExecution ve)
-{
-   exec_map.put(ve.getSessionId(),ve);
-}
-
-
-void unregister(String ssid)
-{
-   exec_map.remove(ssid);
-}
-
-
-public String handleSeedeMessage(String typ,String id,Element xml)
-{
-   String rslt = null;
+   DiexecuteTrace vt = ve.getSeedeResult();
+   DiexecuteCall vc = vt.getRootContext();
    
-   DiexecuteExecution ve = exec_map.get(id);
-   if (ve != null) {
-      switch (typ) {
-         case "EXEC" :
-            ve.handleResult(xml);
-            break;
-         case "RESET" :
-            ve.handleReset();
-            break;
-         case "INPUT" :
-            rslt = ve.handleInput(IvyXml.getAttrString(xml,"FILE"));
-            break;
-         case "INITIALVALUE" :
-            rslt = ve.handleInitialValue(IvyXml.getAttrString(xml,"WHAT"));
-            break;
-         default :
-            IvyLog.logE("DIEXECUTE","Unknown seede command " + typ);
-            break;
+   DiexecuteSetup vs = new DiexecuteSetup(mgr,change_data,startframe,vc);
+   
+   List<DiexecuteAction> rslt = vs.findResets();
+   
+   return rslt;
+}
+
+
+/********************************************************************************/
+/*										*/
+/*	Processing methods: Simple parameters           			*/
+/*										*/
+/********************************************************************************/
+
+List<DiexecuteAction> getParameterActions()
+{
+   Collection<DiexecuteChangeVariable> items = change_data.getTopParameters();
+   
+   if (items == null) return null;
+   
+   List<DiexecuteAction> rslt = new ArrayList<>();
+   
+   Set<DiexecuteChangeVariable> params = new HashSet<>();
+   for (DiexecuteChangeVariable tv : items) {
+      if (tv.getVariableType() == DiexecuteVariableType.PARAMETER) {
+	 params.add(tv);
+       }
+    }
+   if (!params.isEmpty()) {
+      Map<String,DiadValue> pvals = for_thread.getParameterValues(start_frame);
+      if (pvals != null) {
+         for (DiexecuteChangeVariable tv : params) {
+            DiadValue bv = pvals.get(tv.getName());
+            if (bv != null) rslt.add(DiexecuteAction.createSetAction(tv.getName(),bv));
+          }
        }
     }
    
@@ -160,10 +146,10 @@ public String handleSeedeMessage(String typ,String id,Element xml)
 }
 
 
-}       // end of class DiexecuteManager
+}       // end of class DiexecuteChangedItems
 
 
 
 
-/* end of DiexecuteManager.java */
+/* end of DiexecuteChangedItems.java */
 
