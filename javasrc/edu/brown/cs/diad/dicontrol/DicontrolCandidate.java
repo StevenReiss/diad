@@ -30,6 +30,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.brown.cs.diad.dianalysis.DianalysisManager;
 import edu.brown.cs.diad.dicore.DiadCandidateCallback;
+import edu.brown.cs.diad.dicore.DiadExecution;
 import edu.brown.cs.diad.dicore.DiadLocation;
 import edu.brown.cs.diad.dicore.DiadStack;
 import edu.brown.cs.diad.dicore.DiadStackFrame;
@@ -87,6 +88,8 @@ DicontrolCandidate(DicontrolMain ctrl,DiadThread thrd)
    start_frame = null;
    file_mode = diad_control.getProperty("Diad.file.mode",
          DiadAnalysisFileMode.FAIT_FILES);
+   
+   IvyLog.logD("DICONTROL","Setup candidate " + candidate_id + " for " + thrd);
 }
 
 
@@ -229,9 +232,13 @@ private final class CandidateThread extends Thread {
       DianalysisManager anal = diad_control.getAnalysisManager();
       DiexecuteManager exec = diad_control.getExecuteManager();
       DiadSymptom symptom = null;
+      DiadExecution baseexec = null;
       
       for ( ; ; ) {
          try {
+            checkInterrupted();
+            IvyLog.logD("DICONTROL","Candidate " + candidate_id + " :: " +
+                  candidate_state);
             switch (candidate_state) {
                case INITIAL :
                   DiadStack stk = for_thread.getStack();
@@ -251,6 +258,7 @@ private final class CandidateThread extends Thread {
                   if (checkInterrupted()) break;
                   if (symptom != null) {
                      candidate_symptom = symptom;
+                     IvyLog.logD("DICONTROL","Candidate Symptom " + symptom);
                      setState(DiadCandidateState.SYMPTOM_FOUND);
                    }
                   else {
@@ -262,7 +270,10 @@ private final class CandidateThread extends Thread {
                case NO_SYMPTOM :
                case NO_ANALYSIS :
                case NO_START_FRAME :
+               case NO_BASE_EXECUTION :
+               case NO_LOCATIONS :
                case INTERUPTED : 
+               default :
                   return;
                case SYMPTOM_FOUND :
                   if (checkInterrupted()) break;
@@ -303,14 +314,27 @@ private final class CandidateThread extends Thread {
                   else {
                      setState(DiadCandidateState.STARTING_FRAME_FOUND);
                    }
-                  return;
+                  break;
                case STARTING_FRAME_FOUND :
-                  // get initial seede execution that matches fault
-                  // ValidateContext.setupBaseExecution (ValidateFactory.createValidate)
-                  // return a DiadValidator (ValidateContext)
+                  baseexec = exec.createBaseExecution(symptom,  
+                        for_thread,start_frame);
+                  if (checkInterrupted()) break;
+                  if (baseexec == null) {
+                     setState(DiadCandidateState.NO_BASE_EXECUTION); 
+                   }
+                  else {
+                     setState(DiadCandidateState.BASE_EXECUTION_DONE);
+                   }
                   break;
                case BASE_EXECUTION_DONE :
-                  // candidate has been processed
+                  setState(DiadCandidateState.FINAL_LOCATIONS);
+                  // restrict location set by base execution
+                  break;
+               case FINAL_LOCATIONS :
+                  // might want to find repairs 
+                  setState(DiadCandidateState.DEAD);
+                  break;
+               case READY : 
                   return;
              }
           }

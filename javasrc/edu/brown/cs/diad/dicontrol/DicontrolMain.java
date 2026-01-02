@@ -40,6 +40,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -203,6 +204,11 @@ public void bubblesReady()
 public String getProperty(String id)
 {
    return diad_properties.getProperty(id);
+}
+
+Collection<DicontrolCandidate> getActiveCandidates()
+{
+   return debug_candidates.values();
 }
 
 

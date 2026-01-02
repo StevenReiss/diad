@@ -49,19 +49,21 @@ static DicontrolCommand createCommand(DicontrolMain ctrl,Element xml)
       case "PING" : 
          return new CommandPing(ctrl,xml);
       case "SETUPBUBBLES" :
-          return new CommandSetupBubbles(ctrl,xml);
+         return new CommandSetupBubbles(ctrl,xml);
       case "TEST" :
          return new CommandTest(ctrl,xml);
       case "DELAY" :
          return new CommandDelay(ctrl,xml);
       case "EXIT" :
-          return new CommandExit(ctrl,xml);
+         return new CommandExit(ctrl,xml);
+      case "WAITFORSTATE" :
+         return new WaitForState(ctrl,xml);
       default :
          IvyLog.logE("DICONTROL","Unknown command " + cmd + " " +
                IvyXml.convertXmlToString(xml));
          return null;
     }
-
+   
          
 }
 
@@ -200,6 +202,49 @@ private static class CommandDelay extends DicontrolCommand {
     }
    
 }       // end of inner class CommandDelay
+
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Wait for state command                                                  */
+/*                                                                              */
+/********************************************************************************/
+
+private static class WaitForState extends DicontrolCommand {
+
+   private DiadCandidateState target_state;
+   
+   WaitForState(DicontrolMain ctrl,Element xml) {
+      super(ctrl,xml);
+      target_state = IvyXml.getAttrEnum(xml,"STATE",DiadCandidateState.INITIAL);
+    }
+   
+   @Override public void process(IvyXmlWriter xw) {
+      while (true) {
+         for (DicontrolCandidate cand : diad_control.getActiveCandidates()) { 
+            if (cand.getState() == target_state) return;
+            switch (cand.getState()) {
+               case NO_ANALYSIS :
+               case NO_BASE_EXECUTION :
+               case NO_LOCATIONS :
+               case NO_STACK :
+               case NO_START_FRAME :
+               case NO_SYMPTOM :
+               case DEAD :
+               case INTERUPTED :
+               case READY : 
+                  return;
+             }
+            try {
+               Thread.sleep(1000);
+             }
+            catch (InterruptedException e) { }
+          }
+       }
+    }
+   
+}       // end of inner class WaitForState
 
 
 

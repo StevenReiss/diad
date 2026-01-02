@@ -98,21 +98,21 @@ DiexecuteChangeFinder(DiexecuteManager mgr)
 /*                                                                              */
 /********************************************************************************/
 
-DiexecuteChangeData process(DiadThread bl,DiadSymptom rp,DiadStackFrame topframe)
+DiexecuteChangeData process(DiadThread thrd,DiadSymptom rp,DiadStackFrame topframe)
 {
    DiexecuteChangeData rslt = new DiexecuteChangeData();
    
    known_methods = new HashMap<>();
    // need to find correct starting frame
-   DiadStackFrame bf0 = bl.getStack().getTopFrame();
+   DiadStackFrame bf0 = thrd.getStack().getTopFrame();
    ASTNode stmt0 = getNodeForFrame(bf0);
    
-   DiexecuteChangeMap initvars = findProblemVariables(stmt0,rp);
+   DiexecuteChangeMap initvars = findProblemVariables(stmt0,rp,thrd);
    
    DiexecuteChangeMap chngs = initvars;
    DiadStackFrame prevframe = null;
    ASTNode prevnode = null;
-   DiadStack bs = bl.getStack();
+   DiadStack bs = thrd.getStack();
    boolean havefirst = false;
    for (DiadStackFrame bf : bs.getFrames()) {
       if (!havefirst && bf.isUserFrame()) havefirst = true;
@@ -207,14 +207,14 @@ private ASTNode getStatementOf(ASTNode n)
 /*                                                                              */
 /********************************************************************************/
 
-DiexecuteChangeMap findProblemVariables(ASTNode base,DiadSymptom symp)
+DiexecuteChangeMap findProblemVariables(ASTNode base,DiadSymptom symp,DiadThread thrd)
 {
    DianalysisManager analmgr = exec_manager.getDiadControl().getAnalysisManager();
    
    ASTNode n = null;
    switch (symp.getSymptomType()) {
       case ASSERTION :
-         n = analmgr.getAssertionExpression(symp);
+         n = analmgr.getAssertionExpression(symp,thrd);
          break;
       case EXCEPTION :
          n = analmgr.getExceptionNode(symp);

@@ -129,6 +129,16 @@ DiruntimeFrame(Element xml)
 @Override public Collection<String> getLocals()         { return frame_variables.keySet(); }
 @Override public DiruntimeVariable getLocal(String nm)  { return frame_variables.get(nm); } 
 
+@Override public String getFullMethodName()
+{
+   String rslt = getClassName();
+   rslt += "." + method_name;
+   if (method_signature != null) {
+      rslt += method_signature;
+    }
+   
+   return rslt; 
+}
 
 
 /********************************************************************************/

@@ -51,6 +51,7 @@ String getFormatSignature();
 int getLineNumber();
 File getSourceFile();
 boolean isUserFrame();
+String getFullMethodName();
 
 Collection<String> getLocals();
 DiadLocalVariable getLocal(String name);

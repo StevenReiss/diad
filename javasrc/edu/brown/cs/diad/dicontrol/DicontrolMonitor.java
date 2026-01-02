@@ -78,7 +78,7 @@ DicontrolMonitor(DicontrolMain gm,String mintid)
    mint_control.register("<DIAD DO='_VAR_0' />",new CommandHandler());
    mint_control.register("<BEDROCK TYPE='_VAR_0' />",new IDEHandler());
    mint_control.register("<FAITEXEC TYPE='_VAR_0' />",new FaitHandler());
-   mint_control.register("<SEEDEXEC TYPE='_VAR_0'' ID='_VAR_1'' />",new SeedeHandler());
+   mint_control.register("<SEEDEXEC TYPE='_VAR_0' ID='_VAR_1' />",new SeedeHandler());
    
    IvyLog.logD("DICONTROL","Listening for messages on " + mintid);
 }
@@ -597,7 +597,8 @@ private final class SeedeHandler implements MintHandler {
       String rslt = null;
       if (exec != null) {
          try {
-            rslt = exec.handleSeedeMessage(args.getArgument(0),args.getArgument(1),msg.getXml()); 
+            rslt = exec.handleSeedeMessage(args.getArgument(0),
+                  args.getArgument(1),msg.getXml()); 
           }
          catch (Throwable e) {
             IvyLog.logE("DICONTROL","Error processing command",e);

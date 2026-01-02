@@ -113,7 +113,12 @@ Collection<DiadLocation> findInitialLocations()
          double p = IvyXml.getAttrDouble(n,"PRIORITY");
          String reason = IvyXml.getAttrString(n,"REASON");
          Element locelt = IvyXml.getChild(n,"LOCATION");
-         String fnm = IvyXml.getAttrString(xml,"FILE");
+         String fnm = IvyXml.getAttrString(locelt,"FILE");
+         if (fnm == null) {
+            IvyLog.logE("DIANALYSIS","Graph element without FILE " +
+                  IvyXml.convertXmlToString(n));
+            continue;
+          }
          File f = new File(fnm);
          String proj = src.getProjectForFile(f);
          DiadLocation loc = new DiadLocation(null,locelt,proj); 
@@ -243,7 +248,7 @@ private boolean isLocationRelevant(DisourceManager src,DiadLocation loc)
              }
             if (for_symptom.ignoreDriver()) {
                DiadLocation loc0 = for_symptom.getBugLocation();
-               if (loc != null && loc.getMethod().equals(loc0.getMethod())) {
+               if (loc != null && loc0 != null && loc.getMethod().equals(loc0.getMethod())) {
                   IvyLog.logD("DIANALYSIS","IGNORE DRIVER " + js.getFullName());
                   return false; 
                 }

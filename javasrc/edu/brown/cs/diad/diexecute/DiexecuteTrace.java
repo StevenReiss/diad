@@ -39,6 +39,7 @@ import edu.brown.cs.diad.dicore.DiadStackFrame;
 import edu.brown.cs.diad.dicore.DiadThread;
 import edu.brown.cs.diad.dicore.DiadTrace;
 import edu.brown.cs.diad.dicore.DiadValue;
+import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.xml.IvyXml;
 
 class DiexecuteTrace implements DiadTrace, DiexecuteConstants
@@ -310,6 +311,7 @@ private boolean checkStack(DiadThread thread,Stack<String> stack)
       String sgn = frame.getFormatSignature();
       String id = frame.getClassName() + "." + frame.getMethodName() + sgn;
       id = normalizeName(id);
+      IvyLog.logD("DIEXECUTE","Check stack " + id + " " + base);
       if (id.equals(base)) {
          return checkStack(thread,stack,i);
        }
@@ -351,7 +353,11 @@ private boolean checkStack(DiadThread thread,Stack<String> stack,int start)
       String id = frm.getClassName() + "." + frm.getMethodName() + 
             frm.getFormatSignature();
       id = normalizeName(id);
+      IvyLog.logD("DIEXECUTE","Check Stack " + i + " " + id + " " +
+            start + " " + stack.size());
       if (start-i >= stack.size()) return false;
+      IvyLog.logD("DIEXECUTE","Compate stack " + id + " " + 
+            stack.get(start-i));
       if (!id.equals(stack.get(start-i))) return false;
       if (frm == topframe) return true;
     }

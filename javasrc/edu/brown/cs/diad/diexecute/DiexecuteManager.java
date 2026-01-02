@@ -29,6 +29,7 @@ import java.util.Map;
 import org.w3c.dom.Element;
 
 import edu.brown.cs.diad.dicontrol.DicontrolMain;
+import edu.brown.cs.diad.dicore.DiadExecution;
 import edu.brown.cs.diad.dicore.DiadLocation;
 import edu.brown.cs.diad.dicore.DiadStackFrame;
 import edu.brown.cs.diad.dicore.DiadSymptom;
@@ -98,12 +99,14 @@ public DiadStackFrame getStartingFrame(DiadSymptom symp,DiadThread thrd,
 /*                                                                              */
 /********************************************************************************/
 
-DiadTrace createBaseExecution(DiadSymptom symp,DiadThread thrd,DiadStackFrame start)
+public DiadExecution createBaseExecution(DiadSymptom symp,DiadThread thrd,DiadStackFrame start)
 {
    DiexecuteBaseExecution fndr = new DiexecuteBaseExecution(this,
          symp,thrd,start);
-   
-   return fndr.createBaseExecution();
+   DiadTrace trc = fndr.createBaseExecution();
+   if (trc == null) return null;
+  
+   return fndr;
 }
 
 
@@ -140,6 +143,7 @@ public String handleSeedeMessage(String typ,String id,Element xml)
       switch (typ) {
          case "EXEC" :
             ve.handleResult(xml);
+            IvyLog.logD("DIEXECUTE","Set up SEEDE Result");
             break;
          case "RESET" :
             ve.handleReset();
@@ -154,6 +158,9 @@ public String handleSeedeMessage(String typ,String id,Element xml)
             IvyLog.logE("DIEXECUTE","Unknown seede command " + typ);
             break;
        }
+    }
+   else  {
+      IvyLog.logI("DIEXECUTE","Seede message without handler");
     }
    
    return rslt;

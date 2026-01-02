@@ -163,7 +163,7 @@ protected static String getNodeTypeName(ASTNode n)
 protected ASTNode getSourceStatement() throws DiadException
 {
     ASTNode stmt = getSourceManager().getSourceNode(getProject(),for_frame.getSourceFile(),
-         0,for_frame.getLineNumber(),true,true);
+         -1,for_frame.getLineNumber(),true,true);
     
     return stmt;
 }
@@ -217,7 +217,7 @@ protected CommandArgs addCommandArgs(CommandArgs args)
    if (args == null) args = new CommandArgs();
    args.put("FILE",for_frame.getSourceFile().getAbsolutePath());
    args.put("LINE",for_frame.getLineNumber());
-   args.put("METHOD",for_frame.getMethodName());
+   args.put("METHOD",for_frame.getFullMethodName());
    
    int conddepth = getDiadControl().getProperty("Diad.cond.depth",4);
    int querydepth = getDiadControl().getProperty("Diad.query.depth",10);

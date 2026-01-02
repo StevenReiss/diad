@@ -41,7 +41,7 @@ class DiexecuteExecution implements DiexecuteConstants
 /********************************************************************************/
 
 
-enum ExecState { INITIAL, PENDING, READY };
+enum ExecState { INITIAL, PENDING, READY, INTERRUPT };
 
 private String          session_id;
 private DiexecuteTrace  seede_result;
@@ -98,6 +98,8 @@ void start(DiexecuteManager vfac)
       seede_result = null;
       exec_state = ExecState.PENDING;
     }
+   
+   IvyLog.logD("DIEXECUTE","Start SEEDE execution " + getSessionId());
    
    vfac.register(this); 
    
@@ -160,12 +162,16 @@ synchronized String handleInitialValue(String what)
 DiexecuteTrace getSeedeResult()
 {
    synchronized (this) {
-      while (exec_state != ExecState.READY) {
+      while (exec_state != ExecState.READY && exec_state != ExecState.INTERRUPT) {
          try {
             wait(3000);
           }
-         catch (InterruptedException e) { }
+         catch (InterruptedException e) { 
+            exec_state = ExecState.INTERRUPT;
+            return null;
+          }
        }
+      IvyLog.logD("DIEXECUTE","Return SEEDE result " + exec_state);
       return seede_result;
     }
 }

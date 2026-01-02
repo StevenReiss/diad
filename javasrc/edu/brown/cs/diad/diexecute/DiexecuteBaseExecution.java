@@ -23,6 +23,7 @@
 package edu.brown.cs.diad.diexecute;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -32,6 +33,7 @@ import org.w3c.dom.Element;
 
 import edu.brown.cs.diad.dianalysis.DianalysisManager;
 import edu.brown.cs.diad.dicontrol.DicontrolMain;
+import edu.brown.cs.diad.dicore.DiadExecution;
 import edu.brown.cs.diad.dicore.DiadRepair;
 import edu.brown.cs.diad.dicore.DiadStackFrame;
 import edu.brown.cs.diad.dicore.DiadSymptom;
@@ -43,7 +45,7 @@ import edu.brown.cs.ivy.mint.MintConstants.CommandArgs;
 import edu.brown.cs.ivy.xml.IvyXml;
 import edu.brown.cs.ivy.xml.IvyXmlWriter;
 
-class DiexecuteBaseExecution implements DiexecuteConstants
+class DiexecuteBaseExecution implements DiexecuteConstants, DiadExecution
 {
 
 
@@ -101,6 +103,7 @@ DiexecuteBaseExecution(DiexecuteManager mgr,DiadSymptom symp,DiadThread thrd,
    repair_priority = 1.0;
    finder_priority = 1.0;
    best_score = 0;
+   setup_actions = new ArrayList<>();
    
    DicontrolMain ctrl = mgr.getDiadControl();
    
@@ -124,19 +127,19 @@ DiexecuteBaseExecution(DiexecuteManager mgr,DiadSymptom symp,DiadThread thrd,
 /*                                                                              */
 /********************************************************************************/
 
-DiadThread getThread()
+@Override public DiadThread getThread() 
 {
    return for_thread;
 }
 
 
-DiadSymptom getSymptom()
+@Override public DiadSymptom getSymptom() 
 {
    return for_symptom;
 }
 
 
-DiexecuteTrace getExecutionTrace()
+@Override public DiexecuteTrace getExecutionTrace()
 {
    return base_execution.getSeedeResult();
 }
@@ -173,6 +176,7 @@ DiadTrace createBaseExecution()
    Element sessxml = IvyXml.getChild(rslt,"SESSION");
    base_session = IvyXml.getAttrString(sessxml,"ID");
    if (base_session == null) return null;
+   if (Thread.currentThread().isInterrupted()) return null;
    
    // Add all the loaded files
    IvyXmlWriter xw = new IvyXmlWriter();
@@ -185,12 +189,16 @@ DiadTrace createBaseExecution()
    String cnts = xw.toString();
    xw.close();
    diad.sendSeedeMessage(base_session,"ADDFILE",null,cnts);
+   if (Thread.currentThread().isInterrupted()) return null;
    
    DiexecuteChangedItems valuechanges = new DiexecuteChangedItems(exec_manager,for_thread,start_frame,for_symptom);
+   if (Thread.currentThread().isInterrupted()) return null;
+   
    runBaseExecution(null);
    IvyLog.logI("DIEXECUTE","BASE EXECUTION STEPS " + 
-         base_execution.getSeedeResult().getProblemTime());
-   if (base_execution.getSeedeResult().getProblemTime() >= 0) return null;
+         base_execution.getSeedeResult().getSymptomTime());
+   if (base_execution.getSeedeResult().getSymptomTime() >= 0) return null;
+   if (Thread.currentThread().isInterrupted()) return null;
    
    List<DiexecuteAction> pchanges = valuechanges.getParameterActions();
    if (pchanges != null) setup_actions.addAll(pchanges);
@@ -200,6 +208,7 @@ DiadTrace createBaseExecution()
    List<DiexecuteAction> changes = valuechanges.getResetActions(exec_manager,base_execution);
    if (changes != null) {
       for (DiexecuteAction va : changes) {
+         if (Thread.currentThread().isInterrupted()) return null;
          if (checkBaseExecution(va)) {
             setup_actions.add(va);
             return base_execution.getSeedeResult();
@@ -232,7 +241,7 @@ private boolean checkBaseExecution(DiexecuteAction va)
        }
       DiexecuteExecution oexec = base_execution;
       runBaseExecution(ssid);
-      if (base_execution.getSeedeResult().getProblemTime() >= 0) return true;
+      if (base_execution.getSeedeResult().getSymptomTime() >= 0) return true;
       if (oexec != null) base_execution = oexec;           // else ignore
       return false;
     }
@@ -247,7 +256,9 @@ void runBaseExecution(String sid)
 {
    if (sid == null) sid = base_session;
    base_execution = new DiexecuteExecution(sid,this,null);
+   if (Thread.currentThread().isInterrupted()) return;
    base_execution.start(exec_manager);
+   if (Thread.currentThread().isInterrupted()) return;
    
    DiexecuteTrace vt = base_execution.getSeedeResult();
    if (vt != null) vt.setupForLaunch(for_thread); 
@@ -329,7 +340,7 @@ public boolean checkTestResult(DiexecuteTrace testtrace)
 
 public synchronized boolean canCheckResult(double locpri,double findpri)
 {
-   if (base_execution.getSeedeResult().getProblemTime() < 0) 
+   if (base_execution.getSeedeResult().getSymptomTime() < 0) 
       return false;
    
    boolean rslt = true;

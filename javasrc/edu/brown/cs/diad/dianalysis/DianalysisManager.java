@@ -117,10 +117,10 @@ DisourceManager getSourceManager()
    return diad_control.getSourceManager(); 
 }
 
-public ASTNode getAssertionExpression(DiadSymptom symp)
+public ASTNode getAssertionExpression(DiadSymptom symp,DiadThread thrd)
 {
    if (symp.getSymptomType() == DiadSymptomType.ASSERTION) {
-      DianalysisAssertionHistory query = new DianalysisAssertionHistory(this,symp,null);
+      DianalysisAssertionHistory query = new DianalysisAssertionHistory(this,symp,thrd);
       DiadAssertionData ad = query.getAssertionData();
       return ad.getExpression();
     }
@@ -169,7 +169,8 @@ public void addFiles(DiadAnalysisFileMode mode,Collection<File> files,DiadThread
 { 
    Set<File> use = new HashSet<>();
    
-   IvyLog.logD("DIANALYSIS","Add files for " + thrd.getThreadName() + " " + mode);
+   IvyLog.logD("DIANALYSIS","Add files for " + thrd.getThreadName() + " " + mode +
+         " " + analysis_state);
    
    Set<File> add = getInitialFileSet(mode,thrd);
    if (files != null) use.addAll(files);
@@ -193,6 +194,7 @@ public void addFiles(DiadAnalysisFileMode mode,Collection<File> files,DiadThread
       ++ct;
     }
    if (ct > 0) {
+      waitForAnalysis();                // in case we are in the middle of an analysis
       loaded_files.addAll(nset);
       String cnts = buf.toString();
       Element xw = sendFaitMessage("ADDFILE",null,cnts);
@@ -260,6 +262,8 @@ public Collection<DiadLocation> findInitialLocations(DiadSymptom symp,DiadThread
 
 private void startAnalysis()
 {
+   IvyLog.logD("DIANALYSIS","Start analysis " + analysis_state);
+   
    if (analysis_state == DiadAnalysisState.NONE) {
       analysis_state = DiadAnalysisState.PENDING;
       CommandArgs aargs = new CommandArgs("REPORT","FULL_STATS",
@@ -336,6 +340,7 @@ public synchronized Boolean waitForAnalysis()
          wait(10000);
        }
       catch (InterruptedException e) {
+         IvyLog.logD("DIANALYSIS","Analysis interrrupted");
          return null;
        }
     }
