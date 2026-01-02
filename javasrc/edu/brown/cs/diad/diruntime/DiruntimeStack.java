@@ -99,7 +99,11 @@ DiruntimeStack(Element xml)
 {
    if (stack_frames == null || stack_frames.isEmpty()) return null;
    
-   return stack_frames.get(0);
+   for (DiadStackFrame frm : stack_frames) {
+      if (frm.isUserFrame()) return frm;
+    }
+   
+   return null;
 }
 
 

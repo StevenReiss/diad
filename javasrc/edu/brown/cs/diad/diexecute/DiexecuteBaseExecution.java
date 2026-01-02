@@ -34,6 +34,7 @@ import org.w3c.dom.Element;
 import edu.brown.cs.diad.dianalysis.DianalysisManager;
 import edu.brown.cs.diad.dicontrol.DicontrolMain;
 import edu.brown.cs.diad.dicore.DiadExecution;
+import edu.brown.cs.diad.dicore.DiadLocation;
 import edu.brown.cs.diad.dicore.DiadRepair;
 import edu.brown.cs.diad.dicore.DiadStackFrame;
 import edu.brown.cs.diad.dicore.DiadSymptom;
@@ -145,6 +146,26 @@ DiexecuteBaseExecution(DiexecuteManager mgr,DiadSymptom symp,DiadThread thrd,
 }
 
 
+@Override public Collection<DiadLocation> getExecutedLocations(Collection<DiadLocation> base)
+{
+   DiexecuteCall call = getExecutionTrace().getRootContext();
+   Set<String> used = new HashSet<>();
+   call.getExecutedLocations(used);
+   
+   List<DiadLocation> rslt = new ArrayList<>();
+   for (DiadLocation loc : base) {
+      String s = loc.getFile().getPath() + "@" + loc.getStatementLine();
+      if (!used.contains(s)) {
+         IvyLog.logD("DIEXECUTE","IGNORE location " + s + " because it isn't executed");
+       }
+      else {
+         rslt.add(loc);
+       }
+    }
+   return rslt;
+}
+
+
 /********************************************************************************/
 /*                                                                              */
 /*      Processing method                                                       */
@@ -197,12 +218,16 @@ DiadTrace createBaseExecution()
    runBaseExecution(null);
    IvyLog.logI("DIEXECUTE","BASE EXECUTION STEPS " + 
          base_execution.getSeedeResult().getSymptomTime());
-   if (base_execution.getSeedeResult().getSymptomTime() >= 0) return null;
+   if (base_execution.getSeedeResult().getSymptomTime() >= 0) {
+      return base_execution.getSeedeResult();
+    }
    if (Thread.currentThread().isInterrupted()) return null;
    
    List<DiexecuteAction> pchanges = valuechanges.getParameterActions();
    if (pchanges != null) setup_actions.addAll(pchanges);
-   if (setup_actions.size() > 0 && checkBaseExecution(null)) return null;
+   if (setup_actions.size() > 0 && checkBaseExecution(null)) {
+      return base_execution.getSeedeResult();
+    }
    
    // this needs to be more sophisticated to try multiple changes in series
    List<DiexecuteAction> changes = valuechanges.getResetActions(exec_manager,base_execution);
@@ -302,6 +327,13 @@ String handleEdits(String ssid,String edits)
    String sts = IvyXml.getAttrString(rslt,"STATUS");
    if (sts == null) sts = "FAIL";
    return sts;
+}
+
+@Override public void clear()
+{
+   if (base_session == null) return;
+   removeSubsession(base_session);
+   base_session = null;
 }
 
 

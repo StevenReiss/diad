@@ -130,6 +130,18 @@ DiadThread getThread()
 }
 
 
+DiadStackFrame getStartingFrame() 
+{
+   Element runner = getRunner();
+   if (runner == null) return null;
+   String fid = IvyXml.getAttrString(runner,"FRAME");
+   if (fid == null) return null;
+   for (DiadStackFrame frm : for_thread.getStack().getFrames()) {
+      if (frm.getFrameId().equals(fid)) return frm;
+    }
+   return null;
+}
+
 
 @Override public DiexecuteValue getException()
 {
@@ -305,7 +317,17 @@ private boolean checkStack(DiadThread thread,Stack<String> stack)
 {
    DiadStack stk = thread.getStack();
    String base = stack.get(0);
+   DiadStackFrame sfrm = getStartingFrame();
    List<DiadStackFrame> frms = stk.getFrames();
+   
+   if (sfrm != null) {
+      int i1 = frms.indexOf(sfrm);
+      if (i1 >= 0) {
+         return checkStack(thread,stack,i1);
+       }
+    }
+   
+   // find the frame corresponding to our starting point
    for (int i = frms.size()-1; i >= 0; --i) {
       DiadStackFrame frame = frms.get(i);
       String sgn = frame.getFormatSignature();
@@ -356,7 +378,7 @@ private boolean checkStack(DiadThread thread,Stack<String> stack,int start)
       IvyLog.logD("DIEXECUTE","Check Stack " + i + " " + id + " " +
             start + " " + stack.size());
       if (start-i >= stack.size()) return false;
-      IvyLog.logD("DIEXECUTE","Compate stack " + id + " " + 
+      IvyLog.logD("DIEXECUTE","Compare stack " + id + " " + 
             stack.get(start-i));
       if (!id.equals(stack.get(start-i))) return false;
       if (frm == topframe) return true;

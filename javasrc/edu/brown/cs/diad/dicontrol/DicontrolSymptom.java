@@ -106,7 +106,14 @@ DicontrolSymptom(DiadSymptomType type,String item)
 
 @Override public void outputXml(IvyXmlWriter xw)
 {
-   // TODO
+   xw.begin("SYMPTOM");
+   xw.field("TYPE",symptom_type);
+   xw.field("OPERATOR",value_operator);
+   xw.field("PRECISION",target_precision);
+   if (symptom_item != null) xw.textElement("ITEM",symptom_item);
+   if (original_value != null) xw.cdataElement("ORIGINAL",original_value);
+   if (target_value != null) xw.cdataElement("TARGET",target_value);
+   xw.end("SYMPTOM");
 }
 
 

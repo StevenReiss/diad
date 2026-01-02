@@ -35,7 +35,7 @@
 
 package edu.brown.cs.diad.dicore;
 
-
+import java.util.Collection;
 
 public interface DiadExecution
 {
@@ -43,7 +43,9 @@ public interface DiadExecution
 DiadThread getThread();
 DiadSymptom getSymptom();
 DiadTrace getExecutionTrace();
+Collection<DiadLocation> getExecutedLocations(Collection<DiadLocation> base);
 
+void clear();
 
 }       // end of interface DiadExecution
 

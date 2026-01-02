@@ -231,6 +231,7 @@ private static class WaitForState extends DicontrolCommand {
                case NO_STACK :
                case NO_START_FRAME :
                case NO_SYMPTOM :
+               case NO_FINAL_LOCATIONS :
                case DEAD :
                case INTERUPTED :
                case READY : 

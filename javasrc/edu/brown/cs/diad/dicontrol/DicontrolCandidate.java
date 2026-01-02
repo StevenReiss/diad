@@ -58,6 +58,8 @@ private DiadCandidateState  candidate_state;
 private DiadSymptom     candidate_symptom;
 private Collection<DiadLocation> location_set;
 private DiadStackFrame  start_frame;
+private DiadExecution   base_execution;
+private Collection<DiadLocation> exec_locations;
 private String          candidate_id;
 private SwingEventListenerList<DiadCandidateCallback> candidate_listeners;
 private CandidateThread candidate_processor;
@@ -81,16 +83,21 @@ DicontrolCandidate(DicontrolMain ctrl,DiadThread thrd)
    candidate_state = DiadCandidateState.INITIAL; 
    candidate_symptom = null;
    location_set = null;
+   start_frame = null;
+   base_execution = null;
+   exec_locations = null;
+   
    candidate_listeners = new SwingEventListenerList<>(DiadCandidateCallback.class);
    candidate_processor = null;
-   candidate_id = "DIAD_ " + candidate_counter.incrementAndGet();
+   candidate_id = "DIAD_C_" + candidate_counter.incrementAndGet();
    candidate_files = new HashSet<>();
-   start_frame = null;
+   
    file_mode = diad_control.getProperty("Diad.file.mode",
          DiadAnalysisFileMode.FAIT_FILES);
    
    IvyLog.logD("DICONTROL","Setup candidate " + candidate_id + " for " + thrd);
 }
+
 
 
 /********************************************************************************/
@@ -211,6 +218,26 @@ void outputXml(IvyXmlWriter xw)
    xw.field("STATE",candidate_state);
    for_thread.outputXml(xw);
    for_frame.outputXml(xw);
+   if (candidate_symptom != null) {
+      candidate_symptom.outputXml(xw);
+    }
+   if (start_frame != null) {
+      xw.begin("STARTFRAME");
+      start_frame.outputXml(xw);
+      xw.end("STARTFRAME");
+    }
+   xw.begin("FILES");
+   for (File f : candidate_files) {
+      xw.textElement("FILE",f.getPath());
+    }
+   xw.end("FILES");
+   if (exec_locations != null) {
+      xw.begin("EXECLOCATIONS");
+      for (DiadLocation loc : exec_locations) {
+         loc.outputXml(xw);
+       }
+      xw.end("EXECLOCATIONS");
+    }
    xw.end("CANDIDATE");
 }
 
@@ -231,8 +258,6 @@ private final class CandidateThread extends Thread {
    @Override public void run() {
       DianalysisManager anal = diad_control.getAnalysisManager();
       DiexecuteManager exec = diad_control.getExecuteManager();
-      DiadSymptom symptom = null;
-      DiadExecution baseexec = null;
       
       for ( ; ; ) {
          try {
@@ -241,6 +266,11 @@ private final class CandidateThread extends Thread {
                   candidate_state);
             switch (candidate_state) {
                case INITIAL :
+                  candidate_symptom = null;
+                  base_execution = null;
+                  location_set = null;
+                  exec_locations = null;
+                  start_frame = null;
                   DiadStack stk = for_thread.getStack();
                   if (stk == null || for_thread.isInternal()) { 
                      setState(DiadCandidateState.NO_STACK);
@@ -254,27 +284,16 @@ private final class CandidateThread extends Thread {
                   DicontrolSymptomFinder finder =
                      new DicontrolSymptomFinder(diad_control,for_thread,
                            stk,for_frame);
-                  symptom = finder.findSymptom();
+                  candidate_symptom = finder.findSymptom();
                   if (checkInterrupted()) break;
-                  if (symptom != null) {
-                     candidate_symptom = symptom;
-                     IvyLog.logD("DICONTROL","Candidate Symptom " + symptom);
+                  if (candidate_symptom != null) {
+                     IvyLog.logD("DICONTROL","Candidate Symptom " + candidate_symptom);
                      setState(DiadCandidateState.SYMPTOM_FOUND);
                    }
                   else {
                      setState(DiadCandidateState.NO_SYMPTOM);
                    }
                   break;
-               case DEAD :
-               case NO_STACK :
-               case NO_SYMPTOM :
-               case NO_ANALYSIS :
-               case NO_START_FRAME :
-               case NO_BASE_EXECUTION :
-               case NO_LOCATIONS :
-               case INTERUPTED : 
-               default :
-                  return;
                case SYMPTOM_FOUND :
                   if (checkInterrupted()) break;
                   anal.addFiles(file_mode,candidate_files,for_thread);  
@@ -316,10 +335,10 @@ private final class CandidateThread extends Thread {
                    }
                   break;
                case STARTING_FRAME_FOUND :
-                  baseexec = exec.createBaseExecution(symptom,  
+                  base_execution = exec.createBaseExecution(candidate_symptom,  
                         for_thread,start_frame);
                   if (checkInterrupted()) break;
-                  if (baseexec == null) {
+                  if (base_execution == null) {
                      setState(DiadCandidateState.NO_BASE_EXECUTION); 
                    }
                   else {
@@ -327,14 +346,44 @@ private final class CandidateThread extends Thread {
                    }
                   break;
                case BASE_EXECUTION_DONE :
-                  setState(DiadCandidateState.FINAL_LOCATIONS);
+                  exec_locations = base_execution.getExecutedLocations(location_set); 
+                  if (exec_locations == null) {
+                     setState(DiadCandidateState.NO_FINAL_LOCATIONS);   
+                   }
+                  else {
+                     setState(DiadCandidateState.FINAL_LOCATIONS);
+                   }
                   // restrict location set by base execution
                   break;
                case FINAL_LOCATIONS :
                   // might want to find repairs 
-                  setState(DiadCandidateState.DEAD);
+                  setState(DiadCandidateState.READY);
                   break;
                case READY : 
+                  synchronized (this) {
+                     for ( ; ; ) {
+                        try {
+                           wait(10000);
+                         }
+                        catch (InterruptedException e) {
+                           break;
+                         }
+                      }
+                   }
+                  return;
+               case DEAD :
+               case INTERUPTED : 
+                  cleanup(true);
+                  return;
+               case NO_STACK :
+               case NO_SYMPTOM :
+               case NO_ANALYSIS :
+               case NO_START_FRAME :
+               case NO_BASE_EXECUTION :
+               case NO_LOCATIONS :
+               default :
+                  cleanup(false);
+                  // need to remove base execution from seede
                   return;
              }
           }
@@ -356,7 +405,21 @@ private final class CandidateThread extends Thread {
        }
       return false;
     }
-}
+   
+   private void cleanup(boolean all) {
+      if (all) {
+         candidate_symptom = null;
+         location_set = null;
+         exec_locations = null;
+         start_frame = null;
+       }
+      if (base_execution != null) {
+         base_execution.clear();  
+         base_execution = null;
+       }
+    }
+   
+}       // end of inner class CandidateThread
 
 
 
