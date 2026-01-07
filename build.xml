@@ -61,21 +61,22 @@
    <target name='bubbles' depends='all'>
       <jar destfile='diad.jar'>
 	 <manifest>
-	    <attribute name="Bubbles-start" value='edu.brown.cs.diadbb.bait.BarleyFactory' />
+	    <attribute name="Bubbles-start" value='edu.brown.cs.diadbb.bird.BirdFactory' />
 	    <attribute name="Bubbles-palette" value='diadbb.palette' />
-	    <attribute name="Bubbles-resource" value='Barley.props' />
+	    <attribute name="Bubbles-resource" value='Bird.props' />
 	    <attribute name="Bubbles-depends" value='' />
 	 </manifest>
 	 <fileset dir='${DIAD}/java' includes='**/*.class' />
 	 <fileset dir='${PRO}/diadbb/java' includes='**/*.class' />
 	 <fileset dir='${DIAD}/resources' includes='*.xml' />
 	 <fileset dir='${DIAD}/resources' includes='*.proto' />
+	 <fileset dir='${DIAD}/resources' includes='images/*.png' />
 <!--	 <fileset dir='${PRO}/ivy/java' includes='**/*.class' />                        -->
-	 <fileset dir='${PRO}/diadbb' includes='Barley.props' />
+	 <fileset dir='${PRO}/diadbb' includes='Bird.props' />
 	 <fileset dir='${PRO}/diadbb' includes='diadbb.palette' />
       </jar>
-      <copy file='diad.jar' tofile='${PRO}/bubbles/dropins/diad.jar' verbose='true' />
-      <copy file='diad.jar' tofile='${PRO}/bubbles/dropins.export/diad.jar' verbose='true' />
+<!--  <copy file='diad.jar' tofile='${PRO}/bubbles/dropins/diad.jar' verbose='true' />
+      <copy file='diad.jar' tofile='${PRO}/bubbles/dropins.export/diad.jar' verbose='true' /> -->
    </target>
 
 </project>

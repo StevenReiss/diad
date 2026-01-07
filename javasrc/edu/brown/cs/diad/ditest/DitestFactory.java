@@ -59,6 +59,7 @@ private boolean         trace_seede;
 private int             seede_timeout;
 private boolean         fait_starting;
 private boolean         seede_starting;
+private File            workspace_dir;
 
 public static final String [] OPENS;
 
@@ -97,6 +98,7 @@ public DitestFactory(DicontrolMain ctrl)
    seede_timeout = 0;
    fait_starting = false;
    seede_starting = false;
+   workspace_dir = null;
 }
 
 
@@ -125,6 +127,7 @@ public void setupBedrock(String workspace,String mint)
       throw new Error("No eclipse");
     }
    ec2 = new File(ec2,workspace);
+   workspace_dir = ec2;
    
    diad_control.setupMessageServer(mint); 
    
@@ -181,7 +184,8 @@ public boolean startFait()
    IvyLog.logD("DITEST","START FAIT");
    
    IvyExec exec = null;
-   File wd = new File(System.getProperty("user.home"));
+   File wd = workspace_dir;
+   if (wd == null) wd = new File(System.getProperty("user.home"));
    File logf = new File(wd,"fait.log");
    
    List<String> args = new ArrayList<>();
@@ -333,7 +337,8 @@ public boolean startSeede()
    IvyLog.logD("DITEST","START SEEDE");
    
    IvyExec exec = null;
-   File wd = new File(System.getProperty("user.home"));
+   File wd = workspace_dir;
+   if (wd == null) wd = new File(System.getProperty("user.home"));
    File logf = new File(wd,"seede.log");
    boolean isnew = false;
    

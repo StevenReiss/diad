@@ -392,6 +392,7 @@ private final class CandidateThread extends Thread {
                return;
              }
             IvyLog.logE("DICONTROL","Problem processing candidate",e);
+            setState(DiadCandidateState.DEAD);
             return;
           }
        }

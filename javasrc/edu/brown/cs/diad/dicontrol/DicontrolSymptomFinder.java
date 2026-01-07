@@ -37,6 +37,7 @@ import edu.brown.cs.diad.dicore.DiadStackFrame;
 import edu.brown.cs.diad.dicore.DiadSymptom;
 import edu.brown.cs.diad.dicore.DiadThread;
 import edu.brown.cs.diad.disource.DisourceManager;
+import edu.brown.cs.ivy.file.IvyLog;
 
 class DicontrolSymptomFinder implements DicontrolConstants
 {
@@ -103,7 +104,12 @@ DiadSymptom findSymptom()
    
    DisourceManager srcfac = diad_control.getSourceManager();
    ASTNode stmt = srcfac.getSourceNode(null,frm.getSourceFile(),
-         0,frm.getLineNumber(),false,true);
+         -1,frm.getLineNumber(),false,true);
+   if (stmt == null) {
+      IvyLog.logE("DICONTROL","No statement found for " + frm.getSourceFile() + 
+            " " + frm.getLineNumber());
+      return null;
+    }
    
    DicontrolSymptom fnd = checkErrorStatement(stmt);
    if (fnd != null) return fnd;
