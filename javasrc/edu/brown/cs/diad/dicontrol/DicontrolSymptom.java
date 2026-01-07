@@ -97,6 +97,16 @@ DicontrolSymptom(DiadSymptomType type,String item)
    target_value = v;
 }
 
+@Override public void setOperator(DiadValueOperator op)
+{
+   value_operator = op;
+}
+
+@Override public void setPrecision(double p) 
+{
+   target_precision = p; 
+}
+
 
 /********************************************************************************/
 /*                                                                              */
@@ -109,7 +119,9 @@ DicontrolSymptom(DiadSymptomType type,String item)
    xw.begin("SYMPTOM");
    xw.field("TYPE",symptom_type);
    xw.field("OPERATOR",value_operator);
-   xw.field("PRECISION",target_precision);
+   if (value_operator != null && value_operator != DiadValueOperator.NONE) {
+      if (target_precision != 0) xw.field("PRECISION",target_precision);
+    }
    if (symptom_item != null) xw.textElement("ITEM",symptom_item);
    if (original_value != null) xw.cdataElement("ORIGINAL",original_value);
    if (target_value != null) xw.cdataElement("TARGET",target_value);

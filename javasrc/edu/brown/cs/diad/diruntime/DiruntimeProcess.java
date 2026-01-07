@@ -279,11 +279,23 @@ void terminate()
 
 
 void suspend()
-{ }
+{ 
+   for (DiruntimeThread thrd : getThreads()) {
+      if (thrd.getThreadState() == RunThreadState.RUNNING) {
+         thrd.setThreadState(RunThreadState.STOPPED);
+       }
+    }
+}
 
 
 void resume() 
-{ }
+{ 
+   for (DiruntimeThread thrd : getThreads()) {
+      if (thrd.getThreadState() == RunThreadState.STOPPED) {
+         thrd.setThreadState(RunThreadState.RUNNING);
+       }
+    }
+}
 
 
 

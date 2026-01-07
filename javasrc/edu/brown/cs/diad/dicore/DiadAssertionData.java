@@ -37,6 +37,8 @@ package edu.brown.cs.diad.dicore;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 
+import edu.brown.cs.diad.dicore.DiadConstants.DiadValueOperator;
+
 public interface DiadAssertionData
 {
 
@@ -44,6 +46,8 @@ ASTNode getExpression();
 String getOriginalValue();
 String getTargetValue();
 boolean isLocation();
+default double getPrecision()           { return 0; }
+default DiadValueOperator getOperator() { return DiadValueOperator.NONE; }
 
 
 }       // end of interface DiadAssertionData

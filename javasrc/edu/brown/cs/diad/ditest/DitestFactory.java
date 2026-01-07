@@ -94,7 +94,7 @@ public DitestFactory(DicontrolMain ctrl)
    debug_fait = true;
    trace_fait = false;
    debug_seede = true;
-   trace_seede = true;
+   trace_seede = false;
    seede_timeout = 0;
    fait_starting = false;
    seede_starting = false;

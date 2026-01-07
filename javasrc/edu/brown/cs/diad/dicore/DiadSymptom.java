@@ -55,6 +55,8 @@ double getTargetPrecision();
 
 void setOriginalValue(String val);
 void setTargetValue(String val);
+void setOperator(DiadValueOperator op);
+void setPrecision(double v);
 
 default List<String> ignorePatterns() {
    return new ArrayList<>();

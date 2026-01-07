@@ -361,9 +361,11 @@ private void scanArgs(String [] args)
 	 if (args[i].startsWith("-")) {
 	    if (args[i].startsWith("-D")) {                     // -DEBUG
 	       log_level = IvyLog.LogLevel.DEBUG;
-	       log_stderr = true;
 	       // set log level
 	     }
+            else if (args[i].startsWith("-S")) {                // -STDERR
+               log_stderr = true;
+             }
 	    else badArgs();
 	  }
 	 else {
@@ -491,6 +493,11 @@ private final class RuntimeCallback implements DiadRuntimeCallback {
 @Override public void threadStateChanged(DiadThread thrd)
 {
    DicontrolCandidate dc = debug_candidates.get(thrd);
+   IvyLog.logD("DICONTROL","Handle thread state change " + dc + " " +
+         thrd.isRunning() + " " + thrd.isTerminated() + " " +
+         thrd.isStopped() + " " + debug_candidates.size());
+
+   
    if (dc != null) {
       if (thrd.isRunning() || thrd.isTerminated()) {
          dc.terminate(); 

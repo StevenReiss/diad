@@ -176,8 +176,14 @@ void update(Element xml)
       thread_type = btt;		
     }
    
-   if (IvyXml.getAttrBool(xml,"STACK")) num_frames = IvyXml.getAttrInt(xml,"FRAMES",1);
-   else num_frames = -1;
+   call_stack = null;
+   if (IvyXml.getAttrBool(xml,"STACK")) {
+      num_frames = IvyXml.getAttrInt(xml,"FRAMES",1);
+    }
+   else {
+      num_frames = -1;
+    }
+   
    if (IvyXml.getAttrBool(xml,"TERMINATED")) {
       thread_state = RunThreadState.DEAD;
     }
@@ -306,6 +312,8 @@ void setThreadState(RunThreadState state,RunThreadStateDetail detail)
    thread_state = state;
    thread_detail = detail;
    // stack_data = null;
+   
+   if (isRunning()) call_stack = null;
    
    for_process.getManager().fireThreadStateChanged(this); 
 }

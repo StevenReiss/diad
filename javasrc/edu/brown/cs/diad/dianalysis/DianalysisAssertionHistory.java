@@ -27,6 +27,7 @@ import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.AssertStatement;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.NumberLiteral;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.w3c.dom.Element;
 
@@ -35,6 +36,7 @@ import edu.brown.cs.diad.dicore.DiadException;
 import edu.brown.cs.diad.dicore.DiadSymptom;
 import edu.brown.cs.diad.dicore.DiadThread;
 import edu.brown.cs.diad.dicore.DiadValue;
+import edu.brown.cs.diad.dicore.DiadConstants.DiadValueOperator;
 import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.jcomp.JcompAst;
 import edu.brown.cs.ivy.jcomp.JcompType;
@@ -133,6 +135,8 @@ private class AssertionChecker extends ASTVisitor implements DiadAssertionData {
    private ASTNode use_node;
    private String orig_value;
    private String target_value;
+   private double precision_value;
+   private DiadValueOperator value_op;
    private boolean is_location;
    
    AssertionChecker() {
@@ -140,6 +144,8 @@ private class AssertionChecker extends ASTVisitor implements DiadAssertionData {
       orig_value = null;
       target_value = null;
       is_location = false;
+      precision_value = 0;
+      value_op = DiadValueOperator.NONE;
     }
    
    String generateResult() {
@@ -154,6 +160,8 @@ private class AssertionChecker extends ASTVisitor implements DiadAssertionData {
    @Override public String getOriginalValue()   { return orig_value; }
    @Override public String getTargetValue()     { return target_value; }
    @Override public boolean isLocation()        { return is_location; }
+   @Override public double getPrecision()       { return precision_value; }
+   @Override public DiadValueOperator getOperator()   { return value_op; } 
    
    private void useNode(ASTNode n,String orig,String tgt) {
       if (use_node == null) {
@@ -168,10 +176,13 @@ private class AssertionChecker extends ASTVisitor implements DiadAssertionData {
       int ct = mi.arguments().size();
       int givenidx = -1;
       int targetidx = -1;
+      int precidx = -1;
+      
       switch (nm) {
          case "equals" :
             givenidx = THIS_INDEX;
             targetidx = 0;
+            value_op = DiadValueOperator.EQL;
             break;
          case "assertArrayEquals" :
             break;
@@ -179,6 +190,7 @@ private class AssertionChecker extends ASTVisitor implements DiadAssertionData {
          case "assertSame" :
          case "assertNotEquals" :
          case "assertNotSame" :
+            value_op = DiadValueOperator.EQL;
             if (ct == 2) { 
                givenidx = 0;
                targetidx = 1;
@@ -189,6 +201,7 @@ private class AssertionChecker extends ASTVisitor implements DiadAssertionData {
                if (t1.isFloatingType()) {
                   givenidx = 0;
                   targetidx = 1;
+                  precidx = 2;
                 }
                else {
                   givenidx = 1;
@@ -198,17 +211,40 @@ private class AssertionChecker extends ASTVisitor implements DiadAssertionData {
             else if (ct == 4) {
                givenidx = 1;
                targetidx = 2;
+               precidx = 3;
              }
             break;
          case "assertNull" :
+            value_op = DiadValueOperator.EQL;
+            target_value = "null";
+            if (ct == 1) givenidx = 0;
+            else givenidx = 1;
+            break;
          case "assertNotNull" :
+            value_op = DiadValueOperator.NEQ;
+            target_value = "null";
+            if (ct == 1) givenidx = 0;
+            else givenidx = 1;
+            break;
          case "assertTrue" :
+            value_op = DiadValueOperator.EQL;
+            target_value = "true";
+            if (ct == 1) givenidx = 0;
+            else givenidx = 1;
+            break;
          case "assertFalse" :
+            value_op = DiadValueOperator.EQL;
+            target_value = "false";
+            if (ct == 1) givenidx = 0;
+            else givenidx = 1;
+            break;
          case "assertThrows" :
             if (ct == 1) givenidx = 0;
             else givenidx = 1;
             break;
          case "assertThat" :
+            value_op = DiadValueOperator.EQL;
+            target_value = "true";
             if (ct == 2) {
                ASTNode arg1 = getArgument(1,mi); 
                JcompType t1 = JcompAst.getExprType(arg1);
@@ -242,6 +278,18 @@ private class AssertionChecker extends ASTVisitor implements DiadAssertionData {
             givenidx = targetidx;
             targetidx = idx;
           }
+         if (precidx >= 0) {
+            precision_value = 1e-5;
+            ASTNode pg = getArgument(precidx,mi);
+            if (pg instanceof NumberLiteral) {
+               NumberLiteral nl = (NumberLiteral) pg;
+               JcompType tp = JcompAst.getExprType(nl);
+               if (tp.isDoubleType() || tp.isFloatingType()) {
+                  Number nv = JcompAst.getNumberValue(nl);
+                  if (nv != null) precision_value = nv.doubleValue();
+                }
+             }
+          }
        }
       
       if (givenidx < 0) return false;
@@ -255,22 +303,6 @@ private class AssertionChecker extends ASTVisitor implements DiadAssertionData {
          case "assertEquals" :
          case "assertSame" :
             target = getTargetValue(mi,targetidx);
-            break;
-         case "assertNotEquals" :
-         case "assertNotSame" :
-            break;
-         case "assertNull" :
-            target = "null";
-            break;
-         case "assertNotNull" :
-            target = "Non-Null";
-            break;
-         case "assertThat" :
-         case "assertTrue" :
-            target = "true";
-            break;
-         case "assertFalse" :
-            target = "false";
             break;
          case "assertThrows" :
             break;

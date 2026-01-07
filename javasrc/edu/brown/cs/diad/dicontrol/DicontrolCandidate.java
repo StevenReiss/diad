@@ -186,13 +186,14 @@ void setFileMode(DiadAnalysisFileMode mode)
 
 void terminate()
 {
-   candidate_state = DiadCandidateState.DEAD;
    stopProcessing();
 }
 
 
 private synchronized void stopProcessing()
 {
+   IvyLog.logD("DICONTROL","Stop processing " + getId());
+   
    while (candidate_processor.isAlive()) {
       candidate_processor.interrupt();
       try {
@@ -200,6 +201,8 @@ private synchronized void stopProcessing()
        }
       catch (InterruptedException e) { }  
     }
+   
+   setState(DiadCandidateState.DEAD);
    candidate_processor = null;
 }
 

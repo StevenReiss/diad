@@ -234,8 +234,13 @@ private void handleTargetEvent(Element xml)
    Element tgt = IvyXml.getChild(xml,"TARGET");
    String pid = IvyXml.getAttrString(tgt,"PID");
    if (pid == null) pid = IvyXml.getAttrString(tgt,"PROCESS");
-   if (pid == null) return;
+   if (pid == null) {
+      IvyLog.logD("DIRUNTIME","Target event with no process id");
+      return;
+    }
    DiruntimeProcess proc = process_map.get(pid);
+   IvyLog.logD("DIRUNTIME","Handle target event " + kind + " " + pid + " " +
+         proc.getId());
    if (proc == null) return;
    
    switch (kind) {
