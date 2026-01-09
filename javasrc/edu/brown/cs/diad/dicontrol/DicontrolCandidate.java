@@ -132,7 +132,20 @@ void setState(DiadCandidateState st)
 {
    if (st == candidate_state) return;
    
+   IvyLog.logD("DICONTROL","Set candidate " + candidate_id + " = " + st);
+   
    candidate_state = st;
+   if (st == DiadCandidateState.DEAD) {
+      // need to leave thread alone
+      for_frame = null;
+      candidate_symptom = null;
+      location_set = null;
+      start_frame = null;
+      base_execution = null;
+      exec_locations = null;
+      candidate_files.clear();
+    }
+   
    for (DiadCandidateCallback cb : candidate_listeners) {
       cb.stateChanged();
     }
@@ -149,6 +162,9 @@ void start()
    if (candidate_processor != null) {
       stopProcessing();
     }
+   
+   IvyLog.logD("DICONTROL","Start candidate " + candidate_id +
+         " " + candidate_state);
 
    switch (candidate_state) {
       case INITIAL :
@@ -192,10 +208,14 @@ void terminate()
 
 private synchronized void stopProcessing()
 {
-   IvyLog.logD("DICONTROL","Stop processing " + getId());
+   IvyLog.logD("DICONTROL","Stop processing " + getId() + 
+         candidate_processor);
    
-   while (candidate_processor.isAlive()) {
-      candidate_processor.interrupt();
+   while (candidate_processor != null && candidate_processor.isAlive()) {
+      if (!candidate_processor.isInterrupted()) {
+         IvyLog.logD("DICONTROL","Interrupting processor");
+         candidate_processor.interrupt();
+       }
       try {
          wait(100);
        }
@@ -219,8 +239,8 @@ void outputXml(IvyXmlWriter xw)
    xw.begin("CANDIDATE");
    xw.field("ID",candidate_id);
    xw.field("STATE",candidate_state);
-   for_thread.outputXml(xw);
-   for_frame.outputXml(xw);
+   if (for_thread != null) for_thread.outputXml(xw);
+   if (for_frame != null) for_frame.outputXml(xw);
    if (candidate_symptom != null) {
       candidate_symptom.outputXml(xw);
     }
@@ -229,11 +249,13 @@ void outputXml(IvyXmlWriter xw)
       start_frame.outputXml(xw);
       xw.end("STARTFRAME");
     }
-   xw.begin("FILES");
-   for (File f : candidate_files) {
-      xw.textElement("FILE",f.getPath());
+   if (candidate_files != null) {
+      xw.begin("FILES");
+      for (File f : candidate_files) {
+         xw.textElement("FILE",f.getPath());
+       }
+      xw.end("FILES");
     }
-   xw.end("FILES");
    if (exec_locations != null) {
       xw.begin("EXECLOCATIONS");
       for (DiadLocation loc : exec_locations) {
@@ -279,11 +301,13 @@ private final class CandidateThread extends Thread {
                      setState(DiadCandidateState.NO_STACK);
                      return;
                    }
+                  if (checkInterrupted()) break;
                   for_frame = stk.getUserFrame();
                   if (for_frame == null) {
                      setState(DiadCandidateState.NO_STACK);
                      return;
                    }
+                  if (checkInterrupted()) break;
                   DicontrolSymptomFinder finder =
                      new DicontrolSymptomFinder(diad_control,for_thread,
                            stk,for_frame);
@@ -362,6 +386,7 @@ private final class CandidateThread extends Thread {
                   // might want to find repairs 
                   setState(DiadCandidateState.READY);
                   break;
+               case NO_SYMPTOM :
                case READY : 
                   synchronized (this) {
                      for ( ; ; ) {
@@ -379,7 +404,6 @@ private final class CandidateThread extends Thread {
                   cleanup(true);
                   return;
                case NO_STACK :
-               case NO_SYMPTOM :
                case NO_ANALYSIS :
                case NO_START_FRAME :
                case NO_BASE_EXECUTION :
@@ -404,6 +428,7 @@ private final class CandidateThread extends Thread {
    
    private boolean checkInterrupted() {
       if (isInterrupted()) {
+         IvyLog.logD("DICONTROL","Candidate interrupted");
          setState(DiadCandidateState.INTERUPTED); 
          return true;
        }

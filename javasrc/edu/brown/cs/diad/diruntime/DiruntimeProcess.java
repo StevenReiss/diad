@@ -42,6 +42,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.w3c.dom.Element;
 
+import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.xml.IvyXml;
 
 class DiruntimeProcess implements DiruntimeConstants
@@ -195,6 +196,7 @@ void updateThread(Element xml)
    DiruntimeThread thrd = thread_map.get(id);
    
    if (thrd == null) {
+      IvyLog.logD("DIRUNTIME","Creating new thread " + id);
       thrd = new DiruntimeThread(this,thrdxml); 
       thrd.update(thrdxml);
       thread_map.put(id,thrd);
@@ -220,7 +222,7 @@ void updateThread(Element xml)
          break;
       case RESUME :
          if (dtl == RunThreadStateDetail.EVALUATION_IMPLICIT) return;
-         thrd.setThreadState(ost,dtl);
+         thrd.setThreadState(RunThreadState.RUNNING,dtl);
          break;
       case SUSPEND :
          if (dtl == RunThreadStateDetail.EVALUATION_IMPLICIT && iseval) return;

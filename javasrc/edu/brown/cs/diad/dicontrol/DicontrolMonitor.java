@@ -535,11 +535,13 @@ protected class IDEHandler implements MintHandler {
                System.exit(1);
                break;
             default :
+               IvyLog.logE("DICONTROL","Unknown eclispe message " + cmd);
+               msg.replyTo();
                break;
           }
        }
       catch (Throwable t) {
-         IvyLog.logE("DICONTROL","Unknown eclipse message " + cmd,t);
+         IvyLog.logE("DICONTROL","Problem processing eclipse message " + cmd,t);
          msg.replyTo();
        }
     }

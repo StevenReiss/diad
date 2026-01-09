@@ -222,7 +222,10 @@ private void handleThreadEvent(Element xml)
    if (thrd == null) return;
    String pid = IvyXml.getAttrString(thrd,"PID");
    DiruntimeProcess proc = process_map.get(pid);
-   if (proc == null || terminated_processes.contains(pid)) return;
+   if (proc == null || terminated_processes.contains(pid)) {
+      IvyLog.logD("DIRUNTIME","No process for thread event");
+      return;
+    }
    
    proc.updateThread(xml);
 }
@@ -239,9 +242,13 @@ private void handleTargetEvent(Element xml)
       return;
     }
    DiruntimeProcess proc = process_map.get(pid);
+   if (proc == null) {
+      // initial target event, target events after termination
+      return;
+    }
+    
    IvyLog.logD("DIRUNTIME","Handle target event " + kind + " " + pid + " " +
          proc.getId());
-   if (proc == null) return;
    
    switch (kind) {
       case SUSPEND :

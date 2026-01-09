@@ -507,7 +507,9 @@ private final class RuntimeCallback implements DiadRuntimeCallback {
    else if (thrd.isStopped()) {
       dc = new DicontrolCandidate(DicontrolMain.this,thrd); 
       debug_candidates.put(thrd,dc);
-      dc.addCandidateListener(new DicontrolUpdater(DicontrolMain.this,dc));
+      DicontrolUpdater upd = new DicontrolUpdater(DicontrolMain.this,dc);
+      dc.addCandidateListener(upd);
+      upd.stateChanged();
       dc.start(); 
     }
 }

@@ -190,6 +190,9 @@ void update(Element xml)
    else if (IvyXml.getAttrBool(xml,"SUSPENDED")) {
       thread_state = RunThreadState.STOPPED;
     }
+   else {
+      thread_state = RunThreadState.RUNNING;
+    }
    
    exception_type = null;
 }
