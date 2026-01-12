@@ -176,12 +176,12 @@ void update(Element xml)
       thread_type = btt;		
     }
    
-   call_stack = null;
    if (IvyXml.getAttrBool(xml,"STACK")) {
       num_frames = IvyXml.getAttrInt(xml,"FRAMES",1);
     }
    else {
       num_frames = -1;
+      call_stack = null;
     }
    
    if (IvyXml.getAttrBool(xml,"TERMINATED")) {
@@ -316,7 +316,9 @@ void setThreadState(RunThreadState state,RunThreadStateDetail detail)
    thread_detail = detail;
    // stack_data = null;
    
-   if (isRunning()) call_stack = null;
+   if (isRunning()) {
+      call_stack = null;
+    }
    
    for_process.getManager().fireThreadStateChanged(this); 
 }
@@ -504,7 +506,7 @@ public Map<String,DiadValue> getParameterValues(DiadStackFrame basefrm)
          prev = frm;
          break;
        }
-      if (frm == basefrm) {
+      if (frm.equals(basefrm)) {
          cur = frm;
          usenext = true;
        }
@@ -685,6 +687,7 @@ private class CallFinder extends ASTVisitor {
 }	// end of inner class CallFinder
 
 
+
 /********************************************************************************/
 /*                                                                              */
 /*      Output methods                                                          */
@@ -706,6 +709,29 @@ private class CallFinder extends ASTVisitor {
 }
 
 
+
+/********************************************************************************/
+/*                                                                              */
+/*      Comparison methods                                                     */
+/*                                                                              */
+/********************************************************************************/
+
+@Override public boolean equals(Object o)
+{
+   if (o != null && o instanceof DiruntimeThread) {
+      DiruntimeThread dt = (DiruntimeThread) o;
+      return thread_id.equals(dt.thread_id);
+    }
+   
+   return false;
+}
+
+@Override public int hashCode()
+{
+   if (thread_id == null) return System.identityHashCode(this);
+   
+   return thread_id.hashCode();
+}
 
 
 }       // end of class DiruntimeThread

@@ -35,7 +35,7 @@
 
 package edu.brown.cs.diad.dicore;
 
-
+import org.json.JSONObject;
 
 public interface DiadLocalVariable
 {
@@ -45,6 +45,7 @@ String getType();
 String getKind();
 String getValue();
 
+JSONObject toJson();
 
 }       // end of interface DiadLocalVariable
 

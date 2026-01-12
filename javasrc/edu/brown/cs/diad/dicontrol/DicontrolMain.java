@@ -443,6 +443,12 @@ private void processXmlFile(FileReader fr)
          String xmlstr = xr.readXml();
          if (xmlstr == null) break;
          IvyLog.logD("LIMBA","Process XML command: " + xmlstr);
+         if (xmlstr.contains("$")) {
+            for (DicontrolCandidate cand : debug_candidates.values()) {
+               xmlstr = xmlstr.replace("$ID",cand.getId());
+               break;
+             }
+          }
          Element xml = IvyXml.convertStringToXml(xmlstr);
          try {
             DiadCommand cmd = setupDiadCommand(xml);

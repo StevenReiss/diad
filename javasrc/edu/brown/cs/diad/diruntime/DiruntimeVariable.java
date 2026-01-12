@@ -34,6 +34,7 @@
 
 package edu.brown.cs.diad.diruntime;
 
+import org.json.JSONObject;
 import org.w3c.dom.Element;
 
 import edu.brown.cs.diad.dicore.DiadLocalVariable;
@@ -97,6 +98,23 @@ DiruntimeVariable(Element xml)
 @Override public String getValue()              { return var_value; }
 
 
+/********************************************************************************/
+/*                                                                              */
+/*      Output methods                                                          */
+/*                                                                              */
+/********************************************************************************/
+
+@Override public JSONObject toJson()
+{
+   JSONObject jo = new JSONObject();
+   
+   jo.put("NAME",var_name);
+   jo.put("TYPE",var_type);
+   jo.put("KIND",var_kind);
+   jo.put("VALUE",var_value);
+   
+   return jo;
+}
 
 
 }       // end of class DiruntimeVariable

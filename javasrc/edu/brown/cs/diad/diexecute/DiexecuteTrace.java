@@ -381,7 +381,7 @@ private boolean checkStack(DiadThread thread,Stack<String> stack,int start)
       IvyLog.logD("DIEXECUTE","Compare stack " + id + " " + 
             stack.get(start-i));
       if (!id.equals(stack.get(start-i))) return false;
-      if (frm == topframe) return true;
+      if (frm.equals(topframe)) return true;
     }
    return false;
 }

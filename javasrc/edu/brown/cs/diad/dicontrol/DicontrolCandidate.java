@@ -28,6 +28,9 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import edu.brown.cs.diad.dianalysis.DianalysisManager;
 import edu.brown.cs.diad.dicore.DiadCandidateCallback;
 import edu.brown.cs.diad.dicore.DiadExecution;
@@ -224,6 +227,30 @@ private synchronized void stopProcessing()
    
    setState(DiadCandidateState.DEAD);
    candidate_processor = null;
+}
+
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Query methods                                                           */
+/*                                                                              */
+/********************************************************************************/
+
+JSONArray getJsonStack()
+{
+   JSONArray rslt = new JSONArray();
+   boolean use = false;
+   for (DiadStackFrame frm : for_thread.getStack().getFrames()) {
+      if (!use && frm.equals(for_frame)) use = true;
+      if (use) {
+         JSONObject jo = frm.toJson(); 
+         rslt.put(jo);
+       }
+      if (frm.equals(start_frame)) use = false;
+    }
+   
+   return rslt;
 }
 
 

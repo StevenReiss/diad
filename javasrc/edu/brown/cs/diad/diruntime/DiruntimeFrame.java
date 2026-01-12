@@ -40,6 +40,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.w3c.dom.Element;
 
 import edu.brown.cs.diad.dicore.DiadStackFrame;
@@ -160,6 +162,56 @@ DiruntimeFrame(Element xml)
    xw.textElement("FORMATTED",format_signature);
    xw.end("FRAME");
 }
+
+
+@Override public JSONObject toJson() 
+{
+   JSONObject rslt = new JSONObject();
+   rslt.put("ID",frame_id);
+   rslt.put("CLASS",class_name);
+   rslt.put("METHOD",method_name);
+   rslt.put("SIGNATURE",method_signature);
+   rslt.put("FULL_METHOD",class_name + "." +  method_name + format_signature);
+   rslt.put("LINE",line_number);
+   
+   JSONArray lcls = new JSONArray();
+   for (Map.Entry<String,DiruntimeVariable> ent : frame_variables.entrySet()) {
+      JSONObject lclv = ent.getValue().toJson();
+      lcls.put(lclv);
+    }
+   rslt.put("LOCALS",lcls);
+   
+   return rslt;
+}
+
+
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Comparison methods                                                     */
+/*                                                                              */
+/********************************************************************************/
+
+@Override public boolean equals(Object o)
+{
+   if (o != null && o instanceof DiruntimeFrame) {
+      DiruntimeFrame dt = (DiruntimeFrame) o;
+      return frame_id.equals(dt.frame_id);
+    }
+   
+   return false;
+}
+
+
+@Override public int hashCode()
+{
+   if (frame_id == null) return System.identityHashCode(this);
+   
+   return frame_id.hashCode();
+}
+
+
 
 
 

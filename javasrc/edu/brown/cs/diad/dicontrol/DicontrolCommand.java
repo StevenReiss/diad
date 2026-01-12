@@ -22,6 +22,8 @@
 
 package edu.brown.cs.diad.dicontrol;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.w3c.dom.Element;
 
 import edu.brown.cs.diad.dicore.DiadConstants.DiadCommand;
@@ -58,6 +60,8 @@ static DicontrolCommand createCommand(DicontrolMain ctrl,Element xml)
          return new CommandExit(ctrl,xml);
       case "WAITFORSTATE" :
          return new WaitForState(ctrl,xml);
+      case "Q_STACK" :
+         return new QueryStack(ctrl,xml);
       default :
          IvyLog.logE("DICONTROL","Unknown command " + cmd + " " +
                IvyXml.convertXmlToString(xml));
@@ -246,6 +250,80 @@ private static class WaitForState extends DicontrolCommand {
     }
    
 }       // end of inner class WaitForState
+
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Query Commands                                                          */
+/*                                                                              */
+/********************************************************************************/
+
+private abstract static class QueryCommand extends DicontrolCommand {
+   
+   private DicontrolCandidate debug_candidate;
+   
+   protected QueryCommand(DicontrolMain ctrl,Element xml) {
+      super(ctrl,xml);
+      
+      debug_candidate = null;
+      String id = IvyXml.getAttrString(xml,"DEBUGID");
+      for (DicontrolCandidate cand : diad_control.getActiveCandidates()) {
+         if (cand.getId().equals(id)) {
+            debug_candidate = cand;
+            break;
+          }
+       }
+    }
+   
+   protected DicontrolCandidate getCandidate() {
+      return debug_candidate;
+    }
+   
+   @Override public void process(IvyXmlWriter xw) {
+      if (debug_candidate == null) return;
+      
+      JSONObject jo = getJsonObject();
+      JSONArray ja = null;
+      if (jo == null) {
+         ja = getJsonArray();
+       }
+      if (jo != null) {
+         xw.begin("JSON");
+         xw.field("TYPE","OBJECT");
+         xw.cdata(jo.toString(2));
+         xw.end("JSON");
+       }
+      else if (ja != null) {
+         xw.begin("JSON");
+         xw.field("TYPE","ARRAY");
+         xw.cdata(ja.toString(2));
+         xw.end("JSON");
+       }
+      else {
+         localProcess(xw);
+       }
+    }
+   
+   protected JSONObject getJsonObject()                 { return null; }
+   protected JSONArray getJsonArray()                   { return null; }
+   protected void localProcess(IvyXmlWriter xw)         { }
+   
+}       // end of inner class QueryCommand
+
+
+private static class QueryStack extends QueryCommand {
+   
+   QueryStack(DicontrolMain ctrl,Element xml) {
+      super(ctrl,xml);
+    }
+   
+   @Override protected JSONArray getJsonArray() {
+      return getCandidate().getJsonStack(); 
+    }
+   
+   
+}       // end of inner class QueryStack
 
 
 

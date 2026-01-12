@@ -3,4 +3,22 @@
 <DIAD DO='TEST' PROJECT='nanoxml' LAUNCH='testParsing16' CONTINUE='0' />
 <!-- <DIAD DO='DELAY' TIME='120000' /> -->
 <DIAD DO='WAITFORSTATE' STATE='READY' />
+<DIAD DO='Q_STACK' DEBUGID='$ID' />
+
 <DIAD DO='EXIT' />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
