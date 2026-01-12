@@ -34,6 +34,7 @@
      <fileset dir='${IVYLIB}' includes='ivy.jar' />
      <fileset dir='${IVYLIB}' includes='junit.jar' />
      <fileset dir='${IVYLIB}' includes='asm.jar' />
+     <fileset dir='${IVYLIB}' includes='json.jar' />
      <fileset dir='${PRO}/ivy/lib/eclipsejar' includes='*.jar' />
   </path>
 
