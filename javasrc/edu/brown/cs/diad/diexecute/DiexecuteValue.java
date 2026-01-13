@@ -22,6 +22,8 @@
 
 package edu.brown.cs.diad.diexecute;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.w3c.dom.Element;
 
 import edu.brown.cs.diad.dicore.DiadTrace;
@@ -221,6 +223,38 @@ DiexecuteValue(Element v)
    return IvyXml.convertXmlToString(value_element);
 }
 
+
+JSONObject toJson(DiexecuteTrace trace,DiexecuteVariable linv)
+{
+   JSONObject rslt = new JSONObject();
+   rslt.put("SET_TIME",getStartTime());
+   rslt.put("SET_LINE",linv.getLineAtTime(getStartTime()));
+   rslt.put("TYPE",getDataType());
+   if (IvyXml.getAttrBool(value_element,"OBJECT")) {
+      JSONArray flds = new JSONArray();
+      rslt.put("FIELDS",flds);
+      for (Element flde : IvyXml.children(value_element,"FIELD")) {
+         DiexecuteVariable fvar = new DiexecuteVariable(flde);
+         JSONObject fld = fvar.toJson(trace,linv);
+         flds.put(fld);
+       }
+    }
+   else if (IvyXml.getAttrBool(value_element,"ARRAY")) {
+      rslt.put("LENGTH",getArrayLength());
+      JSONArray flds = new JSONArray();
+      rslt.put("ELEMENTS",flds);
+      for (Element flde : IvyXml.children(value_element,"ELEMENT")) {
+         DiexecuteVariable fvar = new DiexecuteVariable(flde);
+         JSONObject fld = fvar.toJson(trace,linv);
+         flds.put(fld);
+       }
+    }
+   else {
+      rslt.put("VALUE",getValue());
+    }
+   
+   return rslt;
+}
 
 
 

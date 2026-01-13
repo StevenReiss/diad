@@ -25,6 +25,8 @@ package edu.brown.cs.diad.diexecute;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.w3c.dom.Element;
 
 import edu.brown.cs.diad.dicore.DiadTrace.DiadTraceVariable;
@@ -122,6 +124,28 @@ List<DiexecuteValue> getValues(DiexecuteTrace trace)
 }
 
 
+
+/********************************************************************************/
+/*                                                                              */
+/*      Output methods                                                          */
+/*                                                                              */
+/********************************************************************************/
+
+JSONObject toJson(DiexecuteTrace trace,DiexecuteVariable linv)
+{
+   JSONObject rslt = new JSONObject();
+   String name = getName();
+   if (name == null) name = IvyXml.getAttrString(variable_element,"INDEX");
+   rslt.put("NAME",name);
+   JSONArray vals = new JSONArray(); 
+   for (DiexecuteValue val : getValues(trace)) {
+      JSONObject va = val.toJson(trace,linv);  
+      if (va != null) vals.put(va);
+    }
+   rslt.put("VALUES",vals);
+   
+   return rslt;
+}
 /********************************************************************************/
 /*                                                                              */
 /*      Equality methods                                                        */

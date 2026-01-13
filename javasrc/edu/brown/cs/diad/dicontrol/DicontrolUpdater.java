@@ -68,7 +68,7 @@ DicontrolUpdater(DicontrolMain ctrl,DicontrolCandidate cand)
          "STATE",for_candidate.getState());
    String cnts = null;
    try (IvyXmlWriter xw = new IvyXmlWriter()) {
-      for_candidate.outputXml(xw);
+      for_candidate.outputXml(xw);  
       cnts = xw.toString();
     }
    

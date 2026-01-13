@@ -54,6 +54,7 @@ private String var_kind;
 private String var_type;
 private String var_value;
 private String var_name;
+private int    var_length;
 
 
 
@@ -69,9 +70,9 @@ DiruntimeVariable(Element xml)
    var_kind = IvyXml.getAttrString(xml,"KIND");
    var_type = IvyXml.getAttrString(xml,"TYPE");
    var_value = IvyXml.getTextElement(xml,"DESCRIPTION");
+   var_length = IvyXml.getAttrInt(xml,"LENGTH");
    if (IvyXml.getAttrBool(xml,"CHARS")) {
-      int len = IvyXml.getAttrInt(xml,"LENGTH");
-      var_value = IvyXml.decodeCharacters(var_value,len);
+      var_value = IvyXml.decodeCharacters(var_value,var_length);
     }
    else {
       var_value = IvyXml.decodeXmlString(var_value);
@@ -98,6 +99,7 @@ DiruntimeVariable(Element xml)
 @Override public String getValue()              { return var_value; }
 
 
+
 /********************************************************************************/
 /*                                                                              */
 /*      Output methods                                                          */
@@ -108,13 +110,68 @@ DiruntimeVariable(Element xml)
 {
    JSONObject jo = new JSONObject();
    
+   String kind = var_kind;
+   if (kind == null) kind = "OBJECT";
+   
    jo.put("NAME",var_name);
    jo.put("TYPE",var_type);
-   jo.put("KIND",var_kind);
+   jo.put("KIND",kind);
+   
+   switch (kind) {
+      default :
+      case "UNKNOWN" :
+      case "OBJECT" :
+      case "CLASS" :
+      case "SCOPE" :
+         if (var_type.equals("null")) jo.put("VALUE",(Object) null);
+         else jo.put("VALUE",var_value);
+         break;
+      case "ARRAY" :
+      case "CHARS" :
+         jo.put("LENGTH",var_length);
+         jo.put("VALUE",var_value);
+         break;
+      case "PRIMITIVE" :
+         switch (var_type) {
+            case "byte" :
+            case "short" :
+            case "int" :
+               int vint = Integer.parseInt(var_value);
+               jo.put("VALUE",vint);
+               break;
+            case "long" :
+               long vlong = Long.parseLong(var_value);
+               jo.put("VALUE",vlong);
+               break;
+            case "double" :
+            case "float" :
+               double vdbl = Double.parseDouble(var_value);
+               jo.put("VALUE",vdbl);
+               break;
+            case "boolean" :
+               boolean vbool = "tTyY1".indexOf(var_value.charAt(0)) >= 0;
+               jo.put("VALUE",vbool);
+               break;
+            case "char" :
+               if (var_value.startsWith("'")) {
+                  jo.put("VALUE",var_value);
+                }
+               else {
+                  int vchar = Integer.parseInt(var_value);
+                  jo.put("VALUE",vchar); 
+                }
+            default :
+               jo.put("VALUE",var_value);
+               break;
+          }
+         break;
+    }
    jo.put("VALUE",var_value);
    
    return jo;
 }
+
+
 
 
 }       // end of class DiruntimeVariable

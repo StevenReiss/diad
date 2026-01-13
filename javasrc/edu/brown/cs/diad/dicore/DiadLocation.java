@@ -46,6 +46,7 @@ import org.w3c.dom.Element;
 
 import edu.brown.cs.diad.dicontrol.DicontrolMain;
 import edu.brown.cs.ivy.file.IvyFile;
+import edu.brown.cs.ivy.file.IvyFormat;
 import edu.brown.cs.ivy.jcomp.JcompAst;
 import edu.brown.cs.ivy.xml.IvyXml;
 import edu.brown.cs.ivy.xml.IvyXmlWriter;
@@ -167,6 +168,25 @@ public String getMethod()
    if (full_method != null) return full_method;
    
    return in_method; 
+}
+
+public String getFullMethod()
+{
+   if (full_method == null) {
+      return in_method;
+    }
+   
+   String rslt = full_method;
+   int idx = rslt.indexOf("(");
+   if (idx > 0) {
+      String sign  = rslt.substring(idx);
+      int sidx = sign.lastIndexOf(")");
+      if (sidx > 0) sign = sign.substring(0,sidx+1);
+      String fsgn = IvyFormat.formatTypeName(sign);
+      rslt = in_method + fsgn;
+    }
+    
+   return rslt;
 }
 
 protected void setMethodData(String full,int off,int len)

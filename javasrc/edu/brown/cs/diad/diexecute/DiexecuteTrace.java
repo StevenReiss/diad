@@ -29,6 +29,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.w3c.dom.Element;
 
 import edu.brown.cs.diad.dicore.DiadDataType;
@@ -58,6 +60,7 @@ private DiexecuteCall    problem_context;
 private Map<Integer,Element> id_map;
 private DiadThread       for_thread;
 private Map<Element,DiexecuteCall> call_map;
+private Map<String,DiexecuteCall> callid_map;
 private String          session_id;
 
 
@@ -77,6 +80,7 @@ DiexecuteTrace(Element rslt,DiadThread thrd)
    problem_context = null;
    for_thread = thrd;
    call_map = new HashMap<>();
+   callid_map = new HashMap<>();
    setupIdMap();
 }
 
@@ -118,6 +122,8 @@ DiexecuteCall getCallForContext(Element ctx)
       if (vc == null) {
          vc = new DiexecuteCall(this,ctx);
          call_map.put(ctx,vc);
+         String idx = String.valueOf(vc.getContextId());
+         callid_map.put(idx,vc);
        }
       return vc;
     }
@@ -797,11 +803,36 @@ void getExecutedLocations(Set<String> rslt)
    if (vc != null) vc.getExecutedLocations(rslt);
 }
 
+
 /********************************************************************************/
 /*                                                                              */
 /*      Output methods                                                          */
 /*                                                                              */
 /********************************************************************************/
+
+JSONObject getJsonExecTrace()
+{
+   return problem_context.getJsonExecTrace(); 
+}
+
+
+JSONArray getJsonLineTrace(String callid)
+{
+   DiexecuteCall ctx = callid_map.get(callid);
+   if (ctx == null) return null;
+   
+   return ctx.getJsonLineTrace(); 
+}
+
+
+JSONObject getJsonVarTrace(String callid,String var)
+{
+   DiexecuteCall ctx = callid_map.get(callid);
+   if (ctx == null) return null;
+   
+   return ctx.getJsonVarTrace(var);  
+}
+
 
 @Override public String toString()
 {

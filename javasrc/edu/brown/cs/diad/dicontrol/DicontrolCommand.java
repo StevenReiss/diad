@@ -62,6 +62,14 @@ static DicontrolCommand createCommand(DicontrolMain ctrl,Element xml)
          return new WaitForState(ctrl,xml);
       case "Q_STACK" :
          return new QueryStack(ctrl,xml);
+      case "Q_LOCATIONS" :
+         return new QueryLocations(ctrl,xml);
+      case "Q_EXECTRACE" :
+         return new QueryExecTrace(ctrl,xml);
+      case "Q_LINETRACE" :
+         return new QueryLineTrace(ctrl,xml);
+      case "Q_VARTRACE" :
+         return new QueryVarTrace(ctrl,xml);
       default :
          IvyLog.logE("DICONTROL","Unknown command " + cmd + " " +
                IvyXml.convertXmlToString(xml));
@@ -324,6 +332,77 @@ private static class QueryStack extends QueryCommand {
    
    
 }       // end of inner class QueryStack
+
+
+
+private static class QueryLocations extends QueryCommand {
+   
+   private boolean all_locations;
+   
+   QueryLocations(DicontrolMain ctrl,Element xml) {
+      super(ctrl,xml);
+      all_locations = IvyXml.getAttrBool(xml,"ALL");
+    }
+   
+   @Override protected JSONArray getJsonArray() {
+      return getCandidate().getJsonLocations(all_locations);  
+    }
+   
+
+}       // end of inner class QueryLocations
+
+
+private static class QueryExecTrace extends QueryCommand {
+   
+   QueryExecTrace(DicontrolMain ctrl,Element xml) {
+      super(ctrl,xml);
+    }
+   
+   @Override protected JSONObject getJsonObject() {
+      return getCandidate().getJsonExecTrace();  
+    }
+   
+
+}       // end of inner class QueryExecTrace
+
+
+
+private static class QueryLineTrace extends QueryCommand {
+   
+   private String call_id;
+   
+   QueryLineTrace(DicontrolMain ctrl,Element xml) {
+      super(ctrl,xml);
+      call_id = IvyXml.getAttrString(xml,"CALLID");
+    }
+   
+   @Override protected JSONArray getJsonArray() {
+      return getCandidate().getJsonLineTrace(call_id);    
+    }
+   
+
+}       // end of inner class QueryLineTrace
+
+
+private static class QueryVarTrace extends QueryCommand {
+   
+   private String call_id;
+   private String var_name;
+   
+   QueryVarTrace(DicontrolMain ctrl,Element xml) {
+      super(ctrl,xml);
+      call_id = IvyXml.getAttrString(xml,"CALLID");
+      var_name = IvyXml.getAttrString(xml,"VARIABLE");
+    }
+   
+   @Override protected JSONObject getJsonObject() {
+      return getCandidate().getJsonVarTrace(call_id,var_name);    
+    }
+   
+
+}       // end of inner class QueryVarTrace
+
+
 
 
 

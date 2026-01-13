@@ -29,6 +29,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
@@ -62,7 +64,6 @@ DiexecuteCall(DiexecuteTrace vt,Element ctx)
    for_trace = vt;
    context_element = ctx;
 }
-
 
 
 /********************************************************************************/
@@ -181,6 +182,17 @@ Map<String,DiexecuteVariable> getVariables()
 }
 
 
+DiexecuteVariable getTraceVariable(String name)
+{
+   for (Element e : IvyXml.children(context_element,"VARIABLE")) {
+      String nm = IvyXml.getAttrString(e,"NAME");
+      if (nm.equals(name)) return new DiexecuteVariable(e);
+    }
+   
+   return null;
+}
+
+
 
 /********************************************************************************/
 /*                                                                              */
@@ -201,6 +213,90 @@ void getExecutedLocations(Set<String> rslt)
       vc.getExecutedLocations(rslt);
     }
 }
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Output methods                                                          */
+/*                                                                              */
+/********************************************************************************/
+
+JSONObject getJsonExecTrace()
+{
+   JSONObject rslt = new JSONObject();
+   rslt.put("ID",getContextId());
+   rslt.put("METHOD",getMethod());
+   rslt.put("FILE",getFile());
+   rslt.put("START_TIME",getStartTime());
+   rslt.put("END_TIME",getEndTime());
+   JSONArray calls = new JSONArray();
+   for (DiexecuteCall c : getInnerCalls()) {
+      JSONObject co = c.getJsonExecTrace();
+      calls.put(co);
+    }
+   rslt.put("CALLS",calls);
+   
+   return rslt; 
+}
+
+
+JSONArray getJsonLineTrace()
+{
+   JSONArray rslt = new JSONArray();
+   
+   DiexecuteVariable lines = getLineNumbers();
+   if (lines != null) {
+      DiexecuteValue prev = null;
+      for (DiexecuteValue val : lines.getValues(for_trace)) {
+         if (prev != null) {
+            JSONObject lobj = buildLineObject(prev,val.getStartTime()-1);
+            rslt.put(lobj);
+          }
+         prev = val;
+       }
+      if (prev != null) {
+         JSONObject lobj = buildLineObject(prev,getEndTime());
+         rslt.put(lobj);
+       }
+    }
+   
+   return rslt;
+}
+
+
+
+private JSONObject buildLineObject(DiexecuteValue val,long end)
+{
+   JSONObject lobj = new JSONObject();
+   
+   int lno = val.getLineValue();
+   lobj.put("LINE",lno);
+   lobj.put("START_TIME",val.getStartTime());
+   lobj.put("END_TIME",end);
+   
+   return lobj;
+}
+
+
+JSONObject getJsonVarTrace(String varname)
+{
+   DiexecuteVariable var = getTraceVariable(varname);
+   if (var == null) return null;
+   
+   DiexecuteVariable linv = getLineNumbers();
+   
+   JSONObject rslt = new JSONObject();
+   rslt.put("NAME",var.getName());
+   JSONArray vals = new JSONArray();
+   for (DiexecuteValue val : var.getValues(for_trace)) {
+      JSONObject va = val.toJson(for_trace,linv);  
+      if (va != null) vals.put(va);
+    }
+   rslt.put("VALUES",vals);
+   
+   return rslt;
+}
+
 
 
 

@@ -29,6 +29,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.w3c.dom.Element;
 
 import edu.brown.cs.diad.dianalysis.DianalysisManager;
@@ -434,19 +436,23 @@ synchronized void noteSeedeLength(long t,DiadRepair repair,double score)
 
 /********************************************************************************/
 /*                                                                              */
-/*      Location mechanism                                                      */
+/*      Output methods                                                          */
 /*                                                                              */
 /********************************************************************************/
 
-public Set<String> getExecutedLocations()
+@Override public JSONObject getJsonExecTrace()
 {
-   Set<String> rslt = new HashSet<>();
-   
-   getExecutionTrace().getExecutedLocations(rslt);
-   
-   if (rslt.isEmpty()) return null;
-   
-   return rslt;
+   return base_execution.getSeedeResult().getJsonExecTrace();
+}
+
+@Override public JSONArray getJsonLineTrace(String callid)
+{
+   return base_execution.getSeedeResult().getJsonLineTrace(callid);  
+}
+
+@Override public JSONObject getJsonVarTrace(String callid,String var)
+{ 
+   return base_execution.getSeedeResult().getJsonVarTrace(callid,var); 
 }
 
 

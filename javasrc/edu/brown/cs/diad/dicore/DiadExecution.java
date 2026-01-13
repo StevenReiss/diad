@@ -37,6 +37,9 @@ package edu.brown.cs.diad.dicore;
 
 import java.util.Collection;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 public interface DiadExecution
 {
 
@@ -46,6 +49,10 @@ DiadTrace getExecutionTrace();
 Collection<DiadLocation> getExecutedLocations(Collection<DiadLocation> base);
 
 void clear();
+
+JSONObject getJsonExecTrace();
+JSONArray getJsonLineTrace(String callid);
+JSONObject getJsonVarTrace(String callid,String var);
 
 }       // end of interface DiadExecution
 

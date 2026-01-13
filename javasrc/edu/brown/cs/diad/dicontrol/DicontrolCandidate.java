@@ -23,9 +23,14 @@
 package edu.brown.cs.diad.dicontrol;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.json.JSONArray;
@@ -233,7 +238,7 @@ private synchronized void stopProcessing()
 
 /********************************************************************************/
 /*                                                                              */
-/*      Query methods                                                           */
+/*      Query methods : Stack                                                   */
 /*                                                                              */
 /********************************************************************************/
 
@@ -253,6 +258,119 @@ JSONArray getJsonStack()
    return rslt;
 }
 
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Query methods : Locations                                               */
+/*                                                                              */
+/********************************************************************************/
+
+JSONArray getJsonLocations(boolean all)
+{
+   JSONArray rslt = new JSONArray();
+   
+   Collection<DiadLocation> base = (all ? location_set : exec_locations);
+   
+   Map<String,List<DiadLocation>> bymethod = new LinkedHashMap<>();
+   for (DiadLocation dloc : base) {
+      String m = dloc.getFullMethod();
+      List<DiadLocation> ll = bymethod.get(m);
+      if (ll == null) {
+         ll = new ArrayList<>();
+         bymethod.put(m,ll);
+       }
+      ll.add(dloc);
+    }
+   
+   for (Map.Entry<String,List<DiadLocation>> ent : bymethod.entrySet()) {
+      Map<Integer,LocationSummary> found = new TreeMap<>();
+      for (DiadLocation loc1 : ent.getValue()) {
+         LocationSummary sum = found.get(loc1.getLineNumber());
+         if (sum == null) {
+            sum = new LocationSummary(loc1);
+            found.put(loc1.getLineNumber(),sum);
+          }
+         else {
+            sum.merge(loc1);
+          }
+       }
+      JSONObject obj = new JSONObject();
+      obj.put("METHOD",ent.getKey());
+      DiadLocation loc0 = ent.getValue().get(0);
+      obj.put("FILE",loc0.getFile());
+      obj.put("START_POSITION",loc0.getMethodOffset());
+      obj.put("END_POSITION",loc0.getMethodEndOffset());
+      JSONArray arr = new JSONArray();
+      for (LocationSummary sum : found.values()) {
+         JSONObject sobj = sum.toJson();
+         arr.put(sobj);
+       }
+      obj.put("LINES",arr);
+      rslt.put(obj);
+    }
+   
+   return rslt;
+}
+
+
+private static class LocationSummary {
+  
+   private int line_number;
+   private int start_offset;
+   private int end_offset;
+   private double loc_priority;
+   
+   LocationSummary(DiadLocation loc) {
+      line_number = loc.getLineNumber();
+      start_offset = loc.getStartOffset();
+      end_offset = loc.getEndOffset();
+      loc_priority = loc.getPriority();
+    }
+   
+   void merge(DiadLocation loc) {
+      start_offset = Math.min(start_offset,loc.getStartOffset());
+      end_offset = Math.max(end_offset,loc.getEndOffset());
+      loc_priority = Math.max(loc_priority,loc.getPriority());
+    }
+   
+   JSONObject toJson() {
+      JSONObject rslt = new JSONObject();
+      rslt.put("LINE",line_number);
+      rslt.put("PRIORITY",loc_priority);
+      return rslt;
+    }
+   
+}       // end of inner class LocationSummary
+
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Query methods ; executions                                              */
+/*                                                                              */
+/********************************************************************************/
+
+JSONObject getJsonExecTrace()
+{
+   if (base_execution == null) return null;
+   
+   return base_execution.getJsonExecTrace(); 
+}
+
+
+JSONArray getJsonLineTrace(String callid)
+{
+   if (base_execution == null) return null;
+   
+   return base_execution.getJsonLineTrace(callid); 
+}
+
+
+JSONObject getJsonVarTrace(String callid,String var)
+{
+   return base_execution.getJsonVarTrace(callid,var); 
+}
 
 
 /********************************************************************************/
