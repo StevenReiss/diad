@@ -127,7 +127,8 @@ void start(DiexecuteManager vfac)
 
 synchronized void handleResult(Element xml)
 {
-   seede_result = new DiexecuteTrace(xml,for_context.getThread());  
+   seede_result = new DiexecuteTrace(this,
+         xml,for_context.getThread());  
    exec_state = ExecState.READY;
    notifyAll();
 }

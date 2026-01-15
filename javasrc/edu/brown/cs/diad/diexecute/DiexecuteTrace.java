@@ -62,7 +62,7 @@ private DiadThread       for_thread;
 private Map<Element,DiexecuteCall> call_map;
 private Map<String,DiexecuteCall> callid_map;
 private String          session_id;
-
+private DiexecuteExecution for_exec;
 
 
 
@@ -72,8 +72,9 @@ private String          session_id;
 /*                                                                              */
 /********************************************************************************/
 
-DiexecuteTrace(Element rslt,DiadThread thrd)
+DiexecuteTrace(DiexecuteExecution exec,Element rslt,DiadThread thrd)
 {
+   for_exec = exec;
    seede_result = IvyXml.getChild(rslt,"CONTENTS");
    session_id = IvyXml.getAttrString(rslt,"ID");
    problem_time = -1;
@@ -120,7 +121,7 @@ DiexecuteCall getCallForContext(Element ctx)
    synchronized (call_map) {
       DiexecuteCall vc = call_map.get(ctx);
       if (vc == null) {
-         vc = new DiexecuteCall(this,ctx);
+         vc = new DiexecuteCall(this,ctx); 
          call_map.put(ctx,vc);
          String idx = String.valueOf(vc.getContextId());
          callid_map.put(idx,vc);
@@ -276,6 +277,30 @@ private Element getRunner()
 {
    return session_id; 
 }
+
+
+DiexecuteCall getContextForTime(long when)
+{
+    return findContextForTime(getRootContext(),when);
+}
+
+
+private DiexecuteCall findContextForTime(DiexecuteCall call,long when)
+{
+   for (DiexecuteCall inner : call.getInnerCalls()) {
+      if (inner.getStartTime() <= when && inner.getEndTime() > when) {
+         return findContextForTime(inner,when);
+       }
+    }
+   return call;
+}
+
+
+DiexecuteManager getManager()
+{
+   return for_exec.getContext().getManager();
+}
+
 
 
 /********************************************************************************/
@@ -831,6 +856,52 @@ JSONObject getJsonVarTrace(String callid,String var)
    if (ctx == null) return null;
    
    return ctx.getJsonVarTrace(var);  
+}
+
+
+JSONObject getJsonVarHistory(String callid,String var,int line,long when)
+{
+   DiexecuteCall ctx = callid_map.get(callid);
+   if (ctx == null) return null;
+   
+   DiexecuteVariable execvar = ctx.getTraceVariable(var);
+   if (execvar == null) return null;
+   
+   if (when == 0) {
+      when = ctx.getStartTime();
+    }
+   if (line <= 0 && when > 0) {
+      line = execvar.getLineAtTime(when);
+    }
+   else if (line <= 0 && when < 0) {
+      List<DiadTraceValue> vals = execvar.getTraceValues(this);
+      if (vals == null) return null;
+      DiadTraceValue last = vals.get(vals.size()-1);
+      when = last.getStartTime();
+      line = execvar.getLineAtTime(when);
+    }
+   else if (line > 0 && when < 0) {
+      DiexecuteVariable lines = ctx.getLineNumbers();
+      boolean next = false;
+      for (DiexecuteValue val : lines.getValues(this)) {
+         if (val.getLineValue() == line) next = true;
+         else if (next) {
+            when = val.getStartTime() - 1;
+            break;
+          }
+       }
+      if (when < 0) when = ctx.getEndTime() - 1;
+    }
+   if (when < 0) {
+      return null;
+    }
+   
+   DiexecuteVarHistory hist = new DiexecuteVarHistory(this,ctx,
+         execvar,when); 
+   
+   JSONObject rslt = hist.process();  
+   
+   return rslt;
 }
 
 

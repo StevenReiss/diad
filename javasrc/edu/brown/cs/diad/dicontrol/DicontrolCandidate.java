@@ -337,7 +337,7 @@ private static class LocationSummary {
    JSONObject toJson() {
       JSONObject rslt = new JSONObject();
       rslt.put("LINE",line_number);
-      rslt.put("PRIORITY",loc_priority);
+//    rslt.put("PRIORITY",loc_priority);
       return rslt;
     }
    
@@ -370,6 +370,12 @@ JSONArray getJsonLineTrace(String callid)
 JSONObject getJsonVarTrace(String callid,String var)
 {
    return base_execution.getJsonVarTrace(callid,var); 
+}
+
+
+JSONObject getJsonVarHistory(String callid,String var,int line,long when)
+{
+   return base_execution.getJsonVarHistory(callid,var,line,when); 
 }
 
 

@@ -153,6 +153,24 @@ DiexecuteValue(Element v)
    return null;
 }
 
+DiexecuteVariable getFieldVariable(DiexecuteTrace trace,String fld)
+{
+   Element use = null;
+   
+   for (Element flde : IvyXml.children(value_element,"FIELD")) {
+      String nm = IvyXml.getAttrString(flde,"NAME");
+      if (nm.equals(fld)) {
+         use = flde;
+         break;
+       }
+      else if (nm.endsWith("." + fld)) use = flde;
+    }
+   
+   if (use == null) return null;
+   
+   return new DiexecuteVariable(use); 
+}
+
 
 
 @Override public DiexecuteValue getIndexValue(DiadTrace rvtr,int idx,long when)
@@ -176,6 +194,24 @@ DiexecuteValue(Element v)
 }
 
 
+DiexecuteVariable getIndexVariable(DiexecuteTrace trace,int idx)
+{
+   Element use = null;
+   for (Element flde : IvyXml.children(value_element,"ELEMENT")) {
+      int eidx = IvyXml.getAttrInt(flde,"INDEX");
+      if (eidx == idx) {
+         use = flde;
+         break;
+       }
+    }
+   
+   if (use == null) return null;
+   
+   return new DiexecuteVariable(use);
+}
+
+
+
 @Override public String getId()
 {
    return IvyXml.getAttrString(value_element,"ID");
@@ -185,6 +221,15 @@ DiexecuteValue(Element v)
 @Override public int getArrayLength()
 {
    return IvyXml.getAttrInt(value_element,"SIZE");
+}
+
+boolean hasChildren()
+{
+   Element e1 = IvyXml.getChild(value_element,"ELEMENT");
+   if (e1 != null) return true;
+   Element e2 = IvyXml.getChild(value_element,"FIELD");
+   if (e2 != null) return true;
+   return false;
 }
 
 

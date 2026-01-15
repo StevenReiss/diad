@@ -168,6 +168,12 @@ DiexecuteBaseExecution(DiexecuteManager mgr,DiadSymptom symp,DiadThread thrd,
 }
 
 
+DiexecuteManager getManager()
+{
+   return exec_manager;
+}
+
+
 /********************************************************************************/
 /*                                                                              */
 /*      Processing method                                                       */
@@ -453,6 +459,13 @@ synchronized void noteSeedeLength(long t,DiadRepair repair,double score)
 @Override public JSONObject getJsonVarTrace(String callid,String var)
 { 
    return base_execution.getSeedeResult().getJsonVarTrace(callid,var); 
+}
+
+
+@Override public JSONObject getJsonVarHistory(String callid,String var,
+      int line,long when)
+{ 
+   return base_execution.getSeedeResult().getJsonVarHistory(callid,var,line,when);  
 }
 
 

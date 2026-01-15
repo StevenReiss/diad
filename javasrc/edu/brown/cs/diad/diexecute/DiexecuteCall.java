@@ -49,7 +49,7 @@ class DiexecuteCall implements DiadTraceCall
 /********************************************************************************/
 
 private Element         context_element;
-private DiexecuteTrace   for_trace;
+private DiexecuteTrace  for_trace;
 
 
 
@@ -190,6 +190,37 @@ DiexecuteVariable getTraceVariable(String name)
     }
    
    return null;
+}
+
+
+String getVariableName(String id,int lno)
+{
+   String rslt = null;
+   int bestline = 0;
+   
+   for (Element e : IvyXml.children(context_element,"VARIABLE")) { 
+      DiexecuteVariable xvar = new DiexecuteVariable(e);
+      String s = xvar.getName();
+      if (s.startsWith("*")) continue;
+      String var = s;
+      int vln = 0;
+      int idx = s.indexOf("@");
+      if (idx > 0) {
+	 vln = Integer.parseInt(var.substring(idx+1));
+	 var = var.substring(0,idx);
+       }
+      if (var.equals(id)) {
+	 if (rslt == null) {
+	    rslt = s;
+	    bestline = vln;
+	  }
+	 else if (vln > 0 && vln > bestline && vln <= lno) {
+	    rslt = s;
+	    bestline = vln;
+	  }
+       }
+    }
+   return rslt;
 }
 
 
