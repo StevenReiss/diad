@@ -24,8 +24,12 @@ package edu.brown.cs.diad.diexecute;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.w3c.dom.Element;
 
@@ -148,7 +152,9 @@ DiexecuteVarVal(Element v,DiexecuteVarVal par)
          key1 = "[" + key + "]";
        }
       if (key != null && key.equals(name) || key1.equals(name)) {
-         return new DiexecuteVarVal(e,this);
+         DiexecuteVarVal vv0 = new DiexecuteVarVal(e,this);
+         vv0 = vv0.getValueAtTime(when);
+         return vv0;
        }
     }
    
@@ -170,7 +176,9 @@ DiexecuteVarVal(Element v,DiexecuteVarVal par)
       if (etime >= 0) rslt.add(etime);
     }
    
-   if (rslt.isEmpty()) return null;
+   // should also take into account time changes for subeleemnts
+   
+   if (rslt.isEmpty()) return Collections.singletonList(0L);
    
    return rslt; 
 }
@@ -344,8 +352,84 @@ DiexecuteVarVal dereference(DiadTrace trace0)
 /*                                                                              */
 /********************************************************************************/
 
-JSONObject toJson(DiadTrace trace,DiexecuteVarVal lines)
+Object toJsonValue(DiadTrace trace,long t,Set<String> done)
 {
+   if (done == null) done = new HashSet<>();
+   DiexecuteVarVal vv0 = getValueAtTime(trace,t);
+   if (vv0 != this) {
+      return vv0.toJsonValue(trace,t,done);
+    }
+   
+   if (IvyXml.getAttrBool(var_element,"NULL")) {
+      return JSONObject.NULL;
+    }
+   else if (IvyXml.getAttrBool(var_element,"OBJECT")) {
+      JSONObject jo = new JSONObject();
+      String id = IvyXml.getAttrString(var_element,"ID");
+      if (!done.add(id)) {
+         jo.put("REF",id);
+       }
+      else {
+         jo.put("ID",id);
+         for (Element fe : IvyXml.children(var_element,"FIELD")) {
+            String fn = IvyXml.getAttrString(fe,"NAME");
+            int idx = fn.lastIndexOf(".");
+            if (idx > 0) fn = fn.substring(idx+1);
+            DiexecuteVarVal vv = new DiexecuteVarVal(fe,this);
+            vv = vv.getValueAtTime(trace,t);
+            jo.put(fn,vv.toJsonValue(trace,t,done));
+          }
+       }
+      return jo;
+    }
+   else if (IvyXml.getAttrBool(var_element,"ARRAY")) {
+      JSONArray arr = new JSONArray();
+      for (Element e : IvyXml.children(var_element,"ELEMENT")) {
+         DiexecuteVarVal ve = new DiexecuteVarVal(e,this);
+         ve = ve.getValueAtTime(t);
+         int idx = IvyXml.getAttrInt(e,"INDEX");
+         arr.put(idx,ve.toJsonValue(trace,t,done));
+       }
+    }
+   else if (IvyXml.getAttrBool(var_element,"CHARS")) {
+      return getStringValue(t);
+    }
+   else {
+      String typ = IvyXml.getAttrString(var_element,"TYPE");
+      if (typ == null) {
+         typ = "?";
+       }
+      switch (typ) {
+         case "int" :
+         case "short" :
+         case "byte" :
+         case "long" :
+         case "java.lang.Integer" :
+         case "java.lang.Short" :
+         case "java.lang.Byte" :
+         case "java.lang.Long" :
+            return Long.parseLong(IvyXml.getText(var_element));
+         case "float" :
+         case "double" :
+         case "java.lang.Float" :
+         case "java.lang.Double" :
+            return Double.parseDouble(IvyXml.getText(var_element));
+         case "boolean" :
+         case "java.lang.Boolean" :
+            String s0 = IvyXml.getText(var_element);
+            boolean fg = false;
+            if (s0 != null && !s0.isEmpty()) {
+               fg = "1YyTt".indexOf(s0.charAt(0)) >= 0;
+             }
+            return fg;
+         case "char" :
+         case "java.lang.Character" :
+            return Long.parseLong(IvyXml.getText(var_element));
+         default :
+         case "java.lang.String" :
+            return IvyXml.getText(var_element);
+       }
+    }
    return null;
 }
 

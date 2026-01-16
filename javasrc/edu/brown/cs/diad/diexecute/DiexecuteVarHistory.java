@@ -25,8 +25,12 @@ package edu.brown.cs.diad.diexecute;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.w3c.dom.Element;
 
@@ -48,6 +52,8 @@ class DiexecuteVarHistory implements DiexecuteConstants
 private DiexecuteTrace  exec_trace;
 private long            start_time; 
 private VarNode         start_node;
+
+private static AtomicInteger node_counter = new AtomicInteger(0);
 
 enum VarNodeType {
    VALUE, SET, STATEMENT, PARAMETER, CALL
@@ -84,10 +90,9 @@ JSONObject process()
 {
    addDependentNodes(start_node);
    
-   // generate a JSON object for the start node, referencing all other nodes
-   // nodes should only be included once
+   JSONObject rslt = generateJson();
    
-   return null;
+   return rslt;
 }
 
 
@@ -105,10 +110,10 @@ private void addDependentNodes(VarNode vn)
       if (when <= now) prev = when;
       else if (when > now) break;
     }
-   if (prev <= 0) {
-      if (vn.isReturn()) prev = now-1;
-      else return;
+   if (prev < 0) {
+      prev = now-1;
     }
+   else if (prev == 0) prev = now;
    
    DiexecuteCall pctx = exec_trace.getContextForTime(prev+1); 
    IvyLog.logD("DIEXECUTE","DEPENDENT CONTEXT " + pctx);
@@ -317,6 +322,54 @@ private int getLine(DiexecuteCall ctx,long time)
 }
 
 
+/********************************************************************************/
+/*                                                                              */
+/*      Output methods                                                          */
+/*                                                                              */
+/********************************************************************************/
+
+private JSONObject generateJson()
+{
+   Map<String,VarNode> nodemap = new TreeMap<>();
+   
+   findNodes(start_node,nodemap);
+   
+   JSONObject rslt = new JSONObject();
+   JSONArray nodes = new JSONArray();
+   for (VarNode vn : nodemap.values()) {
+      JSONObject jo = vn.toJson();
+      nodes.put(jo);
+    }
+   rslt.put("NODES",nodes);
+   
+   JSONArray edges = new JSONArray();
+   for (VarNode vn : nodemap.values()) {
+      if (vn.hasDependents()) {
+         for (VarNode dep : vn.getDependents()) {
+            JSONObject edge = new JSONObject();
+            edge.put("SOURCE",vn.getId());
+            edge.put("TARGET",dep.getId());
+            edges.put(edge);
+          }
+       }
+    }
+   rslt.put("EDGES",edges);
+   
+   return rslt;
+}
+
+
+private void findNodes(VarNode vn,Map<String,VarNode> nodemap)
+{
+   if (nodemap.containsKey(vn.getId())) return;
+   nodemap.put(vn.getId(),vn);
+   if (vn.hasDependents()) {
+      for (VarNode dep : vn.getDependents()) {
+         findNodes(dep,nodemap);
+       }
+    }
+}
+
 
 /********************************************************************************/
 /*										*/
@@ -333,6 +386,7 @@ private static class VarNode {
    private List<VarNode> comes_from;
    private String other_data;
    private VarNodeType node_type;
+   private String node_id;
    
    VarNode(VarNodeType typ,DiexecuteCall ctx,long at,String name,
          DiexecuteVarVal val) {
@@ -343,6 +397,7 @@ private static class VarNode {
       var_value = val;
       comes_from = null;
       other_data = null;
+      node_id = "NODE_" + node_counter.incrementAndGet();
       IvyLog.logD("DIEXECUTE","Create DEPENDENCY " + ctx.getMethod() + " " + 
             var_name + " " + at + " " + val);
     }
@@ -358,14 +413,35 @@ private static class VarNode {
    long getTime()			{ return at_time; }
    String getName()			{ return var_name; }
    DiexecuteVarVal getValue()		{ return var_value; }
-   DiexecuteCall getContext()	        { return in_context; }
-   String getOtherData()		{ return other_data; }
-   VarNodeType getNodeType()		{ return node_type; }
+   String getId()                       { return node_id; }
    
+   boolean hasDependents()              { return comes_from != null; }
    List<VarNode> getDependents()	{ return comes_from; }
    
    boolean isReturn() {
       return var_name != null && var_name.endsWith("*RETURNS*");
+    }
+   
+   JSONObject toJson() {
+      JSONObject rslt = new JSONObject();
+      
+      rslt.put("ID",node_id);
+      rslt.put("METHOD",in_context.getMethod());
+      rslt.put("TIME",at_time);
+      rslt.put("VARIABLE",var_name);
+      rslt.put("VALUE",var_value.getStringValue(at_time));
+      rslt.put("NODE_TYPE",node_type);
+      if (isReturn()) rslt.put("IS_RETURN",true);
+      if (other_data != null) {
+         if (node_type == VarNodeType.STATEMENT) {
+            rslt.put("STATEMENT",other_data);
+          }
+         else {
+            rslt.put("OTHER",other_data);
+          }
+       }
+      
+      return rslt;
     }
    
 }	// end of inner class VarNode

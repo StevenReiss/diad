@@ -23,6 +23,7 @@
 package edu.brown.cs.diad.diexecute;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -865,7 +866,7 @@ JSONObject getJsonVarHistory(String callid,String var,int line,long when)
    DiexecuteCall ctx = callid_map.get(callid);
    if (ctx == null) return null;
    
-   DiexecuteVarVal execvar = ctx.getTraceVariable(var);
+   DiexecuteVarVal execvar = ctx.getValueAtTime(this,var,when);
    if (execvar == null) return null;
    
    when = getActualTime(ctx,execvar,when,line);
@@ -922,7 +923,7 @@ JSONObject getJsonVarValue(String callid,String var,int line,long when)
    DiexecuteCall ctx = callid_map.get(callid);
    if (ctx == null) return null;
    
-   DiexecuteVarVal execvar = ctx.getTraceVariable(var);
+   DiexecuteVarVal execvar = ctx.getValueAtTime(this,var,when);
    if (execvar == null) return null;
    
    when = getActualTime(ctx,execvar,when,line);
@@ -930,7 +931,14 @@ JSONObject getJsonVarValue(String callid,String var,int line,long when)
       return null;
     }
    
-   return null;
+   JSONObject jo = new JSONObject();
+   jo.put("NAME",var);
+   jo.put("TIME",when);
+   jo.put("METHOD",ctx.getMethod());
+   jo.put("VALUE",
+         execvar.toJsonValue(this,when,new HashSet<>()));
+   
+   return jo;
 }
 
 

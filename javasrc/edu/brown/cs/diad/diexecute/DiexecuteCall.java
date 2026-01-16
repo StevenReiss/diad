@@ -24,6 +24,7 @@ package edu.brown.cs.diad.diexecute;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -190,7 +191,7 @@ DiexecuteVarVal getTraceVariable(String name)
    int idx = name.indexOf("@");
    int line = -1;
    if (idx > 0) {
-      mnm = name.substring(0,idx);
+      mnm = name.substring(0,idx);  
       line = Integer.parseInt(name.substring(idx+1));
     }
       
@@ -221,6 +222,7 @@ DiexecuteVarVal getValueAtTime(DiadTrace trace,String name,long when)
    String sub = name.substring(idx+1);
    DiexecuteVarVal var = getValueAtTime(trace,pre,when);
    DiexecuteVarVal val1 = (DiexecuteVarVal) var.getChild(sub,when);
+   val1 = val1.dereference(trace);
    
    return val1;
 }
@@ -354,12 +356,17 @@ JSONObject getJsonVarTrace(String varname)
    DiexecuteVarVal linv = getLineNumbers();
    
    JSONObject rslt = new JSONObject();
+   Set<String> done = new HashSet<>();
    rslt.put("NAME",var.getName());
    JSONArray vals = new JSONArray();
    for (Long t : var.getTimeChanges()) {
       DiexecuteVarVal val = var.getValueAtTime(for_trace,t);
-      JSONObject va = val.toJson(for_trace,linv);  
-      if (va != null) vals.put(va);
+      int lno = linv.getLineValue(t);
+      JSONObject top = new JSONObject();
+      top.put("AT_TIME",t);
+      top.put("AT_LINE",lno);
+      top.put("VALUE",val.toJsonValue(for_trace,t,done));
+      vals.put(top);
     }
    rslt.put("VALUES",vals);
    
