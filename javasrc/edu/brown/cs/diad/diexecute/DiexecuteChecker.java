@@ -241,9 +241,9 @@ private class DiexecuteCheckerException extends DiexecuteSymptomChecker {
       if (!executionChanged()) return 0;
       if (exceptionThrown()) return 0;
       
-      DiexecuteValue origexc = original_execution.getException();
+      DiexecuteVarVal origexc = original_execution.getException();
       if (origexc != null && execution_matcher.getMatchSymptomContext() != null) {
-         DiexecuteValue checkexc = check_execution.getException();
+         DiexecuteVarVal checkexc = check_execution.getException();
          if (checkexc == null) {
             if (execution_matcher.getMatchSymptomAfterTime() > 0) return 1.0;
             return 0.8;
@@ -253,7 +253,7 @@ private class DiexecuteCheckerException extends DiexecuteSymptomChecker {
                return 0.5;
              }
           }
-         else if (origexc.getDataType().equals(checkexc.getDataType())) return 0;
+         else if (origexc.getDataType(-1).equals(checkexc.getDataType(-1))) return 0;
          else return 0.1;   
        }
       else if (execution_matcher.getMatchSymptomContext() != null) return 0.5;
@@ -264,14 +264,14 @@ private class DiexecuteCheckerException extends DiexecuteSymptomChecker {
     }
    
    @Override boolean validateTestLocal() {
-      DiexecuteValue origexc = original_execution.getException();
+      DiexecuteVarVal origexc = original_execution.getException();
       if (origexc != null && execution_matcher.getMatchSymptomContext() != null) {
-         DiexecuteValue checkexc = check_execution.getException();
+         DiexecuteVarVal checkexc = check_execution.getException();
          if (checkexc == null) {
             return false;
           }
          else {
-            return origexc.getDataType().equals(checkexc.getDataType());
+            return origexc.getDataType(-1).equals(checkexc.getDataType(-1));
           }
        }
       return false;
@@ -320,7 +320,7 @@ private class DiexecuteCheckerVariable extends DiexecuteSymptomChecker {
          IvyLog.logD("DIEXECUTE","No change context for variable");
          return 0.0;
        }   
-      DiexecuteVariable vv = vc.getVariables().get(var);
+      DiexecuteVarVal vv = vc.getVariables().get(var);
       if (vv == null) {
          IvyLog.logD("DIEXECUTE","Variable not found in change context");
          return 0.5;
@@ -329,10 +329,10 @@ private class DiexecuteCheckerVariable extends DiexecuteSymptomChecker {
       long t0 = execution_matcher.getMatchSymptomTime();
       IvyLog.logD("DIEXECUTE","Match problem time " + t0);
       if (t0 > 0) {
-         DiexecuteValue vval = vv.getValueAtTime(check_execution,t0);
+         DiexecuteVarVal vval = vv.getValueAtTime(check_execution,t0);
          IvyLog.logD("DIEXECUTE","Value at time : " + vval);
          if (vval != null) {
-            String vvalstr = vval.getValue();
+            String vvalstr = vval.getStringValue(t0);
             if (oval == null && vvalstr == null) return 0;
             if (oval != null && oval.equals(vvalstr)) return 0.0;
             
@@ -341,8 +341,8 @@ private class DiexecuteCheckerVariable extends DiexecuteSymptomChecker {
        }
       boolean haveold = false;
       boolean haveother = false;
-      for (DiexecuteValue vval : vv.getValues(check_execution)) {
-         String vvalstr = vval.getValue();
+      for (Long t : vv.getTimeChanges()) {
+         String vvalstr = vv.getStringValue(t);
          if (oval == null && vvalstr == null) {
             haveold = true;
             haveother = false;
@@ -352,7 +352,7 @@ private class DiexecuteCheckerVariable extends DiexecuteSymptomChecker {
             if (haveold) return 0.60;
             return 0.75;
           }
-         else if (nval == null && vval.getStartTime() > 0) haveother = true;
+         else if (nval == null && t > 0) haveother = true;
        }
       
       if (!haveold) return 0.6;
@@ -367,16 +367,15 @@ private class DiexecuteCheckerVariable extends DiexecuteSymptomChecker {
       return false;
     }
    
-   private double matchValue(DiexecuteValue vval,String vvalstr,String nval)
-{
+   private double matchValue(DiexecuteVarVal vval,String vvalstr,String nval) {
       if (nval == null) return 0.9;
       
-      IvyLog.logD("DIEXECUTE","Match values " + vvalstr + " " + nval + " " + vval.getDataType());
+      IvyLog.logD("DIEXECUTE","Match values " + vvalstr + " " + nval + " " + vval.getDataType(-1));
       
       DiadSymptom prob = validate_context.getSymptom();
       
       if (nval.equals(vvalstr)) return 1.0;
-      if (vval.getDataType().equals("float") || vval.getDataType().equals("double")) {
+      if (vval.getDataType(-1).equals("float") || vval.getDataType(-1).equals("double")) {
          try {
             double v1 = Double.valueOf(vvalstr);
             double v2 = Double.valueOf(nval);
@@ -388,7 +387,7 @@ private class DiexecuteCheckerVariable extends DiexecuteSymptomChecker {
             return 0.6;
           }
        }
-      else if (vval.getDataType().equals("int") || vval.getDataType().equals("long")) {
+      else if (vval.getDataType(-1).equals("int") || vval.getDataType(-1).equals("long")) {
          try {
             long v1 = Long.valueOf(vvalstr);
             long v2 = Long.valueOf(nval);
@@ -400,7 +399,7 @@ private class DiexecuteCheckerVariable extends DiexecuteSymptomChecker {
           }
          // handle > x , < x , ...
        }
-      else if (vval.getDataType().equals("boolean")) {
+      else if (vval.getDataType(-1).equals("boolean")) {
          Boolean v1 = getBoolean(vvalstr);
          Boolean v2 = getBoolean(nval);
          if (v1 != null && v2 != null) {
@@ -508,8 +507,8 @@ private class DiexecuteCheckerLocation extends DiexecuteSymptomChecker {
       
       if (vc == null) return 0.5;
       
-      DiexecuteVariable vv = vc.getLineNumbers();
-      int lmatch = vv.getLineAtTime(t0);
+      DiexecuteVarVal vv = vc.getLineNumbers();
+      int lmatch = vv.getLineValue(t0);
       if (lmatch <= 0) return 0.8;
       
       DiexecuteCall ovc = (DiexecuteCall) execution_matcher.getSymptomContext();
@@ -518,16 +517,16 @@ private class DiexecuteCheckerLocation extends DiexecuteSymptomChecker {
       if (mvc == null) return 0.5;
       
       long t1 = execution_matcher.getSymptomTime();
-      DiexecuteVariable ovv = ovc.getLineNumbers();
-      DiexecuteVariable mvv = mvc.getLineNumbers();
-      int olno = ovv.getLineAtTime(t1);
-      int mlno = mvv.getLineAtTime(t0);
+      DiexecuteVarVal ovv = ovc.getLineNumbers();
+      DiexecuteVarVal mvv = mvc.getLineNumbers();
+      int olno = ovv.getLineValue(t1);
+      int mlno = mvv.getLineValue(t0);
       
       if (mlno == olno) return 0;
       
       boolean fnd = false;
-      for (DiexecuteValue mv : mvv.getValues(check_execution)) {
-         int elno = mv.getLineValue();
+      for (Long t : mvv.getTimeChanges()) {
+         int elno = mvv.getLineValue(t);
          if (elno == olno) fnd = true;
        }
       if (fnd) return 0.6;
@@ -538,8 +537,8 @@ private class DiexecuteCheckerLocation extends DiexecuteSymptomChecker {
    @Override boolean validateTestLocal() {
       long t0 = execution_matcher.getMatchSymptomTime();
       DiexecuteCall vc = execution_matcher.getMatchChangeContext();
-      DiexecuteVariable vv = vc.getLineNumbers();
-      int lmatch = vv.getLineAtTime(t0);
+      DiexecuteVarVal vv = vc.getLineNumbers();
+      int lmatch = vv.getLineValue(t0);
       if (lmatch <= 0) return false;
       return true;
     }

@@ -31,8 +31,6 @@ import java.util.Map;
 
 import edu.brown.cs.diad.dicore.DiadRepair;
 import edu.brown.cs.diad.dicore.DiadTrace.DiadTraceCall;
-import edu.brown.cs.diad.dicore.DiadTrace.DiadTraceValue;
-import edu.brown.cs.diad.dicore.DiadTrace.DiadTraceVariable;
 import edu.brown.cs.ivy.file.IvyLog;
 
 class DiexecuteMatcher implements DiexecuteConstants
@@ -91,15 +89,14 @@ DiexecuteMatcher(DiexecuteTrace orig,DiexecuteTrace match,DiadRepair repair,bool
    
    problem_after_time = 0;
    if (problem_context != null) {
-      DiadTraceVariable plines = problem_context.getLineNumbers();
+      DiexecuteVarVal plines = problem_context.getLineNumbers();
       boolean fnd = false;
-      for (DiadTraceValue vv : plines.getTraceValues(orig)) {
-         long t = vv.getStartTime();
-         if (t == problem_time) fnd = true;
-         else if (fnd) {
-            problem_after_time = t;
-            break;
-          }
+      for (Long t : plines.getTimeChanges()) {
+          if (t == problem_time) fnd = true;
+          else if (fnd) {
+             problem_after_time = t;
+             break;
+           }
        }
       if (fnd && problem_after_time == 0) {
          problem_after_time = problem_context.getEndTime();
@@ -208,8 +205,8 @@ private void matchContexts(DiexecuteCall origctx,DiexecuteCall matchctx)
 
 private void matchLines(DiexecuteCall origctx,DiexecuteCall matchctx) 
 {
-   DiexecuteVariable origline = origctx.getLineNumbers();
-   DiexecuteVariable matchline = matchctx.getLineNumbers();
+   DiexecuteVarVal origline = origctx.getLineNumbers();
+   DiexecuteVarVal matchline = matchctx.getLineNumbers();
    File file = matchctx.getFile();
    
    int checkrepair = -1;
@@ -225,15 +222,13 @@ private void matchLines(DiexecuteCall origctx,DiexecuteCall matchctx)
    long matchtime = matchctx.getStartTime();
    long lastmatch = matchtime;
    if (matchTime(lasttime,matchtime)) {
-      Iterator<DiexecuteValue> it1 = origline.getValues(origctx.getTrace()).iterator();
-      Iterator<DiexecuteValue> it2 = matchline.getValues(matchctx.getTrace()).iterator();
+      Iterator<Long> it1 = origline.getTimeChanges().iterator();
+      Iterator<Long> it2 = matchline.getTimeChanges().iterator();
       boolean fnd = false;
       while (it1.hasNext() && it2.hasNext()) {
-         DiexecuteValue origval = it1.next();
-         DiexecuteValue matchval = it2.next();
-         long thistime = origval.getStartTime();
-         long trytime = matchval.getStartTime();
-         long execline = origval.getNumericValue();
+         long thistime = it1.next();
+         long trytime = it2.next();
+         int execline = origline.getLineValue(thistime);
          long mappedline = execline;
          if (for_repair != null) {
             mappedline = for_repair.getMappedLine(file,   execline);  
@@ -248,14 +243,14 @@ private void matchLines(DiexecuteCall origctx,DiexecuteCall matchctx)
           }
          if (!fnd && 
                (!matchTime(thistime,trytime) ||
-                     mappedline != matchval.getNumericValue())) {
+                     mappedline != matchline.getLineValue(trytime))) {
             if (control_change <= 0 || control_change > thistime) {
                noteChange(origctx,matchctx,lasttime);
              }
             fnd = true;
           }
          lasttime = thistime;
-         lastmatch = matchval.getStartTime();
+         lastmatch = trytime;
        }
       if (match_problem_context == matchctx) {
          long thistime = origctx.getEndTime();
@@ -343,14 +338,14 @@ private void matchInnerContext(DiexecuteCall origctx,DiexecuteCall matchctx,
 
 private void matchVariables(DiexecuteCall origctx,DiexecuteCall matchctx)
 {
-   Map<String,DiexecuteVariable> matchelts = matchctx.getVariables();
+   Map<String,DiexecuteVarVal> matchelts = matchctx.getVariables();
    
-   for (DiexecuteVariable oval : origctx.getVariables().values()) {
+   for (DiexecuteVarVal oval : origctx.getVariables().values()) {
       String nm = oval.getName();
-      DiexecuteVariable mval = matchelts.remove(nm);
+      DiexecuteVarVal mval = matchelts.remove(nm);
       matchVariable(origctx,matchctx,oval,mval);
     }
-   for (DiexecuteVariable mval : matchelts.values()) {
+   for (DiexecuteVarVal mval : matchelts.values()) {
       matchVariable(origctx,matchctx,null,mval);
     }
 }
@@ -358,10 +353,10 @@ private void matchVariables(DiexecuteCall origctx,DiexecuteCall matchctx)
 
 
 private void matchVariable(DiexecuteCall origctx,DiexecuteCall matchctx,
-      DiexecuteVariable ovar,DiexecuteVariable mvar)
+      DiexecuteVarVal ovar,DiexecuteVarVal mvar)
 {
-   List<DiexecuteValue> ovals = getVariableValues(origctx,ovar);
-   List<DiexecuteValue> mvals = getVariableValues(matchctx,mvar);
+   List<DiexecuteVarVal> ovals = getVariableValues(origctx,ovar);
+   List<DiexecuteVarVal> mvals = getVariableValues(matchctx,mvar);
    int sz = Math.max(ovals.size(),mvals.size());
    long difftime = -1;
    long lastdiff = origctx.getStartTime();
@@ -369,9 +364,9 @@ private void matchVariable(DiexecuteCall origctx,DiexecuteCall matchctx,
    // might want to match arrays and objects a bit better
    
    for (int i = 0; i < sz; ++i) {
-      DiexecuteValue oval = null;
+      DiexecuteVarVal oval = null;
       if (i < ovals.size()) oval = ovals.get(i);
-      DiexecuteValue mval = null;
+      DiexecuteVarVal mval = null;
       if (i < mvals.size()) mval = mvals.get(i);
       if (oval == null) {
          difftime = lastdiff;
@@ -382,14 +377,7 @@ private void matchVariable(DiexecuteCall origctx,DiexecuteCall matchctx,
          if (difftime < 0) difftime = origctx.getStartTime();
          break;
        }
-      else if (oval.getValue() == null) {
-         if (mval.getValue() != null) {
-            difftime = oval.getStartTime();
-            if (difftime < 0) difftime = origctx.getStartTime();
-            break;
-          }
-       }
-      else if (!oval.getValue().equals(mval.getValue())) {
+      else if (!oval.equals(mval)) {
          difftime = oval.getStartTime();
          if (difftime < 0) difftime = origctx.getStartTime();
          break;
@@ -408,11 +396,22 @@ private void matchVariable(DiexecuteCall origctx,DiexecuteCall matchctx,
 
 
 
-private List<DiexecuteValue> getVariableValues(DiexecuteCall ctx,DiexecuteVariable var)
+private List<DiexecuteVarVal> getVariableValues(DiexecuteCall ctx,DiexecuteVarVal var)
 {
-   if (var == null) return new ArrayList<>();
+   if (var == null) {
+      return new ArrayList<>();
+    }
    
-   return var.getValues(ctx.getTrace()); 
+   List<DiexecuteVarVal> rslt = new ArrayList<>();
+   for (Long t : var.getTimeChanges()) {
+      DiexecuteVarVal v = var.getValueAtTime(ctx.getTrace(),t);
+      rslt.add(v);
+    }
+   if (rslt.isEmpty()) {
+      rslt.add(var);
+    }
+   
+   return rslt; 
 }
 
 

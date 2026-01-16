@@ -72,6 +72,8 @@ static DicontrolCommand createCommand(DicontrolMain ctrl,Element xml)
          return new QueryVarTrace(ctrl,xml);
       case "Q_VARHISTORY" :
          return new QueryVarHistory(ctrl,xml);
+      case "Q_VARVALUE" :
+         return new QueryVarValue(ctrl,xml);
       default :
          IvyLog.logE("DICONTROL","Unknown command " + cmd + " " +
                IvyXml.convertXmlToString(xml));
@@ -424,9 +426,31 @@ private static class QueryVarHistory extends QueryCommand {
       return getCandidate().getJsonVarHistory(call_id,var_name,
             line_number,exec_time);    
     }
-   
 
 }       // end of inner class QueryVarHistory
+
+
+private static class QueryVarValue extends QueryCommand {
+
+   private String call_id;
+   private String var_name;
+   private int line_number;
+   private long exec_time;
+   
+   QueryVarValue(DicontrolMain ctrl,Element xml) {
+      super(ctrl,xml);
+      call_id = IvyXml.getAttrString(xml,"CALLID");
+      var_name = IvyXml.getAttrString(xml,"VARIABLE");
+      line_number = IvyXml.getAttrInt(xml,"LINE");
+      exec_time = IvyXml.getAttrLong(xml,"WHEN");
+    }
+   
+   @Override protected JSONObject getJsonObject() {
+      return getCandidate().getJsonVarValue(call_id,var_name,
+            line_number,exec_time);    
+    }
+   
+}       // end of inner class QueryVarValue
 
 
 

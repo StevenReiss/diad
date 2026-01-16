@@ -456,7 +456,7 @@ private static class ObjectValue extends DiruntimeValue {
 /*                                                                              */
 /********************************************************************************/
 
-private static class ArrayValue extends DiruntimeValue {
+private static class ArrayValue extends DiruntimeValue {  
    
    private Map<Integer,DiruntimeGenericValue> array_values;
    private int dim_size;

@@ -34,8 +34,9 @@ import org.json.JSONObject;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
+import edu.brown.cs.diad.dicore.DiadTrace;
 import edu.brown.cs.diad.dicore.DiadTrace.DiadTraceCall;
-import edu.brown.cs.diad.dicore.DiadTrace.DiadTraceVariable;
+import edu.brown.cs.diad.dicore.DiadTrace.DiadTraceVarVal;
 import edu.brown.cs.ivy.xml.IvyXml;
 
 class DiexecuteCall implements DiadTraceCall
@@ -125,6 +126,7 @@ List<DiexecuteCall> getInnerCalls()
    return rslt;
 }
 
+
 @Override public List<DiadTraceCall> getInnerTraceCalls()
 {
    List<DiadTraceCall> rslt = new ArrayList<>();
@@ -136,11 +138,11 @@ List<DiexecuteCall> getInnerCalls()
 
 
 
-@Override public DiexecuteVariable getLineNumbers()
+@Override public DiexecuteVarVal getLineNumbers() 
 {
    for (Element e : IvyXml.children(context_element,"VARIABLE")) {
       String nm = IvyXml.getAttrString(e,"NAME");
-      if (nm.equals("*LINE*")) return new DiexecuteVariable(e);
+      if (nm.equals("*LINE*")) return new DiexecuteVarVal(e,null);
     }
    
    return null;
@@ -158,39 +160,71 @@ List<DiexecuteCall> getInnerCalls()
 }
 
 
-Map<String,DiexecuteVariable> getVariables()
+Map<String,DiexecuteVarVal> getVariables()
 {
-   Map<String,DiexecuteVariable> rslt = new LinkedHashMap<>();
+   Map<String,DiexecuteVarVal> rslt = new LinkedHashMap<>();
    for (Element e : IvyXml.children(context_element,"VARIABLE")) {
       String nm = IvyXml.getAttrString(e,"NAME");
       if (nm.equals("*LINE*")) continue;
-      rslt.put(nm,new DiexecuteVariable(e));
+      rslt.put(nm,new DiexecuteVarVal(e,null));
     }
    return rslt;
 }
 
 
-@Override public Map<String,DiadTraceVariable> getTraceVariables()
+@Override public Map<String,DiadTraceVarVal> getTraceVariables()
 {
-   Map<String,DiadTraceVariable> rslt = new LinkedHashMap<>();
+   Map<String,DiadTraceVarVal> rslt = new LinkedHashMap<>();
    for (Element e : IvyXml.children(context_element,"VARIABLE")) {
       String nm = IvyXml.getAttrString(e,"NAME");
       if (nm.equals("*LINE*")) continue;
-      rslt.put(nm,new DiexecuteVariable(e));
+      rslt.put(nm,new DiexecuteVarVal(e,null));
     }
    return rslt;
 }
 
 
-DiexecuteVariable getTraceVariable(String name)
+DiexecuteVarVal getTraceVariable(String name)
 {
+   String mnm = name;
+   int idx = name.indexOf("@");
+   int line = -1;
+   if (idx > 0) {
+      mnm = name.substring(0,idx);
+      line = Integer.parseInt(name.substring(idx+1));
+    }
+      
    for (Element e : IvyXml.children(context_element,"VARIABLE")) {
       String nm = IvyXml.getAttrString(e,"NAME");
-      if (nm.equals(name)) return new DiexecuteVariable(e);
+      if (nm.equals(mnm)) {
+         if (line > 0) {
+            int lno = IvyXml.getAttrInt(e,"LINE");
+            if (lno > 0 && lno != line) continue;
+          }
+         return new DiexecuteVarVal(e,null);
+       }
     }
    
    return null;
 }
+
+
+
+DiexecuteVarVal getValueAtTime(DiadTrace trace,String name,long when) 
+{
+   int idx = name.lastIndexOf("?");
+   if (idx < 0) {
+      DiexecuteVarVal var = getTraceVariable(name);
+      return var.getValueAtTime(trace,when);  
+    }
+   String pre = name.substring(0,idx);
+   String sub = name.substring(idx+1);
+   DiexecuteVarVal var = getValueAtTime(trace,pre,when);
+   DiexecuteVarVal val1 = (DiexecuteVarVal) var.getChild(sub,when);
+   
+   return val1;
+}
+
 
 
 String getVariableName(String id,int lno)
@@ -199,7 +233,7 @@ String getVariableName(String id,int lno)
    int bestline = 0;
    
    for (Element e : IvyXml.children(context_element,"VARIABLE")) { 
-      DiexecuteVariable xvar = new DiexecuteVariable(e);
+      DiexecuteVarVal xvar = new DiexecuteVarVal(e,null);
       String s = xvar.getName();
       if (s.startsWith("*")) continue;
       String var = s;
@@ -233,13 +267,14 @@ String getVariableName(String id,int lno)
 
 void getExecutedLocations(Set<String> rslt)
 {
-   DiexecuteVariable vv = getLineNumbers();
    String file = getFile().getPath();
-   for (DiexecuteValue v : vv.getValues(null)) {
-      int ln = v.getLineValue();
-      String key = file + "@" + ln;
+   
+   DiexecuteVarVal vv = getLineNumbers();
+   for (Integer iv : vv.getLineNumbers()) {
+      String key = file + "@" + iv;
       rslt.add(key);
     }
+   
    for (DiexecuteCall vc : getInnerCalls()) {
       vc.getExecutedLocations(rslt);
     }
@@ -275,18 +310,21 @@ JSONArray getJsonLineTrace()
 {
    JSONArray rslt = new JSONArray();
    
-   DiexecuteVariable lines = getLineNumbers();
+   DiexecuteVarVal lines = getLineNumbers();
    if (lines != null) {
-      DiexecuteValue prev = null;
-      for (DiexecuteValue val : lines.getValues(for_trace)) {
-         if (prev != null) {
-            JSONObject lobj = buildLineObject(prev,val.getStartTime()-1);
+      int prev = -1;
+      long start = 0;
+      for (Long t : lines.getTimeChanges()) {
+         int lv = lines.getLineValue(t);
+         if (prev > 0) {
+            JSONObject lobj = buildLineObject(prev,start,t-1);
             rslt.put(lobj);
           }
-         prev = val;
+         prev = lv;
+         start = t;
        }
-      if (prev != null) {
-         JSONObject lobj = buildLineObject(prev,getEndTime());
+      if (prev >= 0) {
+         JSONObject lobj = buildLineObject(prev,start,getEndTime());
          rslt.put(lobj);
        }
     }
@@ -296,13 +334,12 @@ JSONArray getJsonLineTrace()
 
 
 
-private JSONObject buildLineObject(DiexecuteValue val,long end)
+private JSONObject buildLineObject(int lno,long start,long end)
 {
    JSONObject lobj = new JSONObject();
    
-   int lno = val.getLineValue();
    lobj.put("LINE",lno);
-   lobj.put("START_TIME",val.getStartTime());
+   lobj.put("START_TIME",start);
    lobj.put("END_TIME",end);
    
    return lobj;
@@ -311,15 +348,16 @@ private JSONObject buildLineObject(DiexecuteValue val,long end)
 
 JSONObject getJsonVarTrace(String varname)
 {
-   DiexecuteVariable var = getTraceVariable(varname);
+   DiexecuteVarVal var = getTraceVariable(varname);
    if (var == null) return null;
    
-   DiexecuteVariable linv = getLineNumbers();
+   DiexecuteVarVal linv = getLineNumbers();
    
    JSONObject rslt = new JSONObject();
    rslt.put("NAME",var.getName());
    JSONArray vals = new JSONArray();
-   for (DiexecuteValue val : var.getValues(for_trace)) {
+   for (Long t : var.getTimeChanges()) {
+      DiexecuteVarVal val = var.getValueAtTime(for_trace,t);
       JSONObject va = val.toJson(for_trace,linv);  
       if (va != null) vals.put(va);
     }

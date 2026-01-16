@@ -61,15 +61,15 @@ enum VarNodeType {
 /********************************************************************************/
 
 DiexecuteVarHistory(DiexecuteTrace trace,DiexecuteCall ctx,
-      DiexecuteVariable var,long when)
+      DiexecuteVarVal var,String name,long when)
 {
    exec_trace = trace;
    start_time = when;
    
-   DiexecuteValue val = var.getValueAtTime(exec_trace,when);
+   DiexecuteVarVal val = var.getValueAtTime(exec_trace,when);
    
    start_node = new VarNode(VarNodeType.VALUE,ctx,start_time,
-         val,var);
+         name,val);
 }
 
 
@@ -101,8 +101,7 @@ private void addDependentNodes(VarNode vn)
 {
    long now = vn.getTime();
    long prev = -1;
-   for (DiexecuteValue dv : vn.getVariable().getValues(exec_trace)) {
-      long when = dv.getStartTime();
+   for (Long when : vn.getValue().getTimeChanges()) {
       if (when <= now) prev = when;
       else if (when > now) break;
     }
@@ -115,8 +114,7 @@ private void addDependentNodes(VarNode vn)
    IvyLog.logD("DIEXECUTE","DEPENDENT CONTEXT " + pctx);
    if (pctx == null) return;
    
-   DiexecuteVariable var = pctx.getTraceVariable(vn.getName());
-   VarNode vn1 = new VarNode(VarNodeType.SET,pctx,prev,vn.getValue(),var);
+   VarNode vn1 = new VarNode(VarNodeType.SET,pctx,prev,vn.getName(),vn.getValue());
    if (prev != vn.getTime()) {
       vn.addDependent(vn1);
       vn = vn1;
@@ -187,11 +185,11 @@ List<VarNode> findDependents(VarNode vnorig,Element dep,DiexecuteCall ctx,int ln
    List<VarNode> deps = new ArrayList<>();
    Set<Element> done = new HashSet<>(); 
    boolean chng = true;
-   List<DiexecuteVariable> comps = new ArrayList<>();
-   DiexecuteVariable thisv = ctx.getTraceVariable("this");
+   List<DiexecuteVarVal> comps = new ArrayList<>();
+   DiexecuteVarVal thisv = ctx.getTraceVariable("this");
    if (thisv != null) comps.add(thisv);
    for (int i = 1; i < 10; ++i) {
-      DiexecuteVariable thisnv = ctx.getTraceVariable("this$" + i);
+      DiexecuteVarVal thisnv = ctx.getTraceVariable("this$" + i);
       if (thisnv == null) break;
       comps.add(thisnv);
     }
@@ -204,13 +202,13 @@ List<VarNode> findDependents(VarNode vnorig,Element dep,DiexecuteCall ctx,int ln
 	 String vnm = IvyXml.getAttrString(var,"NAME");
 	 String vty = IvyXml.getAttrString(var,"TYPE");
 	 JcompSymbolKind knd = IvyXml.getAttrEnum(var,"KIND",JcompSymbolKind.NONE);
-	 List<DiexecuteVariable> bvs = new ArrayList<>();
+	 List<DiexecuteVarVal> bvs = new ArrayList<>();
 	 switch (knd) {
 	    case FIELD :
-	       System.err.println("FIELD " + vnm + " " + vty);
-	       for (DiexecuteVariable compv : comps) {
-                  DiexecuteValue val = compv.getValueAtTime(exec_trace,when);
-                  DiexecuteVariable val1 = val.getFieldVariable(exec_trace,vnm);
+	       IvyLog.logD("DIEXECUTE","FIELD " + vnm + " " + vty);
+	       for (DiexecuteVarVal compv : comps) {
+                  DiexecuteVarVal val1 = compv.getChild(vnm,when); 
+                  val1 = val1.dereference(exec_trace);
                   if (val1 != null) {
                      bvs.add(val1);
 		     done.add(var);
@@ -234,10 +232,10 @@ List<VarNode> findDependents(VarNode vnorig,Element dep,DiexecuteCall ctx,int ln
 	       done.add(var);
 	       String lclnm = ctx.getVariableName(vnm,lno);
 	       if (lclnm == null) break;
-               DiexecuteVariable varval = ctx.getTraceVariable(lclnm);
-               DiexecuteValue val = varval.getValueAtTime(exec_trace,when);
+               DiexecuteVarVal varval = ctx.getTraceVariable(lclnm);
+               DiexecuteVarVal val = varval.getValueAtTime(exec_trace,when);
 	       if (val == null) break;
-	       if (!val.hasChildren()) { 
+	       if (!val.hasChildren(when)) { 
 		  bvs.add(varval);
 		}
 	       else {
@@ -248,10 +246,10 @@ List<VarNode> findDependents(VarNode vnorig,Element dep,DiexecuteCall ctx,int ln
 	  }
          
 	 if (bvs.size() > 0) {
-	    for (DiexecuteVariable bv : bvs) {
-               DiexecuteValue val = bv.getValueAtTime(exec_trace,when);
+	    for (DiexecuteVarVal bv : bvs) {
+               DiexecuteVarVal val = bv.getValueAtTime(exec_trace,when);
 	       VarNode vn = new VarNode(VarNodeType.VALUE,ctx,
-                     when,val,bv);
+                     when,vnm,val);
 	       deps.add(vn);
 	     }
 	  }
@@ -312,10 +310,10 @@ private Element getCallDependencies(String name,DiexecuteCall ctx,DiexecuteCall 
 
 private int getLine(DiexecuteCall ctx,long time)
 {
-   DiexecuteVariable lins = ctx.getLineNumbers();
+   DiexecuteVarVal lins = ctx.getLineNumbers();
    if (lins == null) return 0;
    
-   return lins.getLineAtTime(time);
+   return lins.getLineValue(time);
 }
 
 
@@ -331,19 +329,17 @@ private static class VarNode {
    private DiexecuteCall in_context;
    private long at_time;
    private String var_name;
-   private DiexecuteValue var_value;
-   private DiexecuteVariable exec_var;
+   private DiexecuteVarVal var_value;
    private List<VarNode> comes_from;
    private String other_data;
    private VarNodeType node_type;
    
-   VarNode(VarNodeType typ,DiexecuteCall ctx,long at,DiexecuteValue val,
-         DiexecuteVariable var) {
+   VarNode(VarNodeType typ,DiexecuteCall ctx,long at,String name,
+         DiexecuteVarVal val) {
       node_type = typ;
       in_context = ctx;
       at_time = at;
-      exec_var = var;
-      var_name = (exec_var == null ? null : exec_var.getName());
+      var_name = name;
       var_value = val;
       comes_from = null;
       other_data = null;
@@ -361,8 +357,7 @@ private static class VarNode {
    
    long getTime()			{ return at_time; }
    String getName()			{ return var_name; }
-   DiexecuteVariable getVariable()      { return exec_var; }
-   DiexecuteValue getValue()		{ return var_value; }
+   DiexecuteVarVal getValue()		{ return var_value; }
    DiexecuteCall getContext()	        { return in_context; }
    String getOtherData()		{ return other_data; }
    VarNodeType getNodeType()		{ return node_type; }

@@ -55,6 +55,8 @@ JSONArray getJsonLineTrace(String callid);
 JSONObject getJsonVarTrace(String callid,String var);
 JSONObject getJsonVarHistory(String callid,String var,int line,long when);
 
+JSONObject getJsonVarValue(String callid,String var,int line,long when);
+
 }       // end of interface DiadExecution
 
 

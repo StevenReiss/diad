@@ -36,6 +36,7 @@
 package edu.brown.cs.diad.dicore;
 
 import java.io.File;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -46,9 +47,9 @@ public interface DiadTrace extends DiadConstants
 long getSymptomTime();
 DiadTraceCall getSymptomContext();
 DiadTraceCall getRootContext();
-DiadTraceValue getException();
-DiadTraceValue getReturnValue();
-Map<String,DiadTraceVariable> getGlobalVariables();
+DiadTraceVarVal getException();
+DiadTraceVarVal getReturnValue();
+Map<String,DiadTraceVarVal> getGlobalVariables();
 String getSessionId();
 
 
@@ -58,34 +59,31 @@ interface DiadTraceCall {
    long getStartTime();
    long getEndTime();
    List<DiadTraceCall> getInnerTraceCalls();
-   DiadTraceVariable getLineNumbers();
-   Map<String,DiadTraceVariable> getTraceVariables();
+   DiadTraceVarVal getLineNumbers();
+   Map<String,DiadTraceVarVal> getTraceVariables();
    DiadTraceCall getParentCall();
 }
 
 
-interface DiadTraceVariable {
+interface DiadTraceVarVal {
    String getName();
-   List<DiadTraceValue> getTraceValues(DiadTrace rt);
-   DiadTraceValue getValueAtTime(DiadTrace tr,long time);
-   int getLineAtTime(long time);
-}
-
-
-interface DiadTraceValue {
+   String getFullName();
+   boolean hasChildren(long when);
+   Collection<String> getChildNames(long when);
+   DiadTraceVarVal getChild(String name,long when);
+   String getDataType(long when);
+   List<Long> getTimeChanges();
+   long getUpdateTime(long when);
+   boolean isNull(long when);
    long getStartTime();
-   boolean isNull();
-   String getDataType();
-   Long getNumericValue();
-   int getLineValue();
-   String getValue();
-   DiadTraceValue getFieldValue(DiadTrace rt,String fld,long when);
-   DiadTraceValue getIndexValue(DiadTrace rt,int idx,long when);
-   String getId();
-   int getArrayLength();
-   String getEnum();
-   
+   int getLineValue(long when);
+   Long getNumericValue(long when);
+   String getStringValue(long when);
+   String getId(long when);
+   int getArrayLength(long when);
+   List<Integer> getLineNumbers();
 }
+
 
 }       // end of interface DiadTrace
 

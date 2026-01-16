@@ -379,6 +379,12 @@ JSONObject getJsonVarHistory(String callid,String var,int line,long when)
 }
 
 
+JSONObject getJsonVarValue(String callid,String var,int line,long when)
+{
+   return base_execution.getJsonVarValue(callid,var,line,when);
+}
+
+
 /********************************************************************************/
 /*                                                                              */
 /*      Output methods                                                          */

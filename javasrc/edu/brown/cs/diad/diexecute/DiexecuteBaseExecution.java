@@ -469,6 +469,13 @@ synchronized void noteSeedeLength(long t,DiadRepair repair,double score)
 }
 
 
+@Override public JSONObject getJsonVarValue(String callid,String var,
+      int line,long when)
+{ 
+   return base_execution.getSeedeResult().getJsonVarValue(callid,var,line,when);   
+}
+
+
 
 }       // end of class DiexecuteBaseExecution
 

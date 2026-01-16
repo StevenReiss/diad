@@ -9,8 +9,33 @@
 <DIAD DO='Q_EXECTRACE' DEBUGID='$ID' />
 <DIAD DO='Q_LINETRACE' DEBUGID='$ID' CALLID='3' />
 <DIAD DO='Q_VARTRACE' DEBUGID='$ID' CALLID='3' VARIABLE='inputXmlContent' />
+<DIAD DO='Q_VARVALUE' DEBUGID='$ID' CALLID='3'
+	VARIABLE='xml?children?elementData?[0]?qualifiedName'
+	WHEN='55626' />
 <DIAD DO='Q_VARHISTORY' DEBUGID='$ID' CALLID='3'
-	VARIABLE='xml/net,n3.nanoxml.XMLElement.children/java.util.Vector.elementData/[0]/net.n3.nanoxml.XMLElement.qualifiedName'
+	VARIABLE='xml?children?elementData?[0]?qualifiedName'
 	WHEN='55626' />
 <DIAD DO='EXIT' />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

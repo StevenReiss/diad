@@ -150,14 +150,13 @@ DiadStackFrame getStartingFrame()
 }
 
 
-@Override public DiexecuteValue getException()
+@Override public DiexecuteVarVal getException()
 {
-   DiexecuteCall prob = getSymptomContext();
+   DiexecuteCall prob = getSymptomContext(); 
    if (prob != null) {
-      DiexecuteVariable thr = prob.getVariables().get("*THROWS*");
+      DiexecuteVarVal thr = prob.getVariables().get("*THROWS*");
       if (thr != null) {
-         List<DiexecuteValue> vals = thr.getValues(this);
-         return vals.get(0);
+         return thr;
        }
     }
    
@@ -166,7 +165,8 @@ DiadStackFrame getStartingFrame()
    String reason = IvyXml.getAttrString(ret,"REASON");
    if (reason == null) return null;
    if (reason.equals("EXCEPTION")) {
-      return new DiexecuteValue(IvyXml.getChild(ret,"VALUE"));
+      Element vale = IvyXml.getChild(ret,"VALUE");
+      return new DiexecuteVarVal(vale,null);
     }
    
    return null;
@@ -195,7 +195,7 @@ boolean isCompilerError()
 
 
 
-@Override public DiexecuteValue getReturnValue()
+@Override public DiexecuteVarVal getReturnValue()
 {
    Element runner = getRunner();
    Element ret = IvyXml.getChild(runner,"RETURN");
@@ -204,7 +204,7 @@ boolean isCompilerError()
    if (reason.equals("RETURN")) {
       Element rval = IvyXml.getChild(ret,"VALUE");
       if (rval == null) return null;
-      return new DiexecuteValue(rval);
+      return new DiexecuteVarVal(rval,null); 
     }
    
    return null;
@@ -215,12 +215,11 @@ long getExceptionTime()
 {
    DiexecuteCall prob = getSymptomContext();
    if (prob != null) {
-      DiexecuteVariable thr = prob.getVariables().get("*THROWS*");
+      DiexecuteVarVal thr = prob.getVariables().get("*THROWS*");
       if (thr != null) {
          long when = prob.getEndTime();
-         List<DiexecuteValue> vals = thr.getValues(this);
-         for (DiexecuteValue vv : vals) {
-            if (vv.getStartTime() > 0 && vv.getStartTime() < when) when = vv.getStartTime();
+         for (Long t : thr.getTimeChanges()) {
+            if (t > 0 && t < when) when = t;
           }
          return when;
        }
@@ -260,13 +259,13 @@ private Element getRunner()
 
 
 
-@Override public Map<String,DiadTraceVariable> getGlobalVariables()
+@Override public Map<String,DiadTraceVarVal> getGlobalVariables()
 {
-   Map<String,DiadTraceVariable> rslt = new LinkedHashMap<>();
+   Map<String,DiadTraceVarVal> rslt = new LinkedHashMap<>();
    Element glbls = IvyXml.getChild(seede_result,"GLOBALS");
    for (Element e : IvyXml.children(glbls,"VARIABLE")) {
       String nm = IvyXml.getAttrString(e,"NAME");
-      rslt.put(nm,new DiexecuteVariable(e));
+      rslt.put(nm,new DiexecuteVarVal(e,null));
     }
    
    return rslt;
@@ -816,6 +815,8 @@ Element dereference(Element val)
 }
 
 
+
+
 /********************************************************************************/
 /*                                                                              */
 /*      Location methods                                                        */
@@ -864,45 +865,74 @@ JSONObject getJsonVarHistory(String callid,String var,int line,long when)
    DiexecuteCall ctx = callid_map.get(callid);
    if (ctx == null) return null;
    
-   DiexecuteVariable execvar = ctx.getTraceVariable(var);
+   DiexecuteVarVal execvar = ctx.getTraceVariable(var);
    if (execvar == null) return null;
    
-   if (when == 0) {
-      when = ctx.getStartTime();
-    }
-   if (line <= 0 && when > 0) {
-      line = execvar.getLineAtTime(when);
-    }
-   else if (line <= 0 && when < 0) {
-      List<DiadTraceValue> vals = execvar.getTraceValues(this);
-      if (vals == null) return null;
-      DiadTraceValue last = vals.get(vals.size()-1);
-      when = last.getStartTime();
-      line = execvar.getLineAtTime(when);
-    }
-   else if (line > 0 && when < 0) {
-      DiexecuteVariable lines = ctx.getLineNumbers();
-      boolean next = false;
-      for (DiexecuteValue val : lines.getValues(this)) {
-         if (val.getLineValue() == line) next = true;
-         else if (next) {
-            when = val.getStartTime() - 1;
-            break;
-          }
-       }
-      if (when < 0) when = ctx.getEndTime() - 1;
-    }
+   when = getActualTime(ctx,execvar,when,line);
    if (when < 0) {
       return null;
     }
    
    DiexecuteVarHistory hist = new DiexecuteVarHistory(this,ctx,
-         execvar,when); 
+         execvar,var,when); 
    
    JSONObject rslt = hist.process();  
    
    return rslt;
 }
+
+
+private long getActualTime(DiexecuteCall ctx,DiexecuteVarVal execvar,
+      long when,int line) 
+{
+   if (when == 0) {
+      when = ctx.getStartTime();
+    }
+   if (line <= 0 && when > 0) {
+      line = execvar.getLineValue(when);
+    }
+   else if (line <= 0 && when < 0) {
+      boolean fnd = false;
+      for (Long t : execvar.getTimeChanges()) {
+         fnd = true;
+         when = t;
+         line = execvar.getLineValue(when);
+       }
+      if (!fnd) return 0;
+    }
+   else if (line > 0 && when < 0) {
+      DiexecuteVarVal lines = ctx.getLineNumbers();
+      boolean next = false;
+      for (Long t : lines.getTimeChanges()) {
+         int lno = lines.getLineValue(t);
+         if (lno == line) next = true;
+         else if (next) {
+            when = t -1;
+            break;
+          }
+       }
+      if (when < 0) when = ctx.getEndTime() - 1;
+    }
+   
+   return when;
+}
+
+JSONObject getJsonVarValue(String callid,String var,int line,long when)
+{
+   DiexecuteCall ctx = callid_map.get(callid);
+   if (ctx == null) return null;
+   
+   DiexecuteVarVal execvar = ctx.getTraceVariable(var);
+   if (execvar == null) return null;
+   
+   when = getActualTime(ctx,execvar,when,line);
+   if (when < 0) {
+      return null;
+    }
+   
+   return null;
+}
+
 
 
 @Override public String toString()

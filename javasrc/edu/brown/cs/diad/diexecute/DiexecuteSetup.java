@@ -146,19 +146,17 @@ List<DiexecuteAction> findResets()
    
    ASTNode mdcl = getAstNodeForCall(active_call);
    
-   DiexecuteTrace vt = active_call.getTrace();
-   DiexecuteVariable vline = active_call.getLineNumbers();
-   List<DiexecuteValue> lines = vline.getValues(vt);
-   for (int i = 0; i < lines.size(); ++i) {
-      DiexecuteValue vv = lines.get(i);
-      long time = vv.getStartTime();
+   DiexecuteVarVal vline = active_call.getLineNumbers();
+   List<Long> times = vline.getTimeChanges();
+   for (int i = 0; i < times.size(); ++i) {
+      Long time = times.get(i);
       if (time != 0 && first_time == 0) first_time = time;
       long etime;
-      if (i+1 < lines.size()) etime = lines.get(i+1).getStartTime();
+      if (i+1 < times.size()) etime = times.get(i+1);
       else etime = active_call.getEndTime();
       if (time != 0) {
          updateVariableMap(time);
-         int lno =  vv.getLineValue();
+         int lno =  vline.getLineValue(time);
          Statement stmt = getStatementAtLine(mdcl,lno);
          if (stmt == null) continue;
          processStatement(lno,stmt,time,etime);
@@ -336,10 +334,9 @@ private void updateVariableMap(long when)
 {
    for (Iterator<String> it = variable_map.keySet().iterator(); it.hasNext(); ) {
       String var = it.next();
-      DiexecuteVariable vv = active_call.getVariables().get(var);
+      DiexecuteVarVal vv = active_call.getVariables().get(var);
       if (vv == null) continue;
-      for (DiexecuteValue vval : vv.getValues(active_call.getTrace())) {
-         long start = vval.getStartTime();
+      for (Long start : vv.getTimeChanges()) {
          if (start < first_time) continue;
          if (start < when) it.remove();
          break;
@@ -386,11 +383,11 @@ private String getNameTag(ASTNode n,long time)
 
 
 
-private DiexecuteValue getValueAtTime(ASTNode n,long time)
+private DiexecuteVarVal getValueAtTime(ASTNode n,long time)
 {
    Expression lhs = null;
-   DiexecuteValue lval = null;
-   DiexecuteValue rval = null;
+   DiexecuteVarVal lval = null;
+   DiexecuteVarVal rval = null;
    
    JcompSymbol js = JcompAst.getReference(n);
    if (js == null) js = JcompAst.getDefinition(n);
@@ -399,12 +396,12 @@ private DiexecuteValue getValueAtTime(ASTNode n,long time)
    if (n instanceof SimpleName) {
       if (js.isMethodSymbol() || js.isTypeSymbol()) return null;
       else if (js.isFieldSymbol()) {
-         DiexecuteVariable vv = active_call.getVariables().get("this");
+         DiexecuteVarVal vv = active_call.getVariables().get("this");
          if (vv == null) return null;
          lval = vv.getValueAtTime(active_call.getTrace(),time);
        }
       else {
-         DiexecuteVariable vv = active_call.getVariables().get(js.getName());
+         DiexecuteVarVal vv = active_call.getVariables().get(js.getName());
          rval = vv.getValueAtTime(active_call.getTrace(),time);
        }
     }
@@ -419,7 +416,7 @@ private DiexecuteValue getValueAtTime(ASTNode n,long time)
    else if (n instanceof ArrayAccess) {
       ArrayAccess aa = (ArrayAccess) n;
       lval = getValueAtTime(aa.getArray(),time);
-      DiexecuteValue ival = getValueAtTime(aa.getIndex(),time);
+      DiexecuteVarVal ival = getValueAtTime(aa.getIndex(),time); 
       if (lval != null && ival != null) {
          // acccess array here
        }
@@ -432,17 +429,11 @@ private DiexecuteValue getValueAtTime(ASTNode n,long time)
       lval = getValueAtTime(lhs,time);
     }
    if (lval != null && js.isFieldSymbol()) {
-      rval = lval.getFieldValue(active_call.getTrace(),js.getFullName(),time);
+      rval = (DiexecuteVarVal) lval.getChild(js.getFullName(),time);
+      rval = rval.dereference(active_call.getTrace());
     }
    
-   if (rval != null) {
-      // if new setting, return it
-      if (rval.getStartTime() > 0) return rval;
-      // original setting -- use constant anyway?
-      return rval;                                      
-    }
-   
-   return null;
+   return rval;
 }
 
 
@@ -615,9 +606,9 @@ private class SetupProcessor extends ASTVisitor {
 
 private ASTNode getAstNodeForCall(DiexecuteCall vc)
 {
-   DiexecuteVariable vv = vc.getLineNumbers();
+   DiexecuteVarVal vv = vc.getLineNumbers();
    if (vv == null || vc.getFile() == null) return null;
-   int lno = vv.getLineAtTime(vc.getStartTime()+1);
+   int lno = vv.getLineValue(vc.getStartTime()+1);
    DisourceManager srcmgr = exec_manager.getDiadControl().getSourceManager();
    File f = active_frame.getSourceFile();
    String proj = srcmgr.getProjectForFile(f);
@@ -748,7 +739,7 @@ private class ExprRewriter extends ASTVisitor {
     }
    
    @Override public boolean visit(FieldAccess n) {
-      DiexecuteValue vv = getValueAtTime(n,start_time);
+      DiexecuteVarVal vv = getValueAtTime(n,start_time);
       if (vv != null) output(vv);
       else {
          String tag = getNameTag(n,start_time);
@@ -765,7 +756,7 @@ private class ExprRewriter extends ASTVisitor {
     }
    
    @Override public boolean visit(QualifiedName n) {
-      DiexecuteValue vv = getValueAtTime(n,start_time);
+      DiexecuteVarVal vv = getValueAtTime(n,start_time);
       if (vv != null) output(vv);
       else {
          JcompSymbol js = JcompAst.getReference(n);
@@ -831,7 +822,7 @@ private class ExprRewriter extends ASTVisitor {
       String s = n.getIdentifier();
       String r = variable_map.get(s);
       JcompSymbol js = JcompAst.getReference(n);
-      DiexecuteValue vv = getValueAtTime(n,start_time);
+      DiexecuteVarVal vv = getValueAtTime(n,start_time);
       if (vv != null && output(vv)) ;
       else if (r != null && !r.equals(s) && js != null && !js.isFieldSymbol() &&
             !js.isMethodSymbol() && !js.isTypeSymbol()) {
@@ -952,15 +943,15 @@ private class ExprRewriter extends ASTVisitor {
       return false;
     }
    
-   private boolean output(DiexecuteValue vv) {
-      if (vv.isNull()) {
+   private boolean output(DiexecuteVarVal vv) {
+      if (vv.isNull(start_time)) {
          output("null");
          return true;
        }
       Long nv = null;
-      switch (vv.getDataType()) {
+      switch (vv.getDataType(start_time)) {
          case "boolean" :
-            nv = vv.getNumericValue();
+            nv = vv.getNumericValue(start_time);
             if (nv != null && nv == 1) output("true");
             else output("false");
             break;
@@ -970,27 +961,32 @@ private class ExprRewriter extends ASTVisitor {
          case "long" :
          case "double" :
          case "float" :
-            output(vv.getValue());
+            output(vv.getStringValue(start_time));
             break;
          case "java.lang.Integer" :
          case "java.lang.Byte" :
          case "java.lang.Short" :
          case "java.lang.Double" :
          case "java.lang.Float" :
-            output(vv.getDataType() + ".valueOf(" + vv.getValue() + ")");
+            output(vv.getDataType(start_time) + ".valueOf(" + vv.getStringValue(start_time) + ")");
             break;
          case "char" :
-            nv = vv.getNumericValue();
-            if (nv != null) output("((char) " + IvyFormat.formatChar(vv.getValue()) + ")");
-            else output("'" + vv.getValue() + "'");
+            nv = vv.getNumericValue(start_time);
+            if (nv != null) {
+               output("((char) " + IvyFormat.formatChar(vv.getStringValue(start_time)) + ")");
+             }
+            else output("'" + vv.getStringValue(start_time) + "'");
             break;
          case "java.lang.Character" :
-            nv = vv.getNumericValue();
-            if (nv != null) output("Character.valueOf(" + IvyFormat.formatChar(vv.getValue()) + ")");
-            output("'" + vv.getValue() + "'");
+            nv = vv.getNumericValue(start_time);
+            if (nv != null) {
+               output("Character.valueOf(" + 
+                     IvyFormat.formatChar(vv.getStringValue(start_time)) + ")");
+             }
+            output("'" + vv.getStringValue(start_time) + "'");
             break;
          case "java.lang.String" :
-            output("\"" + IvyFormat.formatString(vv.getValue()) + "\"");
+            output("\"" + IvyFormat.formatString(vv.getStringValue(start_time)) + "\"");
             break;
          default :
             return false;
