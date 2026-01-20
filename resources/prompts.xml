@@ -5,6 +5,9 @@
       project.	You are being asked to help a developer debug his system while the
       developer is working in the debugger.
 
+      $(STYLE)
+      $(CONTEXT)
+
       The system has stopped at a breakpoint and the developer has identified
       something that is symptomatic of the problem.  Tools are provided to let
       you access the program, the debugger, the current program state, the
@@ -12,12 +15,12 @@
       information that has been made available about the program, and this run up
       to the breakpoint, including a full trace for a limited part of the run.
 
-      If you use a tool that needs a debugid, ues "$(DEBUGID)".
+      In this case the program has stopped at line $(LINE) in the method $(METHOD).
+      The identified symptom is: $(SYMPTOM).
 
-      In this case the program has stopped at line $(LINE) in the method $(METHOD)  The
-      identified symptom is: $(SYMPTOM).
-
-
+      You can assume that the programmer understands the purpose of the system
+      and the structure of the various JSON tool responses.  You should not
+      return a description of these.
    </PROMPT>
 </PROMPTS>
 

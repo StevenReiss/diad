@@ -115,7 +115,7 @@ DiruntimeVariable(Element xml)
    
    jo.put("NAME",var_name);
    jo.put("TYPE",var_type);
-   jo.put("KIND",kind);
+// jo.put("KIND",kind);
    
    switch (kind) {
       default :
@@ -124,7 +124,7 @@ DiruntimeVariable(Element xml)
       case "CLASS" :
       case "SCOPE" :
          if (var_type.equals("null")) jo.put("VALUE",(Object) null);
-         else jo.put("VALUE",var_value);
+//       else jo.put("VALUE",var_value);
          break;
       case "ARRAY" :
       case "CHARS" :

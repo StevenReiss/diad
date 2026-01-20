@@ -38,6 +38,7 @@ import edu.brown.cs.ivy.exec.IvyExecQuery;
 import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.mint.MintConstants.CommandArgs;
 import edu.brown.cs.ivy.xml.IvyXml;
+import edu.brown.cs.ivy.xml.IvyXmlWriter;
 
 public class DitestFactory implements DitestConstants
 {
@@ -328,6 +329,7 @@ private File getDropinDirectory()
    return f2;
 }
 
+
 /********************************************************************************/
 /*                                                                              */
 /*      Start SEEDE                                                             */
@@ -551,10 +553,29 @@ private boolean startLimba()
       catch (InterruptedException e) { }
     }
    
-   String sty = diad_control.getProperty("Diad.limba.style");
-   if (sty != null) diad_control.setKeyMap("STYLE",sty);
-   String ctx = diad_control.getProperty("Diad.limba.context");
-   if (ctx != null) diad_control.setKeyMap("CONTEXT",ctx);
+   String ws = workspace_dir.getName();
+ 
+   String sty = diad_control.getProperty("Diad.limba.sytle." + ws);
+   if (sty == null) sty = diad_control.getProperty("Diad.limba.style");
+   if (sty != null) {
+      diad_control.setKeyMap("STYLE",sty);
+      IvyXmlWriter xw = new IvyXmlWriter();
+      xw.cdataElement("STYLE",sty);
+      String cnts = xw.toString();
+      xw.close();
+      diad_control.sendLimbaMessage("STYLE",null,cnts);
+    }
+  
+   String ctx = diad_control.getProperty("Diad.limba.context." + ws);
+   if (ctx == null) ctx = diad_control.getProperty("Diad.limba.context");
+   if (ctx != null) {
+      diad_control.setKeyMap("CONTEXT",ctx);
+      IvyXmlWriter xw = new IvyXmlWriter();
+      xw.cdataElement("CONTEXT",ctx);
+      String cnts = xw.toString();
+      xw.close();
+      diad_control.sendLimbaMessage("CONTEXT",null,cnts);
+    }
    diad_control.sendLimbaMessage("PROJECT",null,null);
    
    limba_starting = false;

@@ -167,11 +167,8 @@ DiruntimeFrame(Element xml)
 @Override public JSONObject toJson() 
 {
    JSONObject rslt = new JSONObject();
-   rslt.put("ID",frame_id);
-   rslt.put("CLASS",class_name);
-   rslt.put("METHOD",method_name);
-   rslt.put("SIGNATURE",method_signature);
-   rslt.put("FULL_METHOD",class_name + "." +  method_name + format_signature);
+// rslt.put("ID",frame_id);
+   rslt.put("METHOD",class_name + "." +  method_name + format_signature);
    rslt.put("LINE",line_number);
    
    JSONArray lcls = new JSONArray();

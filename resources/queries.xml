@@ -1,18 +1,18 @@
 <QUERIES>
    <QUERY COMMAND='EXPLAIN'>
-      Your job here is to explain to the developer the root cause of the problem
+      You should return an explanation of the root cause of the problem
       that led to the symptom.	Try to be as comprehensive as possible.
    </QUERY>
    <QUERY COMMAND='LOCATIONS'>
-      Your job here is to identify the most likely program locations that can
+      Your should identify the most likely program locations that can
       be repaired to fix the problem.	Tools are provided that identify the
-      overall set of locations, but these are not prioritized or evaluated
+      set of locations that might affect the problem, but these are not prioritized or evaluated
       for appropriateness.  Given your understanding of the cause of the
       problem you should determine which of these locations are the most
-      relevant.
+      likely to be buggy.
    </QUERY>
    <QUERY COMMAND='REPAIRS'>
-      Your job here is to identify the most likely program fixes to the 
+      Your job here is to identify the most likely repairs to the
       program that will fix the problem.   Tools are provided that identify the
       overall set of locations, but these are not prioritized or evaluated
       for appropriateness and do not provide fixes.  Given your understanding
@@ -21,3 +21,8 @@
       that are likely to fix the problem.
    </QUERY>
 </QUERIES>
+
+
+
+
+

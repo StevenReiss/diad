@@ -349,6 +349,12 @@ DiruntimeType stringType()
 }
 
 
+@Override public String getProcessId()
+{
+   return for_process.getId(); 
+}
+
+
 /********************************************************************************/
 /*                                                                              */
 /*      Stack methods                                                           */

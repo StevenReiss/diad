@@ -149,6 +149,8 @@ void setState(DiadCandidateState st)
    candidate_state = st;
    if (st == DiadCandidateState.DEAD) {
       // need to leave thread alone
+      CommandArgs args = new CommandArgs("DEBUGID",candidate_id);
+      diad_control.sendLimbaMessage("DEBUGREMOVE",args,null);
       for_frame = null;
       candidate_symptom = null;
       location_set = null;
@@ -301,14 +303,16 @@ JSONArray getJsonLocations(boolean all)
        }
       JSONObject obj = new JSONObject();
       obj.put("METHOD",ent.getKey());
-      DiadLocation loc0 = ent.getValue().get(0);
-      obj.put("FILE",loc0.getFile());
-      obj.put("START_POSITION",loc0.getMethodOffset());
-      obj.put("END_POSITION",loc0.getMethodEndOffset());
+//    DiadLocation loc0 = ent.getValue().get(0);
+//    obj.put("FILE",loc0.getFile());
+//    obj.put("START_POSITION",loc0.getMethodOffset());
+//    obj.put("END_POSITION",loc0.getMethodEndOffset());
       JSONArray arr = new JSONArray();
       for (LocationSummary sum : found.values()) {
-         JSONObject sobj = sum.toJson();
-         arr.put(sobj);
+         int lno = sum.getLineNumber();
+         arr.put(lno);
+//       JSONObject sobj = sum.toJson();
+//       arr.put(sobj);
        }
       obj.put("LINES",arr);
       rslt.put(obj);
@@ -338,12 +342,14 @@ private static class LocationSummary {
       loc_priority = Math.max(loc_priority,loc.getPriority());
     }
    
-   JSONObject toJson() {
-      JSONObject rslt = new JSONObject();
-      rslt.put("LINE",line_number);
+// JSONObject toJson() {
+//    JSONObject rslt = new JSONObject();
+//    rslt.put("LINE",line_number); 
 //    rslt.put("PRIORITY",loc_priority);
-      return rslt;
-    }
+//    return rslt;
+//  }
+   
+   int getLineNumber()          { return line_number; }
    
 }       // end of inner class LocationSummary
 
@@ -405,6 +411,7 @@ void askLimba(IvyXmlWriter xw,DiadAskType typ,String query)
    keymap.put("STARTFRAME",start_frame.getFrameId());
    keymap.put("METHOD",for_frame.getFullMethodName());
    keymap.put("LINE",String.valueOf(for_frame.getLineNumber()));
+   keymap.put("PROCESS",for_thread.getProcessId());
    
    String prompt = diad_control.getPrompt(typ.toString());
    prompt = IvyFile.expandName(prompt,keymap);

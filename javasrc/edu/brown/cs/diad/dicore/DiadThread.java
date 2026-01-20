@@ -49,6 +49,7 @@ boolean isRunning();
 DiadStack getStack();
 boolean isInternal();
 String getExceptionType();
+String getProcessId();
 
 DiadValue evaluate(String expr);
 void outputXml(IvyXmlWriter xw);
