@@ -214,6 +214,9 @@ DiexecuteChangeMap findProblemVariables(ASTNode base,DiadSymptom symp,DiadThread
    ASTNode n = null;
    switch (symp.getSymptomType()) {
       case ASSERTION :
+         if (symp.getSymptomItem() == null) {
+            symp.setSymptomItem(base.toString());
+          } 
          n = analmgr.getAssertionExpression(symp,thrd);
          break;
       case EXCEPTION :

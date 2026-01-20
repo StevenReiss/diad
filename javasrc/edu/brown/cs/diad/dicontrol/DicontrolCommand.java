@@ -74,6 +74,8 @@ static DicontrolCommand createCommand(DicontrolMain ctrl,Element xml)
          return new QueryVarHistory(ctrl,xml);
       case "Q_VARVALUE" :
          return new QueryVarValue(ctrl,xml);
+      case "ASKLIMBA" :
+         return new AskLimba(ctrl,xml);
       default :
          IvyLog.logE("DICONTROL","Unknown command " + cmd + " " +
                IvyXml.convertXmlToString(xml));
@@ -454,7 +456,28 @@ private static class QueryVarValue extends QueryCommand {
 
 
 
+/********************************************************************************/
+/*                                                                              */
+/*      Limba commands                                                          */
+/*                                                                              */
+/********************************************************************************/
 
+private static class AskLimba extends QueryCommand {
+
+   private DiadAskType ask_type; 
+   private String ask_text;
+   
+   AskLimba(DicontrolMain ctrl,Element xml) {
+      super(ctrl,xml);
+      ask_type = IvyXml.getAttrEnum(xml,"TYPE",DiadAskType.GENERAL);
+      ask_text = IvyXml.getTextElement(xml,"QUESTION");
+    }
+   
+   @Override public void process(IvyXmlWriter xw) {
+      getCandidate().askLimba(xw,ask_type,ask_text); 
+    }
+   
+}       // end of inner class AskLimba
 
 
 /********************************************************************************/

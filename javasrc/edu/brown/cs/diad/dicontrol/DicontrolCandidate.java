@@ -35,6 +35,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.w3c.dom.Element;
 
 import edu.brown.cs.diad.dianalysis.DianalysisManager;
 import edu.brown.cs.diad.dicore.DiadCandidateCallback;
@@ -45,8 +46,11 @@ import edu.brown.cs.diad.dicore.DiadStackFrame;
 import edu.brown.cs.diad.dicore.DiadSymptom;
 import edu.brown.cs.diad.dicore.DiadThread;
 import edu.brown.cs.diad.diexecute.DiexecuteManager;
+import edu.brown.cs.ivy.file.IvyFile;
 import edu.brown.cs.ivy.file.IvyLog;
+import edu.brown.cs.ivy.mint.MintConstants.CommandArgs;
 import edu.brown.cs.ivy.swing.SwingEventListenerList;
+import edu.brown.cs.ivy.xml.IvyXml;
 import edu.brown.cs.ivy.xml.IvyXmlWriter;
 
 class DicontrolCandidate implements DicontrolConstants
@@ -383,6 +387,52 @@ JSONObject getJsonVarValue(String callid,String var,int line,long when)
 {
    return base_execution.getJsonVarValue(callid,var,line,when);
 }
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      LLM interface methods                                                   */
+/*                                                                              */
+/********************************************************************************/
+
+void askLimba(IvyXmlWriter xw,DiadAskType typ,String query)
+{
+   Map<String,String> keymap = diad_control.getKeyMap();
+   keymap.put("SYMPTOM",candidate_symptom.getText()); 
+   keymap.put("DEBUGID",candidate_id);
+   keymap.put("THREAD",for_thread.getThreadId());
+   keymap.put("FRAME",for_frame.getFrameId());
+   keymap.put("STARTFRAME",start_frame.getFrameId());
+   keymap.put("METHOD",for_frame.getFullMethodName());
+   keymap.put("LINE",String.valueOf(for_frame.getLineNumber()));
+   
+   String prompt = diad_control.getPrompt(typ.toString());
+   prompt = IvyFile.expandName(prompt,keymap);
+   
+   String ask = diad_control.getQuery(typ.toString()); 
+   ask = IvyFile.expandName(ask,keymap);
+   
+   if (ask == null && query != null) ask = query;
+   else if (query != null) ask = ask + " " + query;
+   
+   CommandArgs args = new CommandArgs("USECONTEXT",true,
+         "TOOLS","PROJECT,DEBUG");
+   
+   IvyXmlWriter xw1 = new IvyXmlWriter();
+   xw1.cdataElement("PROMPT",prompt);
+   xw1.begin("CONTEXT");
+   xw1.field("KEY","DEBUGID");
+   xw1.field("VALUE",candidate_id);
+   xw1.end("CONTEXT");
+   xw1.cdataElement("CONTENTS",ask);
+   String cnts = xw1.toString();
+   xw1.close();
+   
+   Element rslt = diad_control.sendLimbaMessage("QUERY",args,cnts);
+   
+   IvyLog.logD("DICONTROL","LIMBA RESULT: " + IvyXml.convertXmlToString(rslt));
+}
+
 
 
 /********************************************************************************/

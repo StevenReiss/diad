@@ -54,11 +54,13 @@ private String          stopped_thread;
 
 private boolean         debug_fait;
 private boolean         trace_fait;
+private boolean         debug_limba;
 private boolean         debug_seede;
 private boolean         trace_seede;
 private int             seede_timeout;
 private boolean         fait_starting;
 private boolean         seede_starting;
+private boolean         limba_starting;
 private File            workspace_dir;
 
 public static final String [] OPENS;
@@ -95,9 +97,11 @@ public DitestFactory(DicontrolMain ctrl)
    trace_fait = false;
    debug_seede = true;
    trace_seede = false;
+   debug_limba = true;
    seede_timeout = 0;
    fait_starting = false;
    seede_starting = false;
+   limba_starting = false;
    workspace_dir = null;
 }
 
@@ -152,6 +156,7 @@ public void setupBedrock(String workspace,String mint)
 	    diad_control.sendBubblesMessage("ENTER",null,null);
             startFait();
             startSeede();
+            startLimba();
             diad_control.bubblesReady(); 
 	    return;
 	  }
@@ -433,6 +438,126 @@ public boolean startSeede()
     }
    
    seede_starting = false;
+   
+   return isnew;
+}
+
+
+//CHECKSTYLE:OFF
+private boolean startLimba()
+// CHECKSTYLE:ON
+{
+   if (limba_starting) return false;
+   limba_starting = true;
+   
+   IvyLog.logD("DITEST","Starting Limba server");
+   
+   IvyExec exec = null;
+   File wd =  workspace_dir;
+   if (wd == null) wd = new File(System.getProperty("user.home"));
+   File logf = new File(wd,"limba.log");
+   
+   List<String> args = new ArrayList<>();
+   args.add(IvyExecQuery.getJavaPath());
+   
+   File f2 = getDropinDirectory();
+   File jarfile = new File(f2,"limba.jar");
+   
+   String xcp = diad_control.getProperty("Diad.limba.class.path");
+   if (xcp == null) {
+      xcp = System.getProperty("java.class.path");
+      String ycp = diad_control.getProperty("Diad.limba.add.path");
+      if (ycp != null) xcp = ycp + File.pathSeparator + xcp;
+    }
+   else {
+      StringBuffer buf = new StringBuffer();
+      StringTokenizer tok = new StringTokenizer(xcp,":;");
+      while (tok.hasMoreTokens()) {
+	 String elt = tok.nextToken();
+	 if (!elt.startsWith("/") &&  !elt.startsWith("\\")) {
+	    if (elt.equals("eclipsejar")) {
+	       elt = getEclipsePath();
+	     }
+	    else if (elt.equals("limba.jar") && jarfile != null) {
+	       elt = jarfile.getPath();
+	     }
+	    else {
+               elt = getLibraryPath(elt);
+	     }
+	  }
+	 if (buf.length() > 0) buf.append(File.pathSeparator);
+	 buf.append(elt);
+       }
+      xcp = buf.toString();
+    }
+   args.add("-cp");
+   args.add(xcp);
+   
+   args.add("edu.brown.cs.limba.limba.LimbaMain");
+   args.add("-m");
+   args.add(diad_control.getMintId());
+   args.add("-L");
+   args.add(logf.getPath());
+   if (debug_limba) {
+      args.add("-D");
+    }
+   String oh = diad_control.getProperty("Diad.ollama.host");
+   if (oh != null && !oh.isEmpty()) {
+      args.add("-host");
+      args.add(oh);
+    }
+   int op = diad_control.getProperty("Diad.ollama.port",0);
+   if (op > 0) {
+      args.add("-port");
+      args.add(Integer.toString(op));
+    }
+   String mdl = diad_control.getProperty("Diad.ollama.model");
+   if (mdl != null && !mdl.isEmpty()) {
+      args.add("-llama");
+      args.add(mdl);
+    }
+   
+   boolean isnew = false;
+   for (int i = 0; i < 500; ++i) {
+      Element rslt = diad_control.sendLimbaMessage("PING",null,null);
+      if (rslt != null) {
+	 break;
+       }
+      if (i == 0) {
+	 try {
+            // make IGNORE_OUTPUT to clean up otutput
+            exec = new IvyExec(args,null,IvyExec.ERROR_OUTPUT);    
+            isnew = true;
+	    IvyLog.logD("DITEST","Run " + exec.getCommand());
+	  }
+	 catch (IOException e) {
+	    break;
+	  }
+       }
+      else {
+	 try {
+	    if (exec != null) {
+	       int sts = exec.exitValue();
+	       IvyLog.logD("DITEST","Limba server disappeared with status " + sts);
+	       break;
+	     }
+	  }
+	 catch (IllegalThreadStateException e) { }
+       }
+      
+      try {
+	 Thread.sleep(2000);
+       }
+      catch (InterruptedException e) { }
+    }
+   
+   String sty = diad_control.getProperty("Diad.limba.style");
+   if (sty != null) diad_control.setKeyMap("STYLE",sty);
+   String ctx = diad_control.getProperty("Diad.limba.context");
+   if (ctx != null) diad_control.setKeyMap("CONTEXT",ctx);
+   diad_control.sendLimbaMessage("PROJECT",null,null);
+   
+   limba_starting = false;
    
    return isnew;
 }

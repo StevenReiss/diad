@@ -70,7 +70,6 @@
 	 <fileset dir='${DIAD}/java' includes='**/*.class' />
 	 <fileset dir='${PRO}/diadbb/java' includes='**/*.class' />
 	 <fileset dir='${DIAD}/resources' includes='*.xml' />
-	 <fileset dir='${DIAD}/resources' includes='*.proto' />
 	 <fileset dir='${DIAD}/resources' includes='images/*.png' />
 <!--	 <fileset dir='${PRO}/ivy/java' includes='**/*.class' />                        -->
 	 <fileset dir='${PRO}/diadbb' includes='Bird.props' />

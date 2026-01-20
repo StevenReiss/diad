@@ -95,6 +95,7 @@ enum DiadAnalysisState {
    FAIL,
 }
 
+
 enum DiadAnalysisFileMode {
    ALL_FILES,
    COMPUTED_FILES,
@@ -103,9 +104,19 @@ enum DiadAnalysisFileMode {
    USER_FILES,
 }
 
+
 enum DiadValueKind {
    UNKNOWN, PRIMITIVE, STRING, CLASS, OBJECT, ARRAY
 }
+
+
+enum DiadAskType {
+   GENERAL,
+   EXPLAIN,
+   LOCATIONS,
+   REPAIRS,
+}
+
 
 double DEFAULT_PRIORITY = 0.5;
 

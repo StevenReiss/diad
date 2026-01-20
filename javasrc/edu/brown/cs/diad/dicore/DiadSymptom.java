@@ -53,6 +53,7 @@ String getTargetValue();
 DiadValueOperator getSymptomOperator(); 
 double getTargetPrecision();
 
+void setSymptomItem(String val);
 void setOriginalValue(String val);
 void setTargetValue(String val);
 void setOperator(DiadValueOperator op);
@@ -75,6 +76,7 @@ default DiadLocation getBugLocation() {
    return null;
 }
 
+String getText();
 void outputXml(IvyXmlWriter xw);  
 
 

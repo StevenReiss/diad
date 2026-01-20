@@ -99,6 +99,7 @@ private DitestFactory test_factory;
 private DianalysisManager analysis_manager;
 private DiexecuteManager execute_manager;
 private Properties  diad_properties;
+private Map<String,String> key_map;
  
 
 
@@ -147,6 +148,9 @@ private DicontrolMain(String [] args)
    source_factory = null;
    analysis_manager = null;
    execute_manager = null;
+   
+   key_map = new HashMap<>();
+   key_map.put("LANGUAGE","java");
    
    scanArgs(args);
 }
@@ -286,6 +290,64 @@ public boolean getProperty(String id,boolean dflt)
 
 
 
+/********************************************************************************/
+/*                                                                              */
+/*      Get prompt from resource file                                           */
+/*                                                                              */
+/********************************************************************************/
+
+String getPrompt(String cmd)
+{
+   InputStream ins = getClass().getClassLoader().getResourceAsStream("resources/prompts.xml");
+   if (ins == null) {
+      ins = getClass().getClassLoader().getResourceAsStream("prompts.xml");
+    }
+   if (ins == null) return null;
+   Element xml = IvyXml.loadXmlFromStream(ins);
+   if (xml == null) return null;
+   String base = null;
+   String ptxt = null;
+   for (Element pmpt : IvyXml.children(xml,"PROMPT")) {
+      String what = IvyXml.getAttrString(pmpt,"COMMAND");
+      if (what == null) base = IvyXml.getText(pmpt).trim();
+      else if (what.equals(cmd)) {
+         ptxt = IvyXml.getText(pmpt).trim();
+       }
+    }
+   
+   if (base == null) return ptxt;
+   if (ptxt == null) return base;
+   
+   return base + " " + ptxt;
+}
+
+
+String getQuery(String cmd)
+{
+   InputStream ins = getClass().getClassLoader().getResourceAsStream("resources/queries.xml");
+   if (ins == null) {
+      ins = getClass().getClassLoader().getResourceAsStream("queries.xml");
+    }
+   if (ins == null) return null;
+   Element xml = IvyXml.loadXmlFromStream(ins);
+   if (xml == null) return null;
+   String base = null;
+   String ptxt = null;
+   for (Element pmpt : IvyXml.children(xml,"QUERY")) {
+      String what = IvyXml.getAttrString(pmpt,"COMMAND");
+      if (what == null) base = IvyXml.getText(pmpt).trim();
+      else if (what.equals(cmd)) {
+         ptxt = IvyXml.getText(pmpt).trim();
+       }
+    }
+   
+   if (base == null) return ptxt;
+   if (ptxt == null) return base;
+   
+   return base + " " + ptxt;
+}
+
+
 
 /********************************************************************************/
 /*                                                                              */
@@ -319,6 +381,12 @@ public Element sendFaitMessage(String cmd,CommandArgs args,String cnts)
 public Element sendSeedeMessage(String id,String cmd,CommandArgs args,String cnts)
 {
    return dicontrol_monitor.sendSeedeMessage(id,cmd,args,cnts);
+}
+
+
+public Element sendLimbaMessage(String cmd,CommandArgs args,String cnts)
+{
+   return dicontrol_monitor.sendLimbaMessage(cmd,args,cnts); 
 }
 
 public Element sendDiadMessage(String cmd,CommandArgs args,String xml)
@@ -487,6 +555,17 @@ DiadCommand setupDiadCommand(Element xml) throws DiadException
 }
 
 
+public void setKeyMap(String key,String val)
+{
+   if (val == null) key_map.remove(key);
+   else key_map.put(key,val);
+}
+
+
+Map<String,String> getKeyMap()
+{
+   return key_map;
+}
 
 /********************************************************************************/
 /*                                                                              */

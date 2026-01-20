@@ -87,6 +87,11 @@ DicontrolSymptom(DiadSymptomType type,String item)
 
 @Override public double getTargetPrecision()            { return target_precision; } 
 
+@Override public void setSymptomItem(String v) 
+{
+   symptom_item = v;
+}
+
 @Override public void setOriginalValue(String v)
 {
    original_value = v;
@@ -113,6 +118,75 @@ DicontrolSymptom(DiadSymptomType type,String item)
 /*      Output methods                                                          */
 /*                                                                              */
 /********************************************************************************/
+
+@Override public String getText()
+{
+   switch (symptom_type) {
+      case ASSERTION :
+         if (original_value != null && target_value != null) {
+            String typ = null;
+            String v = original_value;
+             if (original_value.startsWith("(")) {
+                int idx = original_value.indexOf(") ");
+                if (idx > 0) {
+                   typ = original_value.substring(1,idx).trim();
+                   v = original_value.substring(idx+3);
+                 }
+              }
+             StringBuffer buf = new StringBuffer();
+             if (symptom_item == null) {
+                buf.append("an assertion failed because ");
+              }
+             else {
+                buf.append("the assertion ```");
+                buf.append(symptom_item);
+                buf.append("``` failed because ");
+              }
+             if (typ != null) {
+                if (typ.equals("java.lang.String")) typ = "string";
+                buf.append("the " + typ + " value ");
+              }
+             buf.append(v);
+             switch (value_operator) {
+                case EQL :
+                default :
+                   buf.append(" should be equal to ");
+                   break;
+                case NEQ :
+                   buf.append(" should not be equal to ");
+                   break;
+                case GTR :
+                   buf.append(" should be greater than ");
+                   break;
+                case GEQ :
+                   buf.append(" should be greater than or equal to ");
+                   break;
+                case LSS :
+                   buf.append(" should be less than ");
+                   break;
+                case LEQ :
+                   buf.append(" should be less than or equal to ");
+                   break;
+              }
+             buf.append(target_value);
+             return buf.toString();
+          }
+         return "assertion failed";
+      case EXCEPTION :
+      case CAUGHT_EXCEPTION :
+         return "the program throws the exception " + getSymptomItem();
+      case EXPRESSION :
+        return "expression has the wrong value";
+      case LOCATION :
+         return "execution should not have gotten here";
+      case NO_EXCEPTION :
+         return "the program should have thrown theexception " + getSymptomItem();
+      case VARIABLE :
+         return "variable has the wrong value";
+    }
+   return "symptom"; 
+}
+
 
 @Override public void outputXml(IvyXmlWriter xw)
 {

@@ -57,6 +57,7 @@ class DicontrolMonitor implements DicontrolConstants
 private DicontrolMain	diad_control;
 private MintControl	mint_control;
 private Map<String,EvalData> eval_handlers;
+private Map<String,Element> limba_replys;
 
 private static Random   random_gen = new Random();
 
@@ -72,6 +73,7 @@ DicontrolMonitor(DicontrolMain gm,String mintid)
 {
    diad_control = gm;
    eval_handlers = new HashMap<>();
+   limba_replys = new HashMap<>();
    
    mint_control = MintControl.create(mintid,MintSyncMode.ONLY_REPLIES);
    mint_control.register("<BUBBLES DO='EXIT' />",new ExitHandler());
@@ -79,6 +81,7 @@ DicontrolMonitor(DicontrolMain gm,String mintid)
    mint_control.register("<BEDROCK TYPE='_VAR_0' />",new IDEHandler());
    mint_control.register("<FAITEXEC TYPE='_VAR_0' />",new FaitHandler());
    mint_control.register("<SEEDEXEC TYPE='_VAR_0' ID='_VAR_1' />",new SeedeHandler());
+   mint_control.register("<LIMBAREPLY />",new LimbaHandler());
    
    IvyLog.logD("DICONTROL","Listening for messages on " + mintid);
 }
@@ -447,6 +450,62 @@ Element sendSeedeMessage(String id,String cmd,CommandArgs args,String cnts)
 }
 
 
+
+/********************************************************************************/
+/*                                                                              */
+/*      Send messages to LIMBA                                                  */
+/*                                                                              */
+/********************************************************************************/
+
+public Element sendLimbaMessage(String cmd,CommandArgs args,String cnts)
+{
+   MintDefaultReply rply = new MintDefaultReply();
+   
+   IvyXmlWriter xw = new IvyXmlWriter();
+   xw.begin("LIMBA");
+   xw.field("DO",cmd);
+   String rid = "LIMBA_" + (int) (Math.random()*1000000);
+   if (args == null) args = new CommandArgs("RID",rid);
+   else args.put("RID",rid);
+   for (Map.Entry<String,Object> ent : args.entrySet()) {
+      xw.field(ent.getKey(),ent.getValue());
+    }
+   if (cnts != null) {
+      xw.xmlText(cnts);
+    }
+   xw.end("LIMBA");
+   String msg = xw.toString();
+   xw.close();
+   
+   IvyLog.logD("DICONTROL","Send to LIMBA: " + msg);
+   
+   mint_control.send(msg,rply,MintConstants.MINT_MSG_FIRST_NON_NULL);
+   
+   Element rslt = rply.waitForXml(0);
+   String nrid = IvyXml.getAttrString(rslt,"RID");
+   if (nrid != null) {
+      if (!rid.equals(nrid)) {
+         IvyLog.logE("DICCONTROL","Reply ids don't match " + rid + " " + nrid);
+       }
+      IvyLog.logD("DICONTROL","Waiting for limba reply " + nrid);
+      synchronized (limba_replys) {
+         for ( ; ; ) {
+            if (limba_replys.containsKey(nrid)) {
+               rslt = limba_replys.remove(nrid);
+               break;
+             }
+            try {
+               limba_replys.wait(3000);
+             }
+            catch (InterruptedException e) { }
+          }
+       }
+    }
+   
+   IvyLog.logD("DICONTROL","Reply from LIMBA: " + IvyXml.convertXmlToString(rslt));
+   
+   return rslt;
+}
 /********************************************************************************/
 /*                                                                              */
 /*      Handle messages from the back end                                       */
@@ -612,6 +671,32 @@ private final class SeedeHandler implements MintHandler {
 }       // end of inner class FaitHandler
 
 
+
+/********************************************************************************/
+/*                                                                              */
+/*      Handle Limba messages                                                   */
+/*                                                                              */
+/********************************************************************************/
+
+private final class LimbaHandler implements MintHandler {
+
+  @Override public void receive(MintMessage msg,MintArguments args) {
+     Element xml = msg.getXml();
+     String cmd = IvyXml.getAttrString(xml,"DO");
+     if (cmd != null && cmd.equals("PING")) {
+        msg.replyTo("<PONG/>");
+        return;
+      }
+     String rid = IvyXml.getAttrString(xml,"RID");
+     if (rid != null) {
+        synchronized (limba_replys) {
+           limba_replys.put(rid,IvyXml.getChild(xml,"RESULT"));
+           limba_replys.notifyAll();
+         }
+      }
+   }
+  
+}
 
 /********************************************************************************/
 /*                                                                              */

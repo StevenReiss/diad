@@ -331,7 +331,7 @@ private class AssertionChecker extends ASTVisitor implements DiadAssertionData {
    private String getSourceValue(MethodInvocation mi,int idx) {
       DiadValue bv = getDiadValue(mi,idx);
       if (bv == null) return null;
-      return bv.getDataType().getName() + " " + bv.toString();
+      return "(" + bv.getDataType().getName() + ") " + " " + bv.toString();
     }
    
    private String getTargetValue(MethodInvocation mi,int idx) {
