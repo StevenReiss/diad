@@ -360,12 +360,20 @@ private static class QueryLocations extends QueryCommand {
 
 private static class QueryExecTrace extends QueryCommand {
    
+   private String call_id;
+   
    QueryExecTrace(DicontrolMain ctrl,Element xml) {
       super(ctrl,xml);
+      call_id = IvyXml.getAttrString(xml,"CALLID");
     }
    
    @Override protected JSONObject getJsonObject() {
-      return getCandidate().getJsonExecTrace();  
+      if (call_id != null && !call_id.isEmpty()) {
+         return getCandidate().getJsonLocalTrace(call_id); 
+       }
+      else {
+         return getCandidate().getJsonExecTrace();  
+       }
     }
    
 

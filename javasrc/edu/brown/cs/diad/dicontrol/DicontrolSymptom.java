@@ -39,6 +39,7 @@ class DicontrolSymptom implements DiadSymptom
 
 private DiadSymptomType symptom_type;
 private String symptom_item;
+private String original_expr;
 private String original_value;
 private String target_value;
 private DiadValueOperator value_operator;
@@ -62,6 +63,7 @@ DicontrolSymptom(DiadSymptomType type,String item)
 {
    symptom_type = type;
    symptom_item = item;
+   original_expr = null;
    original_value = null;
    target_value = null;
    value_operator = DiadValueOperator.NONE; 
@@ -83,6 +85,8 @@ DicontrolSymptom(DiadSymptomType type,String item)
 
 @Override public String getTargetValue()                { return target_value; }
 
+@Override public String getOriginalExpression()         { return original_expr; } 
+
 @Override public DiadValueOperator getSymptomOperator() { return value_operator; }
 
 @Override public double getTargetPrecision()            { return target_precision; } 
@@ -95,6 +99,12 @@ DicontrolSymptom(DiadSymptomType type,String item)
 @Override public void setOriginalValue(String v)
 {
    original_value = v;
+   if (original_expr == null) original_expr = v;
+}
+
+@Override public void setOriginalExpression(String v) 
+{
+   original_expr = v;
 }
 
 @Override public void setTargetValue(String v)
@@ -145,6 +155,10 @@ DicontrolSymptom(DiadSymptomType type,String item)
              if (typ != null) {
                 if (typ.equals("java.lang.String")) typ = "string";
                 buf.append("the " + typ + " value ");
+              }
+             if (original_expr != null && 
+                   !original_value.contains(original_expr)) {
+                buf.append(" computed from " + original_expr + " ");
               }
              buf.append(v);
              switch (value_operator) {

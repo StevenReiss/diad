@@ -369,6 +369,12 @@ JSONObject getJsonExecTrace()
 }
 
 
+JSONObject getJsonLocalTrace(String callid)
+{
+   return base_execution.getJsonLocalTrace(callid); 
+}
+
+
 JSONArray getJsonLineTrace(String callid)
 {
    if (base_execution == null) return null;

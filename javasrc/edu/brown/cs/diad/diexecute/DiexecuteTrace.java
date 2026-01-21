@@ -843,6 +843,21 @@ JSONObject getJsonExecTrace()
 }
 
 
+JSONObject getJsonLocalTrace(String callid)
+{
+   DiexecuteCall ctx = null;
+   if (callid.equals("0") || callid.equals("*")) {
+      ctx = problem_context;
+    }
+   else {
+      ctx = callid_map.get(callid);
+      if (ctx == null) ctx = problem_context;
+    }
+   
+   return ctx.getJsonLocalTrace(); 
+}
+
+
 JSONArray getJsonLineTrace(String callid)
 {
    DiexecuteCall ctx = callid_map.get(callid);

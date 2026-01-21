@@ -451,6 +451,12 @@ synchronized void noteSeedeLength(long t,DiadRepair repair,double score)
    return base_execution.getSeedeResult().getJsonExecTrace();
 }
 
+
+@Override public JSONObject getJsonLocalTrace(String callid) 
+{
+   return base_execution.getSeedeResult().getJsonLocalTrace(callid); 
+}
+
 @Override public JSONArray getJsonLineTrace(String callid)
 {
    return base_execution.getSeedeResult().getJsonLineTrace(callid);  

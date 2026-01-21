@@ -133,6 +133,7 @@ DiadAssertionData getAssertionData()
 private class AssertionChecker extends ASTVisitor implements DiadAssertionData { 
    
    private ASTNode use_node;
+   private String orig_expr;
    private String orig_value;
    private String target_value;
    private double precision_value;
@@ -151,6 +152,7 @@ private class AssertionChecker extends ASTVisitor implements DiadAssertionData {
    String generateResult() {
       if (use_node == null) return null;
       if (orig_value != null) getSymptom().setOriginalValue(orig_value);
+      if (orig_expr != null) getSymptom().setOriginalExpression(orig_expr);
       if (target_value != null) getSymptom().setTargetValue(target_value); 
       // should set precision
       return getXmlForLocation("EXPR",use_node,true);
@@ -168,6 +170,7 @@ private class AssertionChecker extends ASTVisitor implements DiadAssertionData {
          use_node = n;
          orig_value = orig;
          target_value = tgt;
+         orig_expr = n.toString();
        }
     }
    

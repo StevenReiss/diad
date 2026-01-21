@@ -308,6 +308,39 @@ JSONObject getJsonExecTrace()
 }
 
 
+JSONObject getJsonLocalTrace()
+{
+   JSONObject rslt = new JSONObject();
+   
+   rslt.put("ID",getContextId());
+   rslt.put("METHOD",getMethod());
+   rslt.put("START_TIME",getStartTime());
+   rslt.put("END_TIME",getEndTime());
+   JSONArray calls = new JSONArray();
+   for (DiexecuteCall c : getInnerCalls()) {
+      JSONObject co = c.getJsonInsideTrace();
+//    calls.put(c.getContextId());
+      calls.put(co);
+    }
+   rslt.put("CALLS",calls);
+   
+   return rslt;
+}
+
+
+JSONObject getJsonInsideTrace()
+{
+   JSONObject rslt = new JSONObject();
+   
+   rslt.put("ID",getContextId());
+   rslt.put("METHOD",getMethod());
+   rslt.put("START_TIME",getStartTime());
+   rslt.put("END_TIME",getEndTime());
+   
+   return rslt;
+}
+
+
 JSONArray getJsonLineTrace()
 {
    JSONArray rslt = new JSONArray();

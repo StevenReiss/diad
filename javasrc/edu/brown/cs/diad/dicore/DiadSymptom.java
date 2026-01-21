@@ -49,12 +49,14 @@ DiadSymptomType getSymptomType();
 
 String getSymptomItem();
 String getOriginalValue();
+String getOriginalExpression();
 String getTargetValue();
 DiadValueOperator getSymptomOperator(); 
 double getTargetPrecision();
 
 void setSymptomItem(String val);
 void setOriginalValue(String val);
+void setOriginalExpression(String val);
 void setTargetValue(String val);
 void setOperator(DiadValueOperator op);
 void setPrecision(double v);

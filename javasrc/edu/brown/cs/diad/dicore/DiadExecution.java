@@ -51,6 +51,7 @@ Collection<DiadLocation> getExecutedLocations(Collection<DiadLocation> base);
 void clear();
 
 JSONObject getJsonExecTrace();
+JSONObject getJsonLocalTrace(String callid);
 JSONArray getJsonLineTrace(String callid);
 JSONObject getJsonVarTrace(String callid,String var);
 JSONObject getJsonVarHistory(String callid,String var,int line,long when);

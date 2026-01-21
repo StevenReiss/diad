@@ -5,7 +5,6 @@
       project.	You are being asked to help a developer debug his system while the
       developer is working in the debugger.
 
-      $(STYLE)
       $(CONTEXT)
 
       The system has stopped at a breakpoint and the developer has identified
