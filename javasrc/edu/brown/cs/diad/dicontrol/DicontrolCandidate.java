@@ -407,8 +407,10 @@ JSONObject getJsonVarValue(String callid,String var,int line,long when)
 /*                                                                              */
 /********************************************************************************/
 
-void askLimba(IvyXmlWriter xw,DiadAskType typ,String query)
+Element askLimba(IvyXmlWriter xw,DiadAskType typ,String query)
 {
+   if (candidate_state != DiadCandidateState.READY) return null;
+   
    Map<String,String> keymap = diad_control.getKeyMap();
    keymap.put("SYMPTOM",candidate_symptom.getText()); 
    keymap.put("DEBUGID",candidate_id);
@@ -418,6 +420,8 @@ void askLimba(IvyXmlWriter xw,DiadAskType typ,String query)
    keymap.put("METHOD",for_frame.getFullMethodName());
    keymap.put("LINE",String.valueOf(for_frame.getLineNumber()));
    keymap.put("PROCESS",for_thread.getProcessId());
+   int cid = base_execution.getExecutionTrace().getRootContext().getContextId();
+   keymap.put("CALLID",String.valueOf(cid));
    
    String prompt = diad_control.getPrompt(typ.toString());
    prompt = IvyFile.expandName(prompt,keymap);
@@ -444,6 +448,8 @@ void askLimba(IvyXmlWriter xw,DiadAskType typ,String query)
    Element rslt = diad_control.sendLimbaMessage("QUERY",args,cnts);
    
    IvyLog.logD("DICONTROL","LIMBA RESULT: " + IvyXml.convertXmlToString(rslt));
+   
+   return rslt;
 }
 
 
@@ -534,7 +540,8 @@ private final class CandidateThread extends Thread {
                   candidate_symptom = finder.findSymptom();
                   if (checkInterrupted()) break;
                   if (candidate_symptom != null) {
-                     IvyLog.logD("DICONTROL","Candidate Symptom " + candidate_symptom);
+                     IvyLog.logD("DICONTROL","Candidate Symptom " + 
+                           candidate_symptom.getText());
                      setState(DiadCandidateState.SYMPTOM_FOUND);
                    }
                   else {

@@ -93,6 +93,7 @@ DicontrolSymptom(DiadSymptomType type,String item)
 
 @Override public void setSymptomItem(String v) 
 {
+   if (v != null) v = v.trim();
    symptom_item = v;
 }
 
@@ -104,6 +105,7 @@ DicontrolSymptom(DiadSymptomType type,String item)
 
 @Override public void setOriginalExpression(String v) 
 {
+   if (v != null) v = v.trim();
    original_expr = v;
 }
 
@@ -158,9 +160,14 @@ DicontrolSymptom(DiadSymptomType type,String item)
               }
              if (original_expr != null && 
                    !original_value.contains(original_expr)) {
-                buf.append(" computed from " + original_expr + " ");
+                buf.append(" computed from " + original_expr + ", ");
+                buf.append(v);
+                buf.append(", ");
               }
-             buf.append(v);
+             else {
+                buf.append(v);
+              }
+           
              switch (value_operator) {
                 case EQL :
                 default :

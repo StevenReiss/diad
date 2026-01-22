@@ -9,13 +9,23 @@
 
       The system has stopped at a breakpoint and the developer has identified
       something that is symptomatic of the problem.  Tools are provided to let
-      you access the program, the debugger, the current program state, the
-      execution stack at the breakpoint, and
-      information that has been made available about the program, and this run up
-      to the breakpoint, including a full trace for a limited part of the run.
+      you access the program source (getSourceCode and getSourceLine),
+      information about the program (getConstructorsForClass, getMethodInforamtion,
+      getClassMethods),
+      and the execution of the program
+      from some prior point up to the stopping point (getCallTrace).  This execution is available
+      as a trace organized by method execution, each of which is identified by
+      a CALLID.  Execution time for each call is available.  It is possible to
+      obtain the sequence of lines in a call (getLineNumberTrace) and the values that a variable took
+      within a call (getVariableTrace) or at a particular time stamp (getVariableValue).
+      Tools are also available to see the history of a particular
+      primitive value over the whole execution (getVariableHistory).
 
       In this case the program has stopped at line $(LINE) in the method $(METHOD).
       The identified symptom is: $(SYMPTOM).
+      In order to answer questions, you
+      should first determine how execution got to this point with the values
+      indicated.  The top-level CALLID of the sample execution is $(CALLID).
 
       You can assume that the programmer understands the purpose of the system
       and the structure of the various JSON tool responses.  You should not

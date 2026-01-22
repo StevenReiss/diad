@@ -360,42 +360,80 @@ Object toJsonValue(DiadTrace trace,long t,Set<String> done)
       return vv0.toJsonValue(trace,t,done);
     }
    
+   String id = IvyXml.getAttrString(var_element,"ID");
+   String typ = IvyXml.getAttrString(var_element,"TYPE");
+   if (id != null) {
+      if (!done.add(id)) {
+         JSONObject jo = new JSONObject();
+         jo.put("REF",id);
+         return jo;
+       }
+    }
+   
+   if (typ != null) {
+      String collfld = null;
+      switch (typ) {
+         case "java.util.Vector" :
+         case "java.util.Stack" :
+            collfld = "elementData";
+            break;
+       }
+      if (collfld != null) {
+         for (Element fe : IvyXml.children(var_element,"FIELD")) {
+            String fn = IvyXml.getAttrString(fe,"NAME");
+            int idx = fn.lastIndexOf(".");
+            if (idx > 0) fn = fn.substring(idx+1);
+            if (fn.equals(collfld)) {
+               DiexecuteVarVal vv = new DiexecuteVarVal(fe,this);
+               vv = vv.getValueAtTime(trace,t);
+               return vv.toJsonValue(trace,t,done);
+             }
+          }
+       }
+    }
+   
    if (IvyXml.getAttrBool(var_element,"NULL")) {
       return JSONObject.NULL;
     }
    else if (IvyXml.getAttrBool(var_element,"OBJECT")) {
       JSONObject jo = new JSONObject();
-      String id = IvyXml.getAttrString(var_element,"ID");
-      if (!done.add(id)) {
-         jo.put("REF",id);
-       }
-      else {
-         jo.put("ID",id);
-         for (Element fe : IvyXml.children(var_element,"FIELD")) {
-            String fn = IvyXml.getAttrString(fe,"NAME");
-            int idx = fn.lastIndexOf(".");
-            if (idx > 0) fn = fn.substring(idx+1);
-            DiexecuteVarVal vv = new DiexecuteVarVal(fe,this);
-            vv = vv.getValueAtTime(trace,t);
-            jo.put(fn,vv.toJsonValue(trace,t,done));
-          }
+      jo.put("ID",id);
+      for (Element fe : IvyXml.children(var_element,"FIELD")) {
+         String fn = IvyXml.getAttrString(fe,"NAME");
+         int idx = fn.lastIndexOf(".");
+         if (idx > 0) fn = fn.substring(idx+1);
+         DiexecuteVarVal vv = new DiexecuteVarVal(fe,this);
+         vv = vv.getValueAtTime(trace,t);
+         jo.put(fn,vv.toJsonValue(trace,t,done));
        }
       return jo;
     }
    else if (IvyXml.getAttrBool(var_element,"ARRAY")) {
       JSONArray arr = new JSONArray();
+      int sz = IvyXml.getAttrInt(var_element,"SIZE");
       for (Element e : IvyXml.children(var_element,"ELEMENT")) {
          DiexecuteVarVal ve = new DiexecuteVarVal(e,this);
          ve = ve.getValueAtTime(t);
          int idx = IvyXml.getAttrInt(e,"INDEX");
-         arr.put(idx,ve.toJsonValue(trace,t,done));
+         if (idx >= 0) {
+            arr.put(idx,ve.toJsonValue(trace,t,done));
+          }
+         else {
+            if (IvyXml.getAttrBool(e,"DEFAULT")) {
+               Object dfltelt = ve.toJsonValue(trace,t,done);
+               for (int i = 0; i < sz; ++i) {
+                  if (arr.opt(i) == null) {
+                     arr.put(i,dfltelt);
+                   }
+                }
+             }
+          }
        }
     }
    else if (IvyXml.getAttrBool(var_element,"CHARS")) {
       return getStringValue(t);
     }
    else {
-      String typ = IvyXml.getAttrString(var_element,"TYPE");
       if (typ == null) {
          typ = "?";
        }

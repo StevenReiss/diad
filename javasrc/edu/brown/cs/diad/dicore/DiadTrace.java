@@ -58,6 +58,7 @@ interface DiadTraceCall {
    String getMethod();
    long getStartTime();
    long getEndTime();
+   int getContextId();
    List<DiadTraceCall> getInnerTraceCalls();
    DiadTraceVarVal getLineNumbers();
    Map<String,DiadTraceVarVal> getTraceVariables();

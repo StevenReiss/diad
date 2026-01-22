@@ -212,6 +212,19 @@ boolean isCompilerError()
 }
 
 
+String getExceptionType() 
+{
+   Element runner = getRunner();
+   Element ret = IvyXml.getChild(runner,"RETURN");
+   String reason = IvyXml.getAttrString(ret,"REASON");
+   if (reason == null) return null;
+   if (reason.equals("EXCEPTION")) {
+      return IvyXml.getAttrString(ret,"MESSAGE");
+    }
+   return null;
+}
+
+
 long getExceptionTime()
 {
    DiexecuteCall prob = getSymptomContext();
@@ -854,7 +867,7 @@ JSONObject getJsonLocalTrace(String callid)
       if (ctx == null) ctx = problem_context;
     }
    
-   return ctx.getJsonLocalTrace(); 
+   return ctx.getJsonLocalTrace(this);  
 }
 
 
