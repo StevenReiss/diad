@@ -75,7 +75,7 @@ static DicontrolCommand createCommand(DicontrolMain ctrl,Element xml)
       case "Q_VARVALUE" :
          return new QueryVarValue(ctrl,xml);
       case "ASKLIMBA" :
-         return new AskLimba(ctrl,xml);
+         return new CommandAskLimba(ctrl,xml);
       default :
          IvyLog.logE("DICONTROL","Unknown command " + cmd + " " +
                IvyXml.convertXmlToString(xml));
@@ -107,7 +107,7 @@ protected DicontrolCommand(DicontrolMain ctrl,Element xml)
 {
    diad_control = ctrl;
    command_name = IvyXml.getAttrString(xml,"DO");
-   reply_id = IvyXml.getAttrString(xml,"ID");
+   reply_id = IvyXml.getAttrString(xml,"RID");
 }
 
 
@@ -470,19 +470,21 @@ private static class QueryVarValue extends QueryCommand {
 /*                                                                              */
 /********************************************************************************/
 
-private static class AskLimba extends QueryCommand {
+private static class CommandAskLimba extends QueryCommand {
 
    private DiadAskType ask_type; 
    private String ask_text;
    
-   AskLimba(DicontrolMain ctrl,Element xml) {
+   CommandAskLimba(DicontrolMain ctrl,Element xml) {
       super(ctrl,xml);
       ask_type = IvyXml.getAttrEnum(xml,"TYPE",DiadAskType.GENERAL);
       ask_text = IvyXml.getTextElement(xml,"QUESTION");
     }
    
    @Override public void process(IvyXmlWriter xw) {
-      getCandidate().askLimba(xw,ask_type,ask_text); 
+      Element rslt = getCandidate().askLimba(xw,ask_type,ask_text); 
+      String resp = IvyXml.getTextElement(rslt,"RESPONSE");
+      if (resp != null) xw.cdataElement("RESPONSE",resp);
     }
    
 }       // end of inner class AskLimba

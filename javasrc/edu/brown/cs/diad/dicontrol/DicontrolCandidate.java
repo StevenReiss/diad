@@ -433,6 +433,7 @@ Element askLimba(IvyXmlWriter xw,DiadAskType typ,String query)
    else if (query != null) ask = ask + " " + query;
    
    CommandArgs args = new CommandArgs("USECONTEXT",true,
+         "ID",getId(),
          "TOOLS","PROJECT,DEBUG");
    
    IvyXmlWriter xw1 = new IvyXmlWriter();

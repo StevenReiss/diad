@@ -317,25 +317,21 @@ JSONObject getJsonLocalTrace(DiexecuteTrace trace)
    rslt.put("START_TIME",getStartTime());
    rslt.put("END_TIME",getEndTime());
    if (this == trace.getRootContext()) {
-      if (trace.isReturn()) rslt.put("RETURN",true);
-      else {
+      if (!trace.isReturn()) {
          String exc = trace.getExceptionType();
          if (exc != null) rslt.put("EXCEPTION",exc);
        }
     }
    else {
-      boolean fnd = false;
       for (Element e : IvyXml.children(context_element,"VARIABLE")) {
          String nm = IvyXml.getAttrString(e,"NAME");
-         if (nm.equals("*THROWS")) {
+         if (nm.equals("*THROWS*")) {
             DiexecuteVarVal vv = new DiexecuteVarVal(e,null);
             String exc = vv.getDataType(getEndTime());
             rslt.put("EXCEPTION",exc);
-            fnd = true;
             break;
           }
        }
-      if (!fnd) rslt.put("RETURN",true);
     }
    
    
@@ -359,6 +355,15 @@ JSONObject getJsonInsideTrace()
    rslt.put("METHOD",getMethod());
    rslt.put("START_TIME",getStartTime());
    rslt.put("END_TIME",getEndTime());
+   for (Element e : IvyXml.children(context_element,"VARIABLE")) {
+      String nm = IvyXml.getAttrString(e,"NAME");
+      if (nm.equals("*THROWS*")) {
+         DiexecuteVarVal vv = new DiexecuteVarVal(e,null);
+         String exc = vv.getDataType(getEndTime());
+         rslt.put("EXCEPTION",exc);
+         break;
+       }
+    }
    
    return rslt;
 }
@@ -406,12 +411,23 @@ private JSONObject buildLineObject(int lno,long start,long end)
 
 JSONObject getJsonVarTrace(String varname)
 {
+   JSONObject rslt = new JSONObject();
+   
    DiexecuteVarVal var = getTraceVariable(varname);
-   if (var == null) return null;
+   if (var == null) {
+      DiexecuteVarVal thisv = getTraceVariable("this");
+      thisv = thisv.getValueAtTime(for_trace,getStartTime()+1);
+      if (thisv != null) {
+         var = thisv.getChild(varname,getEndTime()-1);
+       }
+    }
+   if (var == null) {
+      rslt.put("ERROR","Name not found");
+      return rslt;
+    } 
    
    DiexecuteVarVal linv = getLineNumbers();
    
-   JSONObject rslt = new JSONObject();
    Set<String> done = new HashSet<>();
    rslt.put("NAME",var.getName());
    JSONArray vals = new JSONArray();
