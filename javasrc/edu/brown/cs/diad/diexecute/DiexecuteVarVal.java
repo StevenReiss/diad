@@ -35,6 +35,7 @@ import org.w3c.dom.Element;
 
 import edu.brown.cs.diad.dicore.DiadTrace;
 import edu.brown.cs.diad.dicore.DiadTrace.DiadTraceVarVal;
+import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.xml.IvyXml;
 
 class DiexecuteVarVal implements DiexecuteConstants, DiadTraceVarVal
@@ -138,6 +139,9 @@ DiexecuteVarVal(Element v,DiexecuteVarVal par)
 @Override public DiexecuteVarVal getChild(String name,long when)
 {
    DiexecuteVarVal val = getValueAtTime(when);
+   IvyLog.logD("DIEXECUTE","Get child " + name + " " + when + " " +
+         IvyXml.convertXmlToString(val.var_element));
+   
    for (Element e : IvyXml.children(val.var_element)) {
       String key = null;
       String key1 = null;
@@ -151,7 +155,12 @@ DiexecuteVarVal(Element v,DiexecuteVarVal par)
          key = IvyXml.getAttrString(e,"INDEX");
          key1 = "[" + key + "]";
        }
-      if (key != null && key.equals(name) || key1.equals(name)) {
+      if (key == null || key1 == null) {
+         IvyLog.logE("DIEXECUTE","Unknown child of varval: " + name + " " +
+               val.getChildNames(when) + " " +
+               IvyXml.convertXmlToString(e));
+       }
+      if (key != null && (key.equals(name) || key1.equals(name))) {
          DiexecuteVarVal vv0 = new DiexecuteVarVal(e,this);
          vv0 = vv0.getValueAtTime(when);
          return vv0;

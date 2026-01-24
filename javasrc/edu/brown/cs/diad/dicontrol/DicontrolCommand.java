@@ -453,6 +453,9 @@ private static class QueryVarValue extends QueryCommand {
       var_name = IvyXml.getAttrString(xml,"VARIABLE");
       line_number = IvyXml.getAttrInt(xml,"LINE");
       exec_time = IvyXml.getAttrLong(xml,"WHEN");
+      if (exec_time < 0) {
+         exec_time = IvyXml.getAttrLong(xml,"TIME");
+       }
     }
    
    @Override protected JSONObject getJsonObject() {

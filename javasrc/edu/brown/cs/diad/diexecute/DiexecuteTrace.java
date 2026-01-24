@@ -84,6 +84,10 @@ DiexecuteTrace(DiexecuteExecution exec,Element rslt,DiadThread thrd)
    call_map = new HashMap<>();
    callid_map = new HashMap<>();
    setupIdMap();
+   DiexecuteCall root = getRootContext();
+   callid_map.put("0",root);
+   callid_map.put("*",root);
+   callid_map.put("-1",root);
 }
 
 
@@ -314,6 +318,19 @@ DiexecuteManager getManager()
    return for_exec.getContext().getManager();
 }
 
+
+private DiexecuteCall getCallFromId(String callid)
+{
+   if (callid == null) return getRootContext();
+   
+   DiexecuteCall ctx = callid_map.get(callid);
+   if (ctx == null) {
+      IvyLog.logE("DIEXECUTE","Bad context id given " + callid);
+      ctx = getRootContext();
+    }
+   
+   return ctx;
+}
 
 
 /********************************************************************************/
@@ -858,14 +875,7 @@ JSONObject getJsonExecTrace()
 
 JSONObject getJsonLocalTrace(String callid)
 {
-   DiexecuteCall ctx = null;
-   if (callid.equals("0") || callid.equals("*")) {
-      ctx = problem_context;
-    }
-   else {
-      ctx = callid_map.get(callid);
-      if (ctx == null) ctx = problem_context;
-    }
+   DiexecuteCall ctx = getCallFromId(callid);
    
    return ctx.getJsonLocalTrace(this);  
 }
@@ -873,7 +883,7 @@ JSONObject getJsonLocalTrace(String callid)
 
 JSONArray getJsonLineTrace(String callid)
 {
-   DiexecuteCall ctx = callid_map.get(callid);
+   DiexecuteCall ctx = getCallFromId(callid);
    if (ctx == null) return null;
    
    return ctx.getJsonLineTrace(); 
@@ -882,7 +892,7 @@ JSONArray getJsonLineTrace(String callid)
 
 JSONObject getJsonVarTrace(String callid,String var)
 {
-   DiexecuteCall ctx = callid_map.get(callid);
+   DiexecuteCall ctx = getCallFromId(callid);
    if (ctx == null) return null;
    
    return ctx.getJsonVarTrace(var);  
@@ -891,21 +901,37 @@ JSONObject getJsonVarTrace(String callid,String var)
 
 JSONObject getJsonVarHistory(String callid,String var,int line,long when)
 {
-   DiexecuteCall ctx = callid_map.get(callid);
-   if (ctx == null) return null;
+   DiexecuteCall ctx = getCallFromId(callid); 
+   if (ctx == null) {
+      JSONObject err = new JSONObject();
+      err.put("ERROR","Invalid callid " + callid);
+      return err;
+    }
    
    DiexecuteVarVal execvar = ctx.getValueAtTime(this,var,when);
-   if (execvar == null) return null;
+   if (execvar == null) {
+      JSONObject err = new JSONObject();
+      err.put("ERROR","Invalid variable " + var);
+      return err;
+    }
    
    when = getActualTime(ctx,execvar,when,line);
    if (when < 0) {
-      return null;
+      JSONObject err = new JSONObject();
+      err.put("ERROR","Invalid time " + when + " " + line);
+      return err;
     }
    
    DiexecuteVarHistory hist = new DiexecuteVarHistory(this,ctx,
          execvar,var,when); 
    
    JSONObject rslt = hist.process();  
+   
+   if (rslt == null) {
+      JSONObject err = new JSONObject();
+      err.put("ERROR","history not found");
+      return err;
+    }
    
    return rslt;
 }
@@ -936,11 +962,16 @@ private long getActualTime(DiexecuteCall ctx,DiexecuteVarVal execvar,
          int lno = lines.getLineValue(t);
          if (lno == line) next = true;
          else if (next) {
-            when = t -1;
+            when = t - 1;
             break;
           }
        }
-      if (when < 0) when = ctx.getEndTime() - 1;
+      if (when < 0) {
+         if (!next) {
+            IvyLog.logE("DIEXECUTE","Get actual time given bad line " + line);
+          }
+         when = ctx.getEndTime() - 1;
+       }
     }
    
    return when;
@@ -948,11 +979,15 @@ private long getActualTime(DiexecuteCall ctx,DiexecuteVarVal execvar,
 
 JSONObject getJsonVarValue(String callid,String var,int line,long when)
 {
-   DiexecuteCall ctx = callid_map.get(callid);
+   DiexecuteCall ctx = getCallFromId(callid);
    if (ctx == null) return null;
    
    DiexecuteVarVal execvar = ctx.getValueAtTime(this,var,when);
-   if (execvar == null) return null;
+   if (execvar == null) {
+      JSONObject err = new JSONObject();
+      err.put("ERROR","No such variable");
+      return err;
+    }
    
    when = getActualTime(ctx,execvar,when,line);
    if (when < 0) {

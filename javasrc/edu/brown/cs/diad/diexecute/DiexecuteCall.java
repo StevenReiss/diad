@@ -38,6 +38,7 @@ import org.w3c.dom.Node;
 import edu.brown.cs.diad.dicore.DiadTrace;
 import edu.brown.cs.diad.dicore.DiadTrace.DiadTraceCall;
 import edu.brown.cs.diad.dicore.DiadTrace.DiadTraceVarVal;
+import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.xml.IvyXml;
 
 class DiexecuteCall implements DiadTraceCall
@@ -216,13 +217,29 @@ DiexecuteVarVal getValueAtTime(DiadTrace trace,String name,long when)
    int idx = name.lastIndexOf("?");
    if (idx < 0) {
       DiexecuteVarVal var = getTraceVariable(name);
+      if (var == null) {
+         IvyLog.logE("DIEXECUTE","Variable not found " + name + " " + when +
+               " " + IvyXml.convertXmlToString(context_element));
+         return null;
+       }
       return var.getValueAtTime(trace,when);  
     }
    String pre = name.substring(0,idx);
    String sub = name.substring(idx+1);
    DiexecuteVarVal var = getValueAtTime(trace,pre,when);
+   if (var == null) {
+      IvyLog.logE("DIEXECUTE","Variable not found " + name + " " + when +
+            " " + IvyXml.convertXmlToString(context_element));
+      return null;
+    }
    DiexecuteVarVal val1 = (DiexecuteVarVal) var.getChild(sub,when);
-   val1 = val1.dereference(trace);
+   if (val1 != null) {
+      val1 = val1.dereference(trace);
+    }
+   else {
+      IvyLog.logE("DIEXECUTE","Empty value at time " + name + " " + when +
+            " " + IvyXml.convertXmlToString(context_element));
+    }
    
    return val1;
 }

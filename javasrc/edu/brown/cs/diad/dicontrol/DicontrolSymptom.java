@@ -67,7 +67,7 @@ DicontrolSymptom(DiadSymptomType type,String item)
    original_value = null;
    target_value = null;
    value_operator = DiadValueOperator.NONE; 
-   target_precision = 1e-5;
+   target_precision = 0;
 }
 
 
