@@ -899,12 +899,23 @@ JSONObject getJsonVarTrace(String callid,String var)
 }
 
 
-JSONObject getJsonVarHistory(String callid,String var,int line,long when)
+JSONObject getJsonVarHistory(String callid,String var,int line,long when0)
 {
    DiexecuteCall ctx = getCallFromId(callid); 
    if (ctx == null) {
       JSONObject err = new JSONObject();
       err.put("ERROR","Invalid callid " + callid);
+      return err;
+    }
+   
+   long when = when0;
+   DiexecuteVarVal linevar = ctx.getLineNumbers(); 
+   when = getActualTime(ctx,linevar,when,line);
+   if (when < 0) {
+      IvyLog.logE("DIEXECUTE","Bad time computed " + when + " " + line +
+            " " + when0);
+      JSONObject err = new JSONObject();
+      err.put("ERROR","Invalid time " + when + " " + line);
       return err;
     }
    
@@ -915,12 +926,6 @@ JSONObject getJsonVarHistory(String callid,String var,int line,long when)
       return err;
     }
    
-   when = getActualTime(ctx,execvar,when,line);
-   if (when < 0) {
-      JSONObject err = new JSONObject();
-      err.put("ERROR","Invalid time " + when + " " + line);
-      return err;
-    }
    
    DiexecuteVarHistory hist = new DiexecuteVarHistory(this,ctx,
          execvar,var,when); 
@@ -937,21 +942,21 @@ JSONObject getJsonVarHistory(String callid,String var,int line,long when)
 }
 
 
-private long getActualTime(DiexecuteCall ctx,DiexecuteVarVal execvar,
+private long getActualTime(DiexecuteCall ctx,DiexecuteVarVal linevar,
       long when,int line) 
 {
    if (when == 0) {
       when = ctx.getStartTime();
     }
    if (line <= 0 && when > 0) {
-      line = execvar.getLineValue(when);
+      line = linevar.getLineValue(when);
     }
    else if (line <= 0 && when < 0) {
       boolean fnd = false;
-      for (Long t : execvar.getTimeChanges()) {
+      for (Long t : linevar.getTimeChanges()) {
          fnd = true;
          when = t;
-         line = execvar.getLineValue(when);
+         line = linevar.getLineValue(when);
        }
       if (!fnd) return 0;
     }
@@ -977,21 +982,26 @@ private long getActualTime(DiexecuteCall ctx,DiexecuteVarVal execvar,
    return when;
 }
 
-JSONObject getJsonVarValue(String callid,String var,int line,long when)
+JSONObject getJsonVarValue(String callid,String var,int line,long when0)
 {
    DiexecuteCall ctx = getCallFromId(callid);
    if (ctx == null) return null;
+   
+   DiexecuteVarVal linevar = ctx.getLineNumbers();
+   long when = getActualTime(ctx,linevar,when0,line);
+   if (when < 0) {
+      IvyLog.logE("DIEXECUTE","Bad time computed " + when + " " + line +
+            " " + when0);
+      JSONObject err = new JSONObject();
+      err.put("ERROR","No time or line given");
+      return err;
+    }
    
    DiexecuteVarVal execvar = ctx.getValueAtTime(this,var,when);
    if (execvar == null) {
       JSONObject err = new JSONObject();
       err.put("ERROR","No such variable");
       return err;
-    }
-   
-   when = getActualTime(ctx,execvar,when,line);
-   if (when < 0) {
-      return null;
     }
    
    JSONObject jo = new JSONObject();
