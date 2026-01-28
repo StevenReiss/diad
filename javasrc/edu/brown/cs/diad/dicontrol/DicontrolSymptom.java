@@ -22,9 +22,12 @@
 
 package edu.brown.cs.diad.dicontrol;
 
+import org.w3c.dom.Element;
+
 import edu.brown.cs.diad.dicore.DiadSymptom;
 import edu.brown.cs.diad.dicore.DiadConstants.DiadSymptomType;
 import edu.brown.cs.diad.dicore.DiadConstants.DiadValueOperator;
+import edu.brown.cs.ivy.xml.IvyXml;
 import edu.brown.cs.ivy.xml.IvyXmlWriter;
 
 class DicontrolSymptom implements DiadSymptom
@@ -68,6 +71,16 @@ DicontrolSymptom(DiadSymptomType type,String item)
    target_value = null;
    value_operator = DiadValueOperator.NONE; 
    target_precision = 0;
+}
+
+DicontrolSymptom(Element xml)
+{
+   symptom_type = IvyXml.getAttrEnum(xml,"TYPE",DiadSymptomType.NONE);
+   symptom_item = IvyXml.getTextElement(xml,"ITEM");
+   original_expr = IvyXml.getTextElement(xml,"ORIGINAL");
+   target_value = IvyXml.getTextElement(xml,"TARGET");
+   value_operator = IvyXml.getAttrEnum(xml,"OPERATOR",DiadValueOperator.NONE);
+   target_precision = IvyXml.getAttrDouble(xml,"PRECISION",0);
 }
 
 

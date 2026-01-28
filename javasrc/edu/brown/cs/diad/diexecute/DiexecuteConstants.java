@@ -35,9 +35,9 @@
 
 package edu.brown.cs.diad.diexecute;
 
+import edu.brown.cs.diad.dicore.DiadConstants;
 
-
-public interface DiexecuteConstants
+public interface DiexecuteConstants extends DiadConstants
 {
 
 
@@ -52,9 +52,11 @@ interface DiexecuteChangeVariable {
    String getName();
 }
 
-
-int MAX_SEEDE_STEPS = 1000000;
-int MAX_SEEDE_DEPTH = 100;
+/********************************************************************************/
+/*                                                                              */
+/*      Constants for scoring patches -- not used yet                           */
+/*                                                                              */
+/********************************************************************************/
 
 double DEFAULT_SCORE = 0.25;
 

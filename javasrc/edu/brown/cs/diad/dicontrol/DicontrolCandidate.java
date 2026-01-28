@@ -68,8 +68,10 @@ private DiadThread      for_thread;
 private DiadStackFrame  for_frame;
 private DiadCandidateState  candidate_state; 
 private DiadSymptom     candidate_symptom;
+private DiadSymptom     user_symptom;
 private Collection<DiadLocation> location_set;
 private DiadStackFrame  start_frame;
+private DiadStackFrame  user_frame;
 private DiadExecution   base_execution;
 private Collection<DiadLocation> exec_locations;
 private String          candidate_id;
@@ -98,6 +100,8 @@ DicontrolCandidate(DicontrolMain ctrl,DiadThread thrd)
    start_frame = null;
    base_execution = null;
    exec_locations = null;
+   user_symptom = null;
+   user_frame = null;
    
    candidate_listeners = new SwingEventListenerList<>(DiadCandidateCallback.class);
    candidate_processor = null;
@@ -171,10 +175,23 @@ void setState(DiadCandidateState st)
 /*                                                                              */
 /********************************************************************************/
 
-void start() 
+void start(DiadCandidateState start) 
 {
+   if (start != null) {
+      if (candidate_state.ordinal() < start.ordinal()) {
+         start = candidate_state;
+       }
+      if (candidate_state == DiadCandidateState.DEAD) {
+         start = DiadCandidateState.INITIAL;
+       }
+    }
+   
    if (candidate_processor != null) {
-      stopProcessing();
+      stopProcessing(false);
+    }
+   
+   if (start != null) {
+      candidate_state = start; 
     }
    
    IvyLog.logD("DICONTROL","Start candidate " + candidate_id +
@@ -200,7 +217,8 @@ void start()
 
 void setSymptom(DiadSymptom symp)
 {
-   // set symptom if possible and restart
+   user_symptom = symp;
+   start(DiadCandidateState.INITIAL);
 }
 
 void addFiles(Collection<File> files)
@@ -208,19 +226,42 @@ void addFiles(Collection<File> files)
    // add to files, if any new files, restart
 }
 
+
+DiadAnalysisFileMode getFileMode()
+{
+   return file_mode;
+}
+
 void setFileMode(DiadAnalysisFileMode mode)
 {
    file_mode = mode;
-   // restart analysis
+   start(DiadCandidateState.DOING_ANALYSIS);
 }
+
+void setStartFrame(String frameid)
+{
+   DiadStackFrame frame = null;
+   if (frameid != null) {
+      for (DiadStackFrame fm : for_thread.getStack().getFrames()) {
+         if (frameid.equals(fm.getFrameId())) {
+            frame = fm;
+            break;
+          }
+       }
+      if (frame == null) return;
+    }
+   user_frame = frame;
+   start(DiadCandidateState.FINDING_STARTING_FRAME);
+}
+
 
 void terminate()
 {
-   stopProcessing();
+   stopProcessing(true);
 }
 
 
-private synchronized void stopProcessing()
+private synchronized void stopProcessing(boolean report)
 {
    IvyLog.logD("DICONTROL","Stop processing " + getId() + 
          candidate_processor);
@@ -236,7 +277,9 @@ private synchronized void stopProcessing()
       catch (InterruptedException e) { }  
     }
    
-   setState(DiadCandidateState.DEAD);
+   if (report) {
+      setState(DiadCandidateState.DEAD);
+    }
    candidate_processor = null;
 }
 
@@ -517,28 +560,11 @@ private final class CandidateThread extends Thread {
             IvyLog.logD("DICONTROL","Candidate " + candidate_id + " :: " +
                   candidate_state);
             switch (candidate_state) {
+               case INITIAL :
+                  setState(DiadCandidateState.FINDING_SYMPTOM);
+                  break;
                case FINDING_SYMPTOM :  
-                  candidate_symptom = null;
-                  base_execution = null;
-                  location_set = null;
-                  exec_locations = null;
-                  start_frame = null;
-                  DiadStack stk = for_thread.getStack();
-                  if (stk == null || for_thread.isInternal()) { 
-                     setState(DiadCandidateState.NO_USER_STACK);
-                     return;
-                   }
-                  if (checkInterrupted()) break;
-                  for_frame = stk.getUserFrame();
-                  if (for_frame == null) {
-                     setState(DiadCandidateState.NO_USER_STACK);
-                     return;
-                   }
-                  if (checkInterrupted()) break;
-                  DicontrolSymptomFinder finder =
-                     new DicontrolSymptomFinder(diad_control,for_thread,
-                           stk,for_frame);
-                  candidate_symptom = finder.findSymptom();
+                  findSymptom();
                   if (checkInterrupted()) break;
                   if (candidate_symptom != null) {
                      IvyLog.logD("DICONTROL","Candidate Symptom " + 
@@ -579,8 +605,13 @@ private final class CandidateThread extends Thread {
                case FINDING_STARTING_FRAME :
                   start_frame = null;
                   if (checkInterrupted()) break;
-                  start_frame = exec.getStartingFrame(candidate_symptom,
-                        for_thread,location_set);
+                  if (user_frame == null) {
+                     start_frame = exec.getStartingFrame(candidate_symptom,
+                           for_thread,location_set);
+                   }
+                  else {
+                     start_frame = user_frame;
+                   }
                   if (checkInterrupted()) break;
                   if (start_frame == null) {
                      setState(DiadCandidateState.NO_START_FRAME);
@@ -600,7 +631,7 @@ private final class CandidateThread extends Thread {
                      setState(DiadCandidateState.FINDING_EXECUTED_LOCATIONS);
                    }
                   break;
-               case FINDING_EXECUTED_LOCATIONS :
+               case FINDING_EXECUTED_LOCATIONS : 
                   exec_locations = base_execution.getExecutedLocations(location_set); 
                   if (exec_locations == null) {
                      setState(DiadCandidateState.NO_FINAL_LOCATIONS);   
@@ -653,6 +684,35 @@ private final class CandidateThread extends Thread {
        }
     }
    
+   
+   private void findSymptom() {
+      candidate_symptom = null;
+      base_execution = null;
+      location_set = null;
+      exec_locations = null;
+      start_frame = null;
+      DiadStack stk = for_thread.getStack(); 
+      if (stk == null || for_thread.isInternal()) { 
+         setState(DiadCandidateState.NO_USER_STACK);
+         return;
+       }
+      if (checkInterrupted()) return;
+      for_frame = stk.getUserFrame();
+      if (for_frame == null) {
+         setState(DiadCandidateState.NO_USER_STACK);
+         return;
+       }
+      if (checkInterrupted()) return;
+      if (user_symptom == null) {
+         DicontrolSymptomFinder finder =
+            new DicontrolSymptomFinder(diad_control,for_thread,
+                  stk,for_frame);
+         candidate_symptom = finder.findSymptom();
+       }
+      else {
+         candidate_symptom = user_symptom;
+       }
+    }
    
    private boolean checkInterrupted() {
       if (isInterrupted()) {

@@ -210,6 +210,12 @@ public String getProperty(String id)
    return diad_properties.getProperty(id);
 }
 
+public void setProperty(String id,Object val)
+{
+   if (val == null) diad_properties.remove(id);
+   else diad_properties.put(id,val.toString());
+}
+
 Collection<DicontrolCandidate> getActiveCandidates()
 {
    return debug_candidates.values();
@@ -595,7 +601,7 @@ private final class RuntimeCallback implements DiadRuntimeCallback {
       DicontrolUpdater upd = new DicontrolUpdater(DicontrolMain.this,dc);
       dc.addCandidateListener(upd);
       upd.stateChanged();
-      dc.start(); 
+      dc.start(DiadCandidateState.INITIAL);  
     }
 }
    

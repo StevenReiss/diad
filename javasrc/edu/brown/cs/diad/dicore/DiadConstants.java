@@ -50,14 +50,9 @@ interface DiadCommand {
 
 
 enum DiadCandidateState {
+   INITIAL,
    FINDING_SYMPTOM,
    NO_SYMPTOM_FOUND,
-   NO_USER_STACK,
-   NO_ANALYSIS,
-   NO_START_FRAME,
-   NO_LOCATIONS_FOUND,
-   NO_BASE_EXECUTION,
-   NO_FINAL_LOCATIONS,
    DOING_ANALYSIS,
    FINDING_STARTING_FRAME,
    FINDING_ALL_LOCATIONS,
@@ -65,6 +60,12 @@ enum DiadCandidateState {
    FINDING_EXECUTED_LOCATIONS,
    PREPARING_DATA,
    READY,
+   NO_USER_STACK,
+   NO_ANALYSIS,
+   NO_START_FRAME,
+   NO_LOCATIONS_FOUND,
+   NO_BASE_EXECUTION,
+   NO_FINAL_LOCATIONS,
    DEAD,
    INTERUPTED,
 }
@@ -118,7 +119,25 @@ enum DiadAskType {
 }
 
 
+/********************************************************************************/
+/*                                                                              */
+/*      Constants for analysis                                                        */
+/*                                                                              */
+/********************************************************************************/
+
 double DEFAULT_PRIORITY = 0.5;
+
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Constants for execution                                                          */
+/*                                                                              */
+/********************************************************************************/
+
+int MAX_SEEDE_STEPS = 1000000;
+int MAX_SEEDE_DEPTH = 100;
+
 
 }       // end of interface DicoreConstants
 

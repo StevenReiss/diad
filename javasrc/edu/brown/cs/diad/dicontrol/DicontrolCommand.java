@@ -22,6 +22,9 @@
 
 package edu.brown.cs.diad.dicontrol;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.w3c.dom.Element;
@@ -76,6 +79,12 @@ static DicontrolCommand createCommand(DicontrolMain ctrl,Element xml)
          return new QueryVarValue(ctrl,xml);
       case "ASKLIMBA" :
          return new CommandAskLimba(ctrl,xml);
+      case "PARAMETER" :
+         return new CommandParameter(ctrl,xml);
+      case "SYMPTOM" :
+         return new CommandSymptom(ctrl,xml);
+      case "STARTFRAME" :
+         return new CommandStartFrame(ctrl,xml);
       default :
          IvyLog.logE("DICONTROL","Unknown command " + cmd + " " +
                IvyXml.convertXmlToString(xml));
@@ -297,6 +306,8 @@ private abstract static class QueryCommand extends DicontrolCommand {
    @Override public void process(IvyXmlWriter xw) {
       if (debug_candidate == null) return;
       
+      long start = System.currentTimeMillis();
+      
       JSONObject jo = getJsonObject();
       JSONArray ja = null;
       if (jo == null) {
@@ -317,6 +328,9 @@ private abstract static class QueryCommand extends DicontrolCommand {
       else {
          localProcess(xw);
        }
+      
+      long time = System.currentTimeMillis() - start;
+      IvyLog.logI("DICONTROL","Command " + getCommandName() + " TIME = " + time);
     }
    
    protected JSONObject getJsonObject()                 { return null; }
@@ -494,6 +508,152 @@ private static class CommandAskLimba extends QueryCommand {
     }
    
 }       // end of inner class AskLimba
+
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Parameter commands                                                      */
+/*                                                                              */
+/********************************************************************************/
+
+private static class CommandParameter extends DicontrolCommand {
+   
+   private DicontrolCandidate debug_candidate;
+   private Map<String,String> set_values;
+   
+   CommandParameter(DicontrolMain ctrl,Element xml) {
+      super(ctrl,xml);
+      debug_candidate = null;
+      String id = IvyXml.getAttrString(xml,"DEBUGID");
+      if (id != null && !id.isEmpty()) {
+         for (DicontrolCandidate cand : diad_control.getActiveCandidates()) {
+            if (cand.getId().equals(id)) {
+               debug_candidate = cand;
+               break;
+             }
+          }
+       }
+      set_values = new HashMap<>();
+      for (Element set : IvyXml.children(xml,"SET")) {
+         String name = IvyXml.getAttrString(set,"KEY");
+         String val = IvyXml.getTextElement(set,"VALUE");
+         if (val == null || val.isEmpty()) val = IvyXml.getText(set);
+         if (name != null && val != null) {
+            set_values.put(name,val);
+          }
+       }
+    }
+    
+   @Override public void process(IvyXmlWriter xw) {
+      for (Map.Entry<String,String> ent : set_values.entrySet()) {
+         switch (ent.getKey()) {
+            case "FILEMODE" :
+               DiadAnalysisFileMode mode = findFileMode(ent.getValue());
+               if (debug_candidate == null && mode != null) {
+                  diad_control.setProperty("Diad.file.mode",mode.toString());
+                }
+               else if (mode != null) {
+                  debug_candidate.setFileMode(mode);
+                }
+               break;
+            case "SEEDE_STEPS" :
+               try {
+                  int v = Integer.parseInt(ent.getValue());
+                  diad_control.setProperty("Diad.max.seede.steps",String.valueOf(v));
+                  if (debug_candidate != null) {
+                     debug_candidate.start(DiadCandidateState.DOING_BASE_EXECUTION);
+                   }
+                }
+               catch (NumberFormatException e) { }
+               break;
+            case "SEEDE_DEPTH" :
+               try {
+                  int v = Integer.parseInt(ent.getValue());
+                  diad_control.setProperty("Diad.max.seede.depth",String.valueOf(v));
+                  if (debug_candidate != null) {
+                     debug_candidate.start(DiadCandidateState.DOING_BASE_EXECUTION);
+                   }
+                }
+               catch (NumberFormatException e) { }
+               break;
+            default :
+               IvyLog.logE("DICONTROL","Unknown parameter " + ent.getKey());
+               break;
+          }
+       }
+      xw.begin("PARAMETERS");
+      DiadAnalysisFileMode mode = diad_control.getProperty(
+            "Diad.file.mode",DiadAnalysisFileMode.FAIT_FILES);
+      if (debug_candidate != null) mode = debug_candidate.getFileMode();
+      xw.field("FILEMODE",mode);
+      long mxtime = diad_control.getProperty("Diad.max.seede.steps",MAX_SEEDE_STEPS);
+      int mxdepth = diad_control.getProperty("Diad.max.seede.depth",MAX_SEEDE_DEPTH); 
+      xw.field("SEEDE_STEPS",mxtime);
+      xw.field("SEEDE_DEPTH",mxdepth);
+      xw.end("PARAMETERS");
+    }
+   
+   private DiadAnalysisFileMode findFileMode(String val) {
+      try {
+         return Enum.valueOf(DiadAnalysisFileMode.class,val);
+       }
+      catch (IllegalArgumentException e) { }
+      
+      return null;
+    }
+   
+}       // end of inner calss CommandParameter
+
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Symptom command                                                         */
+/*                                                                              */
+/********************************************************************************/
+
+private static class CommandSymptom extends QueryCommand {
+   
+   private Element symptom_xml;
+   
+   CommandSymptom(DicontrolMain ctrl,Element xml) {
+      super(ctrl,xml);
+      symptom_xml = IvyXml.getChild(xml,"SYMPTOM");
+    }
+   
+   @Override public void process(IvyXmlWriter xw) {
+      DicontrolSymptom symp = null;
+      if (symptom_xml != null) symp = new DicontrolSymptom(symptom_xml);
+      getCandidate().setSymptom(symp);
+    }
+   
+}       // end of inner class CommandSymptom
+
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Start frame command                                                     */
+/*                                                                              */
+/********************************************************************************/
+
+private static class CommandStartFrame extends QueryCommand {
+   
+   private String frame_id;
+   
+   CommandStartFrame(DicontrolMain ctrl,Element xml) {
+      super(ctrl,xml);
+      frame_id = IvyXml.getAttrString(xml,"FRAME");
+    }
+   
+   @Override public void process(IvyXmlWriter xw) {
+      getCandidate().setStartFrame(frame_id); 
+    }
+   
+}       // end of inner class CommandSymptom
+
+
 
 
 /********************************************************************************/
