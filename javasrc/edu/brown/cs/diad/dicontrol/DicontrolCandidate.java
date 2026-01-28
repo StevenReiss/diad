@@ -92,7 +92,7 @@ DicontrolCandidate(DicontrolMain ctrl,DiadThread thrd)
 {
    diad_control = ctrl;
    for_thread = thrd;
-   candidate_state = DiadCandidateState.INITIAL; 
+   candidate_state = DiadCandidateState.FINDING_SYMPTOM; 
    candidate_symptom = null;
    location_set = null;
    start_frame = null;
@@ -181,16 +181,16 @@ void start()
          " " + candidate_state);
 
    switch (candidate_state) {
-      case INITIAL :
-      case SYMPTOM_FOUND :
-      case BASE_EXECUTION_DONE :
-      case STARTING_FRAME_FOUND :
+      case FINDING_SYMPTOM :
+      case DOING_ANALYSIS :
+      case FINDING_EXECUTED_LOCATIONS :
+      case DOING_BASE_EXECUTION :
          candidate_processor = new CandidateThread();
          candidate_processor.start();
          break;
-      case NO_SYMPTOM :   
+      case NO_SYMPTOM_FOUND :   
          break;
-      case NO_STACK :
+      case NO_USER_STACK :
       case DEAD :
          candidate_state = DiadCandidateState.DEAD;
          break;
@@ -517,7 +517,7 @@ private final class CandidateThread extends Thread {
             IvyLog.logD("DICONTROL","Candidate " + candidate_id + " :: " +
                   candidate_state);
             switch (candidate_state) {
-               case INITIAL :
+               case FINDING_SYMPTOM :  
                   candidate_symptom = null;
                   base_execution = null;
                   location_set = null;
@@ -525,13 +525,13 @@ private final class CandidateThread extends Thread {
                   start_frame = null;
                   DiadStack stk = for_thread.getStack();
                   if (stk == null || for_thread.isInternal()) { 
-                     setState(DiadCandidateState.NO_STACK);
+                     setState(DiadCandidateState.NO_USER_STACK);
                      return;
                    }
                   if (checkInterrupted()) break;
                   for_frame = stk.getUserFrame();
                   if (for_frame == null) {
-                     setState(DiadCandidateState.NO_STACK);
+                     setState(DiadCandidateState.NO_USER_STACK);
                      return;
                    }
                   if (checkInterrupted()) break;
@@ -543,40 +543,40 @@ private final class CandidateThread extends Thread {
                   if (candidate_symptom != null) {
                      IvyLog.logD("DICONTROL","Candidate Symptom " + 
                            candidate_symptom.getText());
-                     setState(DiadCandidateState.SYMPTOM_FOUND);
+                     setState(DiadCandidateState.DOING_ANALYSIS);
                    }
                   else {
-                     setState(DiadCandidateState.NO_SYMPTOM);
+                     setState(DiadCandidateState.NO_SYMPTOM_FOUND);
                    }
                   break;
-               case SYMPTOM_FOUND :
+               case DOING_ANALYSIS :
                   if (checkInterrupted()) break;
                   anal.addFiles(file_mode,candidate_files,for_thread);  
                   if (checkInterrupted()) break;
                   Boolean fg = anal.waitForAnalysis(); 
                   if (fg == null || checkInterrupted()) break;
                   if (fg) {
-                     setState(DiadCandidateState.ANALYSIS_DONE);
+                     setState(DiadCandidateState.FINDING_ALL_LOCATIONS);
                    }
                   else {
                      setState(DiadCandidateState.NO_ANALYSIS);
                    }
                   break;
-               case ANALYSIS_DONE :
+               case FINDING_ALL_LOCATIONS :
                   location_set = null;
                   if (checkInterrupted()) break;
                   Collection<DiadLocation> locs = anal.findInitialLocations(
                         candidate_symptom,for_thread);
                   if (checkInterrupted()) break;
                   if (locs == null ||locs.isEmpty()) {
-                     setState(DiadCandidateState.NO_LOCATIONS); 
+                     setState(DiadCandidateState.NO_LOCATIONS_FOUND); 
                    } 
                   else {
                      location_set = locs;
-                     setState(DiadCandidateState.INITIAL_LOCATIONS);
+                     setState(DiadCandidateState.FINDING_STARTING_FRAME);
                    }
                   break; 
-               case INITIAL_LOCATIONS :
+               case FINDING_STARTING_FRAME :
                   start_frame = null;
                   if (checkInterrupted()) break;
                   start_frame = exec.getStartingFrame(candidate_symptom,
@@ -586,10 +586,10 @@ private final class CandidateThread extends Thread {
                      setState(DiadCandidateState.NO_START_FRAME);
                    }
                   else {
-                     setState(DiadCandidateState.STARTING_FRAME_FOUND);
+                     setState(DiadCandidateState.DOING_BASE_EXECUTION);
                    }
                   break;
-               case STARTING_FRAME_FOUND :
+               case DOING_BASE_EXECUTION :
                   base_execution = exec.createBaseExecution(candidate_symptom,  
                         for_thread,start_frame);
                   if (checkInterrupted()) break;
@@ -597,24 +597,24 @@ private final class CandidateThread extends Thread {
                      setState(DiadCandidateState.NO_BASE_EXECUTION); 
                    }
                   else {
-                     setState(DiadCandidateState.BASE_EXECUTION_DONE);
+                     setState(DiadCandidateState.FINDING_EXECUTED_LOCATIONS);
                    }
                   break;
-               case BASE_EXECUTION_DONE :
+               case FINDING_EXECUTED_LOCATIONS :
                   exec_locations = base_execution.getExecutedLocations(location_set); 
                   if (exec_locations == null) {
                      setState(DiadCandidateState.NO_FINAL_LOCATIONS);   
                    }
                   else {
-                     setState(DiadCandidateState.FINAL_LOCATIONS);
-                   }
+                     setState(DiadCandidateState.PREPARING_DATA);
+                   } 
                   // restrict location set by base execution
                   break;
-               case FINAL_LOCATIONS :
+               case PREPARING_DATA :
                   // might want to find repairs 
                   setState(DiadCandidateState.READY);
                   break;
-               case NO_SYMPTOM :
+               case NO_SYMPTOM_FOUND :
                case READY : 
                   synchronized (this) {
                      for ( ; ; ) {
@@ -631,11 +631,11 @@ private final class CandidateThread extends Thread {
                case INTERUPTED : 
                   cleanup(true);
                   return;
-               case NO_STACK :
+               case NO_USER_STACK :
                case NO_ANALYSIS :
                case NO_START_FRAME :
                case NO_BASE_EXECUTION :
-               case NO_LOCATIONS :
+               case NO_LOCATIONS_FOUND :
                default :
                   cleanup(false);
                   // need to remove base execution from seede

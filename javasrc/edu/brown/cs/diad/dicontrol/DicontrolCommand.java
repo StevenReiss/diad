@@ -235,7 +235,7 @@ private static class WaitForState extends DicontrolCommand {
    
    WaitForState(DicontrolMain ctrl,Element xml) {
       super(ctrl,xml);
-      target_state = IvyXml.getAttrEnum(xml,"STATE",DiadCandidateState.INITIAL);
+      target_state = IvyXml.getAttrEnum(xml,"STATE",DiadCandidateState.FINDING_SYMPTOM);
     }
    
    @Override public void process(IvyXmlWriter xw) {
@@ -245,10 +245,10 @@ private static class WaitForState extends DicontrolCommand {
             switch (cand.getState()) {
                case NO_ANALYSIS :
                case NO_BASE_EXECUTION :
-               case NO_LOCATIONS :
-               case NO_STACK :
+               case NO_LOCATIONS_FOUND :
+               case NO_USER_STACK :
                case NO_START_FRAME :
-               case NO_SYMPTOM :
+               case NO_SYMPTOM_FOUND :
                case NO_FINAL_LOCATIONS :
                case DEAD :
                case INTERUPTED :
