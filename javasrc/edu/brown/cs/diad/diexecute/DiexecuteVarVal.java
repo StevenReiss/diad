@@ -438,6 +438,7 @@ Object toJsonValue(DiadTrace trace,long t,Set<String> done)
              }
           }
        }
+      return arr;
     }
    else if (IvyXml.getAttrBool(var_element,"CHARS")) {
       return getStringValue(t);
@@ -477,7 +478,6 @@ Object toJsonValue(DiadTrace trace,long t,Set<String> done)
             return IvyXml.getText(var_element);
        }
     }
-   return null;
 }
 
 

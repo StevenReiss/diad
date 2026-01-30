@@ -115,7 +115,7 @@ public DitestFactory(DicontrolMain ctrl)
 
 public void setupBedrock(String workspace,String mint)
 {
-   IvyLog.logI("LIMBA","Starting bedrock/eclipse for debugging");
+   IvyLog.logI("DITEST","Starting bedrock/eclipse for debugging");
    
    File ec1 = new File(BROWN_ECLIPSE);
    File ec2 = new File(BROWN_WS);
@@ -143,7 +143,7 @@ public void setupBedrock(String workspace,String mint)
    cmd += " -vmargs -Dedu.brown.cs.bubbles.MINT=" + mint;
    cmd += " -Xmx16000m";
    
-   IvyLog.logI("LIMBA","RUN: " + cmd);
+   IvyLog.logI("DITEST","RUN: " + cmd);
    
    try {
       for (int i = 0; i < 250; ++i) {
@@ -168,7 +168,7 @@ public void setupBedrock(String workspace,String mint)
        }
     }
    catch (IOException e) {
-      IvyLog.logE("LIMBA","Problem with eclipse",e);
+      IvyLog.logE("DITEST","Problem with eclipse",e);
     }
    
    throw new Error("Problem running Eclipse: " + cmd);

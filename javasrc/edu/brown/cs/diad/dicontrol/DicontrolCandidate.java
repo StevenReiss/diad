@@ -198,6 +198,7 @@ void start(DiadCandidateState start)
          " " + candidate_state);
 
    switch (candidate_state) {
+      case INITIAL :
       case FINDING_SYMPTOM :
       case DOING_ANALYSIS :
       case FINDING_EXECUTED_LOCATIONS :

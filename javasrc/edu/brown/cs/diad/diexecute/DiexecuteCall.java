@@ -210,38 +210,76 @@ DiexecuteVarVal getTraceVariable(String name)
    return null;
 }
 
+DiexecuteVarVal getTraceVarValueFlex(String name,long when)
+{
+   int idx = name.lastIndexOf("?");
+   if (idx > 0) {
+      // handle ? sequence of names
+      String pre = name.substring(0,idx);
+      String sub = name.substring(idx+1);
+      DiexecuteVarVal v0 = getTraceVarValueFlex(pre,when);
+      if (v0 == null) return null;
+      v0 = v0.getValueAtTime(for_trace,when);
+      DiexecuteVarVal v1 = v0.getChild(sub,when);
+      if (v1 != null) {
+         v1 = v1.dereference(for_trace);
+         return v1;
+       }
+      else if (when < getEndTime()) {
+         return getTraceVarValueFlex(name,getEndTime());
+       }
+      else return null;
+    }
+   
+   // Look up the name directly and use if found
+   DiexecuteVarVal var0 = getTraceVariable(name);
+   if (var0 != null) return var0;
+   
+   // look up this.name and use if found
+   DiexecuteVarVal thisv = getTraceVariable("this");
+   thisv = thisv.getValueAtTime(for_trace,getStartTime()+1);
+   if (thisv != null) {
+      DiexecuteVarVal var1 = thisv.getChild(name,when);
+      if (var1 != null) return var1;
+    }
+   
+   // replace name.field with name?field
+   // replace name[idx] with name?[idx]
+   String name1 = name;
+   name1 = name1.replace(".","?");
+   name1 = name1.replace("[","?[");
+   if (!name1.equals(name)) {
+      // if either replacement worked, then try with new value
+      return getTraceVarValueFlex(name1,when);
+    }
+   
+   return null;
+}
+
+
 
 
 DiexecuteVarVal getValueAtTime(DiadTrace trace,String name,long when) 
 {
-   int idx = name.lastIndexOf("?");
-   if (idx < 0) {
-      DiexecuteVarVal var = getTraceVariable(name);
-      if (var == null) {
-         IvyLog.logE("DIEXECUTE","Variable not found " + name + " " + when +
-               " " + IvyXml.convertXmlToString(context_element));
-         return null;
-       }
-      return var.getValueAtTime(trace,when);  
+   DiexecuteVarVal var0 = getTraceVarValueFlex(name,when);
+   if (var0 == null && when < getEndTime()) {
+      return getValueAtTime(trace,name,getEndTime());
     }
-   String pre = name.substring(0,idx);
-   String sub = name.substring(idx+1);
-   DiexecuteVarVal var = getValueAtTime(trace,pre,when);
-   if (var == null) {
+   else if (var0 == null) {
       IvyLog.logE("DIEXECUTE","Variable not found " + name + " " + when +
             " " + IvyXml.convertXmlToString(context_element));
       return null;
     }
-   DiexecuteVarVal val1 = (DiexecuteVarVal) var.getChild(sub,when);
-   if (val1 != null) {
-      val1 = val1.dereference(trace);
-    }
    else {
+      var0 = var0.getValueAtTime(for_trace,when);
+    }
+   
+   if (var0 == null) {
       IvyLog.logE("DIEXECUTE","Empty value at time " + name + " " + when +
             " " + IvyXml.convertXmlToString(context_element));
     }
    
-   return val1;
+   return var0;
 }
 
 
@@ -430,18 +468,7 @@ JSONObject getJsonVarTrace(String varname)
 {
    JSONObject rslt = new JSONObject();
    
-   DiexecuteVarVal var = getTraceVariable(varname);
-   if (var == null) {
-      DiexecuteVarVal thisv = getTraceVariable("this");
-      thisv = thisv.getValueAtTime(for_trace,getStartTime()+1);
-      if (thisv != null) {
-         var = thisv.getChild(varname,getEndTime()-1);
-       }
-    }
-   if (var == null) {
-      rslt.put("ERROR","Name not found");
-      return rslt;
-    } 
+   DiexecuteVarVal var = getTraceVarValueFlex(varname,getEndTime());
    
    DiexecuteVarVal linv = getLineNumbers();
    

@@ -486,7 +486,7 @@ private void process()
          processXmlFile(fr); 
        }
       catch (IOException e) {
-         IvyLog.logE("LIMBA","Problem reading input file " + input_file,e);
+         IvyLog.logE("DICONTROL","Problem reading input file " + input_file,e);
        }
     }
    
@@ -516,7 +516,7 @@ private void processXmlFile(FileReader fr)
       for ( ; ; ) {
          String xmlstr = xr.readXml();
          if (xmlstr == null) break;
-         IvyLog.logD("LIMBA","Process XML command: " + xmlstr);
+         IvyLog.logD("DICONTROL","Process XML command: " + xmlstr);
          if (xmlstr.contains("$")) {
             for (DicontrolCandidate cand : debug_candidates.values()) {
                xmlstr = xmlstr.replace("$ID",cand.getId());
@@ -531,16 +531,16 @@ private void processXmlFile(FileReader fr)
                xw.begin("RESULT");
                cmd.process(xw);
                xw.end("RESULT");
-               IvyLog.logD("LIMBA","Command " + cmd.getCommandName() + ":\n");
-               IvyLog.logD("LIMBA","RESULT: " + xw.toString());
+               IvyLog.logD("DICONTROL","Command " + cmd.getCommandName() + ":\n");
+               IvyLog.logD("DICONTROL","RESULT: " + xw.toString());
              }
             catch (Throwable t) {
-               IvyLog.logE("LIMBA",
+               IvyLog.logE("DICONTROL",
                      "Problem prcessing command " + cmd.getCommandName(),t);
              }
           }
          catch (DiadException e) {
-            IvyLog.logE("LIMBA","Bad command",e);
+            IvyLog.logE("DICONTROL","Bad command",e);
           }
        }
     }
