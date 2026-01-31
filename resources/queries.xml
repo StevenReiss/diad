@@ -1,7 +1,42 @@
 <QUERIES>
    <QUERY COMMAND='EXPLAIN'>
       You should return an explanation of the root cause of the problem
-      that led to the symptom.	Try to be as comprehensive as possible.
+      that led to the symptom.	This should be an analysis that starts
+      with the symptom and indicates what in the program caused it.  It
+      can be specific, identifying the lines that led to the problem,
+      or can be general, indicating the overall problem and what types of
+      things to look for.
+      For example, if the fault is a NullPointerException, explain how
+      the particular value could be null at the stopping point.
+   </QUERY>
+   <QUERY COMMAND='TEST1'>
+      You should return an explanation of the root cause of the problem
+      that led to the symptom.	This should be an analysis that starts
+      with the symptom and indicates what in the program caused it.  It
+      can be specific, identifying the lines that led to the problem,
+      or can be general, indicating the overall problem and what types of
+      things to look for.
+   </QUERY>
+   <QUERY COMMAND='TEST2'>
+      You should return an explanation of the root cause of the problem
+      that led to the symptom.	This should be an analysis that starts
+      with the symptom and indicates what in the program caused it.  It
+      can be specific, identifying the lines that led to the problem,
+      or can be general, indicating the overall problem and what types of
+      things to look for.
+      For example, if the fault is a NullPointerException, explain how
+      the particular value could be null at the stopping point.
+      Be sure to stick to the provided symptom and no others.
+   </QUERY>
+   <QUERY COMMAND='TEST3'>
+      You should return three possible explanations of the root cause of the problem
+      that led to the symptom.	This should be an analysis that starts
+      with the symptom and indicates what in the program caused it.  It
+      can be specific, identifying the lines that led to the problem,
+      or can be general, indicating the overall problem and what types of
+      things to look for.
+      For example, if the fault is a NullPointerException, explain how
+      the particular value could be null at the stopping point.
    </QUERY>
    <QUERY COMMAND='LOCATIONS'>
       Your should identify the most likely program locations that can
@@ -15,12 +50,75 @@
       Your job here is to identify the most likely repairs to the
       program that will fix the problem.   Tools are provided that identify the
       overall set of locations, but these are not prioritized or evaluated
-      for appropriateness and do not provide fixes.  Given your understanding
+      for appropriateness and do not provide fixes.  You should consider
+      these lines, analyze whether they are likely to be buggy, determine
+      if and how they might be changed.  This should be based on your understanding
       of the cause of the problem and your knowledge of the program and
-      programming in general, you should provide a set of possible patches
-      that are likely to fix the problem.
+      programming in general.
+      In the end you should provide a of possible patches
+      that are likely to fix the problem.  Providing multiple alternatives
+      is fine.
    </QUERY>
 </QUERIES>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

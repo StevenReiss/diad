@@ -11,25 +11,35 @@
       something that is symptomatic of the problem.  Tools are provided to let
       you access the program source (getSourceCode and getSourceLine),
       information about the program (getConstructorsForClass, getMethodInforamtion,
-      getClassMethods),
-      and the execution of the program
-      from some prior point up to the stopping point (getCallTrace).  This execution is available
+      getClassMethods), about the current stopping point (getStackFrames),
+      and about the execution of the program
+      from some prior point on the current stack up to the stopping point (getCallTrace).
+      This execution is available
       as a trace organized by method execution, each of which is identified by
       a CALLID.  Execution time for each call is available.  It is possible to
-      obtain the sequence of lines in a call (getLineNumberTrace) and the values that a variable took
-      within a call (getVariableTrace) or at a particular time stamp (getVariableValue).
+      obtain the sequence of lines in a call (getLineNumberTrace), the values that a variable took
+      within a call (getVariableTrace) or at a particular time stamp (getVariableValue),
+      and the return valuie of the call (getReturnValue).
       Tools are also available to see the history of a particular
       primitive value over the whole execution (getVariableHistory).
+      Some analysis of the execution has been done and is made available as well.
+      The set of possible lines that affect the symptom and hence may be buggy can
+      be obtained either for those lines that are executed in the above execution
+      (getFaultLocations) or throughout the whole program (getAllFaultLocations).
+      The history of a particular variable or primitive value, i.e. how and where
+      and when it was changed during the execution, is also available (getVariableHistory).
 
       In this case the program has stopped at line $(LINE) in the method $(METHOD).
       The identified symptom is: $(SYMPTOM).
+      There are no other faults that you neede to consider.
       In order to answer questions, you
       should first determine how execution got to this point with the values
       indicated.  The top-level CALLID of the sample execution is $(CALLID).
 
-      You can assume that the programmer understands the purpose of the system
-      and the structure of the various JSON tool responses.  You should not
-      return a description of these.
+      You can assume that the programmer understands the purpose of the system,
+      its various classes and components,
+      and the structure of the various JSON tool responses.
+      You should not return a description of these.
    </PROMPT>
 </PROMPTS>
 

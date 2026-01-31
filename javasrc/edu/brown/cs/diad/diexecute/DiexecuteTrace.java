@@ -327,9 +327,32 @@ private DiexecuteCall getCallFromId(String callid)
    if (ctx == null) {
       IvyLog.logE("DIEXECUTE","Bad context id given " + callid);
       ctx = getRootContext();
+      try {
+         Integer.parseInt(callid);
+       }
+      catch (NumberFormatException e) {
+         DiexecuteCall findctx = findContextByName(ctx,callid);
+         if (findctx != null) ctx = findctx;
+       }
     }
    
    return ctx;
+}
+
+
+private DiexecuteCall findContextByName(DiexecuteCall call,String cid) 
+{
+   if (call.getMethod().equals(cid)) {
+      return call;
+    }
+   else if (call.getMethod().startsWith(cid + "(")) {
+      return call;
+    }
+   for (DiexecuteCall icall : call.getInnerCalls()) {
+      DiexecuteCall rcall = findContextByName(icall,cid);
+      if (rcall != null) return rcall;
+    }
+   return null;
 }
 
 
@@ -998,6 +1021,10 @@ JSONObject getJsonVarValue(String callid,String var,int line,long when0)
     }
    
    DiexecuteVarVal execvar = ctx.getValueAtTime(this,var,when);
+   if (execvar == null) {
+      DiexecuteVarVal var0 = ctx.getTraceVarValueFlex(var,when);
+      if (var0 != null) execvar = var0.getValueAtTime(this,when);
+    }
    if (execvar == null) {
       JSONObject err = new JSONObject();
       err.put("ERROR","No such variable");

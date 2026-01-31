@@ -116,6 +116,9 @@ enum DiadAskType {
    EXPLAIN,
    LOCATIONS,
    REPAIRS,
+   TEST1,
+   TEST2,
+   TEST3,
 }
 
 
