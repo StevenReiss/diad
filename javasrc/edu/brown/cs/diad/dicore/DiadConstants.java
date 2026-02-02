@@ -67,7 +67,7 @@ enum DiadCandidateState {
    NO_BASE_EXECUTION,
    NO_FINAL_LOCATIONS,
    DEAD,
-   INTERUPTED,
+   INTERRUPTED,
 }
 
 
@@ -116,6 +116,7 @@ enum DiadAskType {
    EXPLAIN,
    LOCATIONS,
    REPAIRS,
+   USER,
    TEST1,
    TEST2,
    TEST3,

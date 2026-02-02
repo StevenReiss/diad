@@ -18,6 +18,7 @@
       <echo file='./build.properties' message="PRO=${setupfile}${line.separator}" />
       <echo file='./build.properties' message='DIAD=${diadfile}${line.separator}' append='true' />
       <mkdir dir='./java/edu/brown/cs/diad' />
+      <mkdir dir='./lib' />
       <property name='PRO' value='${setupfile}' />
       <property name='DIAD' value='${diadfile}' />
    </target>

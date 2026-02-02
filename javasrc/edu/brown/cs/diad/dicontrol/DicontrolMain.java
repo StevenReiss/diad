@@ -313,16 +313,21 @@ String getPrompt(String cmd)
    if (xml == null) return null;
    String base = null;
    String ptxt = null;
+   boolean useboth = true;
    for (Element pmpt : IvyXml.children(xml,"PROMPT")) {
       String what = IvyXml.getAttrString(pmpt,"COMMAND");
-      if (what == null) base = IvyXml.getText(pmpt).trim();
-      else if (what.equals(cmd)) {
-         ptxt = IvyXml.getText(pmpt).trim();
+      if (what == null) base = IvyXml.getText(pmpt);
+      else if (what.contains(cmd)) {
+         ptxt = IvyXml.getText(pmpt);
+         if (IvyXml.getAttrBool(pmpt,"COMPLETE")) {
+            useboth = false;
+          }
        }
     }
    
    if (base == null) return ptxt;
    if (ptxt == null) return base;
+   if (!useboth) return ptxt;
    
    return base + " " + ptxt;
 }
@@ -341,9 +346,9 @@ String getQuery(String cmd)
    String ptxt = null;
    for (Element pmpt : IvyXml.children(xml,"QUERY")) {
       String what = IvyXml.getAttrString(pmpt,"COMMAND");
-      if (what == null) base = IvyXml.getText(pmpt).trim();
+      if (what == null) base = IvyXml.getText(pmpt);
       else if (what.equals(cmd)) {
-         ptxt = IvyXml.getText(pmpt).trim();
+         ptxt = IvyXml.getText(pmpt);
        }
     }
    

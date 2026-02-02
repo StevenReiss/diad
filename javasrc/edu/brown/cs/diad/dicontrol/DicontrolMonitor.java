@@ -190,14 +190,13 @@ private class CommandProcessor extends Thread {
          mint_control.send(xw.toString());
        }
       catch (Throwable t) {
-         IvyXmlWriter xw = new IvyXmlWriter();
+         IvyLog.logE("DICONTROL","Problem processing command",t);      IvyXmlWriter xw = new IvyXmlWriter();
          xw.begin("DIADREPLY");
          xw.field("RID",reply_id);
          xw.begin("ERROR");
          xw.textElement("MESSAGE",t);
          xw.end("ERROR");
          xw.end("DIADREPLY");
-         IvyLog.logD("DIAD","Send error reply " + xw.toString());
          mint_control.send(xw.toString());
          xw.close();
        }

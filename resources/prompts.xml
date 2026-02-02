@@ -41,6 +41,17 @@
       and the structure of the various JSON tool responses.
       You should not return a description of these.
    </PROMPT>
+   <PROMPT COMMAND='USER' COMPLETE='TRUE'>
+      You are an expert Java programmer with lots of debugging experience and a strong
+      knowledge of the Java libraries and other libraries that might be used in a
+      project.	You are being asked to help a developer debug his system while the
+      developer is working in the debugger.
+
+      $(CONTEXT)
+
+      Recall we are trying to fix $(SYMPTOM).  Recall the top-level CALLID of the
+      sample execution is $(CALLID).
+   </PROMPT>
 </PROMPTS>
 
 

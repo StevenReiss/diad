@@ -660,7 +660,7 @@ private final class CandidateThread extends Thread {
                    }
                   return;
                case DEAD :
-               case INTERUPTED : 
+               case INTERRUPTED : 
                   cleanup(true);
                   return;
                case NO_USER_STACK :
@@ -718,7 +718,7 @@ private final class CandidateThread extends Thread {
    private boolean checkInterrupted() {
       if (isInterrupted()) {
          IvyLog.logD("DICONTROL","Candidate interrupted");
-         setState(DiadCandidateState.INTERUPTED); 
+         setState(DiadCandidateState.INTERRUPTED); 
          return true;
        }
       return false;

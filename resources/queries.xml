@@ -59,6 +59,8 @@
       that are likely to fix the problem.  Providing multiple alternatives
       is fine.
    </QUERY>
+   <QUERY COMMAND='USER'>
+   </QUERY>
 </QUERIES>
 
 
