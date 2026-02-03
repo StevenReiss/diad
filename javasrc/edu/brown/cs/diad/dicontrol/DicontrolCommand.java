@@ -48,6 +48,7 @@ abstract class DicontrolCommand implements DicontrolConstants, DiadCommand
 static DicontrolCommand createCommand(DicontrolMain ctrl,Element xml)
 {
    String cmd = IvyXml.getAttrString(xml,"DO");
+   if (cmd == null) cmd = "NO_COMMAND";
    cmd = cmd.toUpperCase();
    
    switch (cmd) {

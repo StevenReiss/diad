@@ -119,7 +119,7 @@ DiexecuteChangeData process(DiadThread thrd,DiadSymptom rp,DiadStackFrame topfra
       ASTNode n = getNodeForFrame(bf);
       if (n != null) {
          initvars = convertChangesToParent(chngs,bf,prevframe,n,prevnode);
-	 chngs = processMethod(n,initvars);
+         chngs = processMethod(n,initvars);
          rslt.setChanges(bf,chngs);
          if (bf.equals(topframe)) {
             rslt.setTopFrame(bf);

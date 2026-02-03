@@ -97,9 +97,9 @@ JSONObject process()
 
 
 /********************************************************************************/
-/*										*/
-/*	Methods to find dependencies						*/
-/*										*/
+/*                                                                              */
+/*      Methods to find dependencies                                            */
+/*                                                                              */
 /********************************************************************************/
 
 private void addDependentNodes(VarNode vn)
@@ -157,9 +157,9 @@ private void addDependentNodes(VarNode vn)
 
 
 /********************************************************************************/
-/*										*/
-/*	Ask seede to find dependencies for a particular statement		*/
-/*										*/
+/*                                                                              */
+/*      Ask seede to find dependencies for a particular statement               */
+/*                                                                              */
 /********************************************************************************/
 
 List<VarNode> findDependents(VarNode vnorig,Element dep,DiexecuteCall ctx,int lno,long when)
@@ -170,19 +170,19 @@ List<VarNode> findDependents(VarNode vnorig,Element dep,DiexecuteCall ctx,int ln
    String other = null;
    switch (typ) {
       case STATEMENT :
-	 other = IvyXml.getTextElement(dep,"BODY");
-	 break;
+         other = IvyXml.getTextElement(dep,"BODY");
+         break;
       case PARAMETER :
-	 other = IvyXml.getTextElement(dep,"BODY");
-	 int idx1 = other.indexOf("(");
-	 if (idx1 > 0) other = other.substring(0,idx1);
-	 break;
+         other = IvyXml.getTextElement(dep,"BODY");
+         int idx1 = other.indexOf("(");
+         if (idx1 > 0) other = other.substring(0,idx1);
+         break;
       case CALL :
-	 other = IvyXml.getTextElement(dep,"INNERMETHOD");
-	 break;
+         other = IvyXml.getTextElement(dep,"INNERMETHOD");
+         break;
       case SET :
       case VALUE :
-	 break;
+         break;
     }
    vnorig.setNodeType(typ);
    if (other != null) vnorig.setOtherData(other);
@@ -202,62 +202,62 @@ List<VarNode> findDependents(VarNode vnorig,Element dep,DiexecuteCall ctx,int ln
    while (chng) {
       chng = false;
       for (Element var : IvyXml.children(dep,"VAR")) {
-	 if (done.contains(var)) continue;
+         if (done.contains(var)) continue;
          
-	 String vnm = IvyXml.getAttrString(var,"NAME");
-	 String vty = IvyXml.getAttrString(var,"TYPE");
-	 JcompSymbolKind knd = IvyXml.getAttrEnum(var,"KIND",JcompSymbolKind.NONE);
-	 List<DiexecuteVarVal> bvs = new ArrayList<>();
-	 switch (knd) {
-	    case FIELD :
-	       IvyLog.logD("DIEXECUTE","FIELD " + vnm + " " + vty);
-	       for (DiexecuteVarVal compv : comps) {
+         String vnm = IvyXml.getAttrString(var,"NAME");
+         String vty = IvyXml.getAttrString(var,"TYPE");
+         JcompSymbolKind knd = IvyXml.getAttrEnum(var,"KIND",JcompSymbolKind.NONE);
+         List<DiexecuteVarVal> bvs = new ArrayList<>();
+         switch (knd) {
+            case FIELD :
+               IvyLog.logD("DIEXECUTE","FIELD " + vnm + " " + vty);
+               for (DiexecuteVarVal compv : comps) {
                   DiexecuteVarVal val1 = compv.getChild(vnm,when); 
                   val1 = val1.dereference(exec_trace);
                   if (val1 != null) {
                      bvs.add(val1);
-		     done.add(var);
+                     done.add(var);
                    }
-		}
-	       break;
+                }
+               break;
                
-	    case NONE :
-	    case CLASS :
-	    case INTERFACE :
-	    case ENUM :
-	    case METHOD :
-	    case CONSTRUCTOR :
-	    case PACKAGE :
-	    case ANNOTATION :
-	    case ANNOTATION_MEMBER :
-	       done.add(var);
-	       break;
+            case NONE :
+            case CLASS :
+            case INTERFACE :
+            case ENUM :
+            case METHOD :
+            case CONSTRUCTOR :
+            case PACKAGE :
+            case ANNOTATION :
+            case ANNOTATION_MEMBER :
+               done.add(var);
+               break;
                
-	    case LOCAL :
-	       done.add(var);
-	       String lclnm = ctx.getVariableName(vnm,lno);
-	       if (lclnm == null) break;
+            case LOCAL :
+               done.add(var);
+               String lclnm = ctx.getVariableName(vnm,lno);
+               if (lclnm == null) break;
                DiexecuteVarVal varval = ctx.getTraceVariable(lclnm);
                DiexecuteVarVal val = varval.getValueAtTime(exec_trace,when);
-	       if (val == null) break;
-	       if (!val.hasChildren(when)) { 
-		  bvs.add(varval);
-		}
-	       else {
-		  comps.add(varval);
-		  chng = true;
-		}
-	       break;
-	  }
+               if (val == null) break;
+               if (!val.hasChildren(when)) { 
+                  bvs.add(varval);
+                }
+               else {
+                  comps.add(varval);
+                  chng = true;
+                }
+               break;
+          }
          
-	 if (bvs.size() > 0) {
-	    for (DiexecuteVarVal bv : bvs) {
+         if (bvs.size() > 0) {
+            for (DiexecuteVarVal bv : bvs) {
                DiexecuteVarVal val = bv.getValueAtTime(exec_trace,when);
-	       VarNode vn = new VarNode(VarNodeType.VALUE,ctx,
+               VarNode vn = new VarNode(VarNodeType.VALUE,ctx,
                      when,vnm,val);
-	       deps.add(vn);
-	     }
-	  }
+               deps.add(vn);
+             }
+          }
        }
     }
    
@@ -272,10 +272,10 @@ private Element getVariableDependencies(String name,DiexecuteCall ctx,int lno,lo
    if (when == 0) return null;
    
    CommandArgs args = new CommandArgs("FILE",ctx.getFile(),
-	 "LINE",lno,
-	 "TIME",when,
-	 "CONTEXT",ctx.getContextId(),
-	 "VARIABLE",name);
+         "LINE",lno,
+         "TIME",when,
+         "CONTEXT",ctx.getContextId(),
+         "VARIABLE",name);
    Element rslt = exec_trace.getManager().sendSeedeMessage(exec_trace.getSessionId(),
          "VARHISTORY",args,null);
    if (rslt == null) return null;
@@ -293,14 +293,14 @@ private Element getCallDependencies(String name,DiexecuteCall ctx,DiexecuteCall 
    // need the file and line for the called context
    
    CommandArgs args = new CommandArgs("FILE",ctx.getFile(),
-	 "LINE",lno,
-	 "TIME",when,
-	 "CONTEXT",ctx.getContextId(),
-	 "CALLEDCONTEXT",cctx.getContextId(),
-	 "CALLEDFILE",cctx.getFile(),
-	 "CALLEDMETHOD",cctx.getMethod(),
-	 "CALLEDLINE",clno,
-	 "VARIABLE",name);
+         "LINE",lno,
+         "TIME",when,
+         "CONTEXT",ctx.getContextId(),
+         "CALLEDCONTEXT",cctx.getContextId(),
+         "CALLEDFILE",cctx.getFile(),
+         "CALLEDMETHOD",cctx.getMethod(),
+         "CALLEDLINE",clno,
+         "VARIABLE",name);
    
    Element rslt = exec_trace.getManager().sendSeedeMessage(exec_trace.getSessionId(),
          "VARHISTORY",args,null);
@@ -372,9 +372,9 @@ private void findNodes(VarNode vn,Map<String,VarNode> nodemap)
 
 
 /********************************************************************************/
-/*										*/
-/*	Variable History Node							*/
-/*										*/
+/*                                                                              */
+/*      Variable History Node                                                   */
+/*                                                                              */
 /********************************************************************************/
 
 private static class VarNode {
@@ -407,16 +407,16 @@ private static class VarNode {
       if (!comes_from.contains(vn)) comes_from.add(vn);
     }
    
-   void setOtherData(String data)	{ other_data = data; }
-   void setNodeType(VarNodeType vnt)	{ node_type = vnt; }
+   void setOtherData(String data)       { other_data = data; }
+   void setNodeType(VarNodeType vnt)    { node_type = vnt; }
    
-   long getTime()			{ return at_time; }
-   String getName()			{ return var_name; }
-   DiexecuteVarVal getValue()		{ return var_value; }
+   long getTime()                       { return at_time; }
+   String getName()                     { return var_name; }
+   DiexecuteVarVal getValue()           { return var_value; }
    String getId()                       { return node_id; }
    
    boolean hasDependents()              { return comes_from != null; }
-   List<VarNode> getDependents()	{ return comes_from; }
+   List<VarNode> getDependents()        { return comes_from; }
    
    boolean isReturn() {
       return var_name != null && var_name.endsWith("*RETURNS*");
@@ -444,7 +444,7 @@ private static class VarNode {
       return rslt;
     }
    
-}	// end of inner class VarNode
+}       // end of inner class VarNode
 
 
 }       // end of class DiexecuteVarHistory

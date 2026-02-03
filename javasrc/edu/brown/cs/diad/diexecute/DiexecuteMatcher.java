@@ -466,26 +466,26 @@ private DiffStruct computeContextDiffs(DiexecuteCall origctx,DiexecuteCall match
    
    for (int d = 1; d <= maxd; ++d) {
       for (int k = lower; k <= upper; k+= 2) {
-	 if (k == origin-d || (k != origin+d && lastd[k+1] >= lastd[k-1])) {
-	    row = lastd[k+1] + 1;
-	    script[k] = new DiffStruct(script[k+1],true,null,row-1);
-	  }
-	 else {
-	    row = lastd[k-1];
-	    script[k] = new DiffStruct(script[k-1],false,b.get(row+k-origin-1),row);
-	  }
-	 col = row + k - origin;
-	 while (row < m && col < n && matchContext(a.get(row),b.get(col))) {
-	    ++row;
-	    ++col;
-	  }
-	 lastd[k] = row;
-	 if (row == m && col == n) {
-	    rslt = script[k].createEdits();
-	    return rslt;
-	  }
-	 if (row == m) lower = k+2;
-	 if (col == n) upper = k-2;
+         if (k == origin-d || (k != origin+d && lastd[k+1] >= lastd[k-1])) {
+            row = lastd[k+1] + 1;
+            script[k] = new DiffStruct(script[k+1],true,null,row-1);
+          }
+         else {
+            row = lastd[k-1];
+            script[k] = new DiffStruct(script[k-1],false,b.get(row+k-origin-1),row);
+          }
+         col = row + k - origin;
+         while (row < m && col < n && matchContext(a.get(row),b.get(col))) {
+            ++row;
+            ++col;
+          }
+         lastd[k] = row;
+         if (row == m && col == n) {
+            rslt = script[k].createEdits();
+            return rslt;
+          }
+         if (row == m) lower = k+2;
+         if (col == n) upper = k-2;
        }
       lower = lower-1;
       upper = upper+1;
@@ -519,13 +519,13 @@ DiffStruct(DiffStruct prior,boolean del,DiexecuteCall dat, int i) {
    line_index = i;
 }
 
-public int getNumDelete()		{ return delete_count; }
+public int getNumDelete()               { return delete_count; }
 
-public DiexecuteCall getData()	{ return replace_data; }
+public DiexecuteCall getData()  { return replace_data; }
 
-public int getIndex()		{ return line_index; }
+public int getIndex()           { return line_index; }
 
-public DiffStruct getNext()		{ return next_edit; }
+public DiffStruct getNext()             { return next_edit; }
 
 DiffStruct createEdits() {
    DiffStruct shead = this;
@@ -545,7 +545,7 @@ DiffStruct createEdits() {
    return ep;
 }
 
-}	// end of inner class DiffStruct
+}       // end of inner class DiffStruct
 
 
 

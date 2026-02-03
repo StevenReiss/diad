@@ -1,21 +1,21 @@
 /********************************************************************************/
-/*										*/
-/*		DicontrolMonitor.java						*/
-/*										*/
-/*	Message server interface for DIAD					*/
-/*										*/
+/*                                                                              */
+/*              DicontrolMonitor.java                                           */
+/*                                                                              */
+/*      Message server interface for DIAD                                       */
+/*                                                                              */
 /********************************************************************************/
-/*	Copyright 2025 Brown University -- Steven P. Reiss		      */
+/*      Copyright 2025 Brown University -- Steven P. Reiss                    */
 /*********************************************************************************
- *  Copyright 2025, Brown University, Providence, RI.				 *
- *										 *
- *			  All Rights Reserved					 *
- *										 *
- * This program and the accompanying materials are made available under the	 *
+ *  Copyright 2025, Brown University, Providence, RI.                            *
+ *                                                                               *
+ *                        All Rights Reserved                                    *
+ *                                                                               *
+ * This program and the accompanying materials are made available under the      *
  * terms of the Eclipse Public License v1.0 which accompanies this distribution, *
- * and is available at								 *
- *	http://www.eclipse.org/legal/epl-v10.html				 *
- *										 *
+ * and is available at                                                           *
+ *      http://www.eclipse.org/legal/epl-v10.html                                *
+ *                                                                               *
  ********************************************************************************/
 
 
@@ -49,13 +49,13 @@ class DicontrolMonitor implements DicontrolConstants
 
 
 /********************************************************************************/
-/*										*/
-/*	Private Storage 							*/
-/*										*/
+/*                                                                              */
+/*      Private Storage                                                         */
+/*                                                                              */
 /********************************************************************************/
 
-private DicontrolMain	diad_control;
-private MintControl	mint_control;
+private DicontrolMain   diad_control;
+private MintControl     mint_control;
 private Map<String,EvalData> eval_handlers;
 private Map<String,Element> limba_replys;
 
@@ -64,9 +64,9 @@ private static Random   random_gen = new Random();
 
  
 /********************************************************************************/
-/*										*/
-/*	Constructors								*/
-/*										*/
+/*                                                                              */
+/*      Constructors                                                            */
+/*                                                                              */
 /********************************************************************************/
 
 DicontrolMonitor(DicontrolMain gm,String mintid)
@@ -206,9 +206,9 @@ private class CommandProcessor extends Thread {
 
 
 /********************************************************************************/
-/*										*/
-/*	Send messages to front end						*/
-/*										*/
+/*                                                                              */
+/*      Send messages to front end                                              */
+/*                                                                              */
 /********************************************************************************/
 
 boolean sendPing()
@@ -254,9 +254,9 @@ Element sendDiadMessage(String cmd,CommandArgs args,String cnts)
 
 
 /********************************************************************************/
-/*										*/
-/*	Send messages to Eclipse						*/
-/*										*/
+/*                                                                              */
+/*      Send messages to Eclipse                                                */
+/*                                                                              */
 /********************************************************************************/
 
 void pongEclipse()
@@ -287,7 +287,7 @@ Element sendBubblesMessage(String cmd,CommandArgs args,String cnts)
    xw.field("DO",cmd);
    if (args != null) {
       for (Map.Entry<String,Object> ent : args.entrySet()) {
-	 xw.field(ent.getKey(),ent.getValue());
+         xw.field(ent.getKey(),ent.getValue());
        }
     }
    if (cnts != null) {
@@ -316,7 +316,7 @@ private final class ExitHandler implements MintHandler {
       System.exit(0);
     }
 
-}	// end of inner class ExitHandler
+}       // end of inner class ExitHandler
 
 
 private final class BubblesPingHandler implements MintHandler {
@@ -325,7 +325,7 @@ private final class BubblesPingHandler implements MintHandler {
       msg.replyTo("<PONG/>");
     }
 
-}	// end of inner class ExitHandler
+}       // end of inner class ExitHandler
 
 
 private final class EclipseStopper extends Thread {
@@ -386,10 +386,10 @@ public Element sendFaitMessage(String cmd,CommandArgs args,String cnts)
             MintControl.MINT_MSG_FIRST_NON_NULL);
       String prslt = prply.waitForString(3000);
       if (prslt == null) {
-	 diad_control.getTestManager().startFait();  
-	 rply = new MintDefaultReply();
-	 mint_control.send(msg,rply,MintConstants.MINT_MSG_FIRST_NON_NULL);
-	 rslt = rply.waitForXml(0);
+         diad_control.getTestManager().startFait();  
+         rply = new MintDefaultReply();
+         mint_control.send(msg,rply,MintConstants.MINT_MSG_FIRST_NON_NULL);
+         rslt = rply.waitForXml(0);
        }
     }
    
@@ -438,10 +438,10 @@ Element sendSeedeMessage(String id,String cmd,CommandArgs args,String cnts)
       mint_control.send("<SEEDE DO='PING' SID='*' />",rply,MintConstants.MINT_MSG_FIRST_NON_NULL);
       String prslt = prply.waitForString(3000);
       if (prslt == null) {
-	 diad_control.getTestManager().startSeede();
-	 rply = new MintDefaultReply();
-	 mint_control.send(msg,rply,MintConstants.MINT_MSG_FIRST_NON_NULL);
-	 rslt = rply.waitForXml(0);
+         diad_control.getTestManager().startSeede();
+         rply = new MintDefaultReply();
+         mint_control.send(msg,rply,MintConstants.MINT_MSG_FIRST_NON_NULL);
+         rslt = rply.waitForXml(0);
        }
     }
    
@@ -604,7 +604,7 @@ protected class IDEHandler implements MintHandler {
        }
     }
 
-}	// end of inner class IDEHandler
+}       // end of inner class IDEHandler
 
 
 
@@ -707,14 +707,14 @@ public Element waitForEvaluation(String id)
 {
    synchronized (eval_handlers) {
       for ( ; ; ) {
-	 EvalData ed = eval_handlers.remove(id);
-	 if (ed != null) {
-	    return ed.getResult();
-	  }
-	 try {
-	    eval_handlers.wait(5000);
-	  }
-	 catch (InterruptedException e) { }
+         EvalData ed = eval_handlers.remove(id);
+         if (ed != null) {
+            return ed.getResult();
+          }
+         try {
+            eval_handlers.wait(5000);
+          }
+         catch (InterruptedException e) { }
        }
     }
 }
@@ -733,9 +733,9 @@ private static class EvalData {
       return eval_result;
     }
 
-}	// end of inner class EvalData
+}       // end of inner class EvalData
 
-}	// end of class DicontrolMonitor
+}       // end of class DicontrolMonitor
 
 
 

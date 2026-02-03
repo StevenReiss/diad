@@ -5,30 +5,30 @@
 /*      Representation of a runtime thread                                      */
 /*                                                                              */
 /********************************************************************************/
-/*	Copyright 2025 Brown University -- Steven P. Reiss		      */
+/*      Copyright 2025 Brown University -- Steven P. Reiss                    */
 /*********************************************************************************
- *  Copyright 2025, Brown University, Providence, RI.				 *
- *										 *
- *			  All Rights Reserved					 *
- *										 *
- *  Permission to use, copy, modify, and distribute this software and its	 *
- *  documentation for any purpose other than its incorporation into a		 *
- *  commercial product is hereby granted without fee, provided that the 	 *
- *  above copyright notice appear in all copies and that both that		 *
- *  copyright notice and this permission notice appear in supporting		 *
- *  documentation, and that the name of Brown University not be used in 	 *
- *  advertising or publicity pertaining to distribution of the software 	 *
- *  without specific, written prior permission. 				 *
- *										 *
- *  BROWN UNIVERSITY DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS		 *
- *  SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND		 *
- *  FITNESS FOR ANY PARTICULAR PURPOSE.  IN NO EVENT SHALL BROWN UNIVERSITY	 *
- *  BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY 	 *
- *  DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,		 *
- *  WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS		 *
- *  ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 	 *
- *  OF THIS SOFTWARE.								 *
- *										 *
+ *  Copyright 2025, Brown University, Providence, RI.                            *
+ *                                                                               *
+ *                        All Rights Reserved                                    *
+ *                                                                               *
+ *  Permission to use, copy, modify, and distribute this software and its        *
+ *  documentation for any purpose other than its incorporation into a            *
+ *  commercial product is hereby granted without fee, provided that the          *
+ *  above copyright notice appear in all copies and that both that               *
+ *  copyright notice and this permission notice appear in supporting             *
+ *  documentation, and that the name of Brown University not be used in          *
+ *  advertising or publicity pertaining to distribution of the software          *
+ *  without specific, written prior permission.                                  *
+ *                                                                               *
+ *  BROWN UNIVERSITY DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS                *
+ *  SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND            *
+ *  FITNESS FOR ANY PARTICULAR PURPOSE.  IN NO EVENT SHALL BROWN UNIVERSITY      *
+ *  BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY          *
+ *  DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,              *
+ *  WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS               *
+ *  ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE          *
+ *  OF THIS SOFTWARE.                                                            *
+ *                                                                               *
  ********************************************************************************/
 
 
@@ -173,7 +173,7 @@ void update(Element xml)
       RunThreadType btt = null;
       if (thread_name != null) btt = KNOWN_THREADS.get(thread_name);
       if (btt == null) btt = RunThreadType.USER;
-      thread_type = btt;		
+      thread_type = btt;                
     }
    
    if (IvyXml.getAttrBool(xml,"STACK")) {
@@ -403,10 +403,10 @@ DiruntimeValue evaluate(String expr,DiadStackFrame frm)
     }
    String proj = for_process.getManager().findProjectForFile(frm.getSourceFile());
    CommandArgs args = new CommandArgs("THREAD",thread_id,
-	 "FRAME",frm.getFrameId(),"BREAK",false,"EXPR",expr,
+         "FRAME",frm.getFrameId(),"BREAK",false,"EXPR",expr,
          "IMPLICIT",true,
          "PROJECT",proj,
-	 "LEVEL",3,"ARRAY",-1,"REPLYID",eid);
+         "LEVEL",3,"ARRAY",-1,"REPLYID",eid);
    args.put("SAVEID",eid);
    Element xml = getManager().sendBubblesMessage("EVALUATE",args,null);
    if (IvyXml.isElement(xml,"RESULT")) {
@@ -415,7 +415,7 @@ DiruntimeValue evaluate(String expr,DiadStackFrame frm)
       Element v1 = IvyXml.getChild(v,"VALUE");
       String assoc = expr;
       if (args.get("SAVEID") != null) {
-	 assoc = "*" + args.get("SAVEID").toString();
+         assoc = "*" + args.get("SAVEID").toString();
        }
       DiruntimeValueData svd = new DiruntimeValueData(this,v1,assoc);
       svd = getUniqueValue(svd);
@@ -454,10 +454,10 @@ DiruntimeValueData evaluateExpr(String expr)
    String proj = getManager().findProjectForFile(frm.getSourceFile());  
    
    CommandArgs args = new CommandArgs("THREAD",thread_id,
-	 "FRAME",frm.getFrameId(),"BREAK",false,"EXPR",expr,
+         "FRAME",frm.getFrameId(),"BREAK",false,"EXPR",expr,
          "IMPLICIT",true,
          "PROJECT",proj,
-	 "LEVEL",3,"ARRAY",-1,"REPLYID",eid);
+         "LEVEL",3,"ARRAY",-1,"REPLYID",eid);
    args.put("SAVEID",eid);
    Element xml = getManager().sendBubblesMessage("EVALUATE",args,null);
    if (IvyXml.isElement(xml,"RESULT")) {
@@ -466,7 +466,7 @@ DiruntimeValueData evaluateExpr(String expr)
       Element v1 = IvyXml.getChild(v,"VALUE");
       String assoc = expr;
       if (args.get("SAVEID") != null) {
-	 assoc = "*" + args.get("SAVEID").toString();
+         assoc = "*" + args.get("SAVEID").toString();
        }
       DiruntimeValueData svd = new DiruntimeValueData(this,v1,assoc);
       svd = getUniqueValue(svd);
@@ -528,8 +528,8 @@ public Map<String,DiadValue> getParameterValues(DiadStackFrame basefrm)
    MethodDeclaration mthd = null;
    for (ASTNode m = n; m != null; m = m.getParent()) {
       if (m instanceof MethodDeclaration) {
-	 mthd = (MethodDeclaration) m;
-	 break;
+         mthd = (MethodDeclaration) m;
+         break;
        }
     }
    if (mthd == null) return null;
@@ -571,7 +571,7 @@ public Map<String,DiadValue> getParameterValues(DiadStackFrame basefrm)
 private ASTNode getAstForFrame(DiadStackFrame frm,ASTNode base)
 {
    CommandArgs args = new CommandArgs("PATTERN",IvyXml.xmlSanitize(frm.getClassName()),
-	 "DEFS",true,"REFS",false,"FOR","TYPE");
+         "DEFS",true,"REFS",false,"FOR","TYPE");
    Element cxml = getManager().sendBubblesMessage("PATTERNSEARCH",args,null);
    File fnm = null;
    String pnm = null;
@@ -609,9 +609,9 @@ protected ASTNode findNode(CompilationUnit cu,String text,int line)
    if (line > 0) {
       off = cu.getPosition(line,0);
       while (off < text.length()) {
-	 char c = text.charAt(off);
-	 if (!Character.isWhitespace(c)) break;
-	 ++off;
+         char c = text.charAt(off);
+         if (!Character.isWhitespace(c)) break;
+         ++off;
        }
     }
    ASTNode node = JcompAst.findNodeAtOffset(cu,off);
@@ -690,7 +690,7 @@ private class CallFinder extends ASTVisitor {
        }
     }
 
-}	// end of inner class CallFinder
+}       // end of inner class CallFinder
 
 
 

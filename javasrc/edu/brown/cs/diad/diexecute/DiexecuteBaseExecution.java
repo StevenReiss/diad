@@ -191,7 +191,7 @@ DiadTrace createBaseExecution()
    
    CommandArgs args = new CommandArgs("TYPE","LAUNCH",
          "PROJECT",proj,
-         "THREADID",for_thread.getThreadId(),
+        "THREADID",for_thread.getThreadId(),
          "FRAMEID",start_frame.getFrameId());  
    if (show_all) args.put("SHOWALL",true);
    if (show_strings) args.put("TOSTRING",true);

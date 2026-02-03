@@ -103,28 +103,28 @@ DiruntimeValueData(DiruntimeValue cv)
 
 
 /********************************************************************************/
-/*										*/
-/*	Access methods								*/
-/*										*/
+/*                                                                              */
+/*      Access methods                                                          */
+/*                                                                              */
 /********************************************************************************/
 
-DiadValueKind getKind()	{ return value_kind; }
+DiadValueKind getKind() { return value_kind; }
 
-String getType()		{ return val_type; }
-String getValue()		{ return val_value; }
+String getType()                { return val_type; }
+String getValue()               { return val_value; }
 
-String getActualType()		{ return null; }
-boolean hasContents()		{ return has_values; }
-boolean isLocal()		{ return is_local; }
-boolean isStatic()		{ return is_static; }
+String getActualType()          { return null; }
+boolean hasContents()           { return has_values; }
+boolean isLocal()               { return is_local; }
+boolean isStatic()              { return is_static; }
 
 String getFrame() {
    return for_thread.getStack().getUserFrame().getFrameId(); 
 }
 
-String getThread()		{ return for_thread.getThreadId(); }
+String getThread()              { return for_thread.getThreadId(); }
 
-int getLength() 		{ return array_length; }
+int getLength()                 { return array_length; }
 
 
 DiruntimeValue getDiadValue()
@@ -145,21 +145,21 @@ DiruntimeValue getDiadValue()
    
    switch (value_kind) {
       case PRIMITIVE :
-	 if (typ.isBooleanType()) {
-	    result_value = DiruntimeValue.booleanValue(
+         if (typ.isBooleanType()) {
+            result_value = DiruntimeValue.booleanValue(
                   for_thread.findType("boolean"),val_value);
-	  }
-	 else if (typ.isNumericType()) {
-	    result_value = DiruntimeValue.numericValue(typ,val_value);
-	  }
-	 break;
+          }
+         else if (typ.isNumericType()) {
+            result_value = DiruntimeValue.numericValue(typ,val_value);
+          }
+         break;
       case STRING :
-	 result_value = DiruntimeValue.stringValue(for_thread.findType("java.lang.String"),
+         result_value = DiruntimeValue.stringValue(for_thread.findType("java.lang.String"),
                val_value);
-	 break;
+         break;
       case OBJECT :
-	 Map<String,DiruntimeGenericValue> inits = new HashMap<>();
-	 Map<String,DiruntimeValueData> sets = new HashMap<>();
+         Map<String,DiruntimeGenericValue> inits = new HashMap<>();
+         Map<String,DiruntimeValueData> sets = new HashMap<>();
          if (typ.getFields() != null) {
             for (Map.Entry<String,DiadDataType> ent : typ.getFields().entrySet()) {
                String fnm = ent.getKey();
@@ -183,57 +183,57 @@ DiruntimeValue getDiadValue()
                 }
              }
           }
-	 if (hash_code == 0) { 
-	    inits.put(HASH_CODE_FIELD,new DeferredLookup(HASH_CODE_FIELD));
-	  }
-	 else {
-	    DiruntimeValue hvl = DiruntimeValue.numericValue(
+         if (hash_code == 0) { 
+            inits.put(HASH_CODE_FIELD,new DeferredLookup(HASH_CODE_FIELD));
+          }
+         else {
+            DiruntimeValue hvl = DiruntimeValue.numericValue(
                   for_thread.intType(),hash_code); 
-	    inits.put(HASH_CODE_FIELD,hvl);
-	  }
-	 result_value = DiruntimeValue.objectValue(typ,inits);
+            inits.put(HASH_CODE_FIELD,hvl);
+          }
+         result_value = DiruntimeValue.objectValue(typ,inits);
          
-	 for (Map.Entry<String,DiruntimeValueData> ent : sets.entrySet()) {
-	    DiruntimeValue cv = ent.getValue().getDiadValue();
-	    try {
-	       result_value.setFieldValue(ent.getKey(),cv);
-	     }
-	    catch (Exception e) {
-	       IvyLog.logE("DIRUNTIME","Unexpected error setting field value",e);
-	     }
-	  }
-	 break;
+         for (Map.Entry<String,DiruntimeValueData> ent : sets.entrySet()) {
+            DiruntimeValue cv = ent.getValue().getDiadValue();
+            try {
+               result_value.setFieldValue(ent.getKey(),cv);
+             }
+            catch (Exception e) {
+               IvyLog.logE("DIRUNTIME","Unexpected error setting field value",e);
+             }
+          }
+         break;
       case ARRAY :
-	 if (array_length <= 1024) computeValues();
-	 Map<Integer,DiruntimeGenericValue> ainits = new HashMap<>();
-	 for (int i = 0; i < array_length; ++i) {
-	    String key = "[" + i + "]";
-	    String fullkey = getKey(key,null);
-	    if (sub_values != null && sub_values.get(fullkey) != null) {
-	       DiruntimeValueData fsvd = sub_values.get(fullkey);
-	       fsvd = for_thread.getUniqueValue(fsvd);
-	       ainits.put(i,fsvd.getDiadValue());
-	     }
-	    else {
-	       DeferredLookup def = new DeferredLookup(key);
-	       ainits.put(i,def);
-	     }
-	  }
-	 result_value = DiruntimeValue.arrayValue(typ,array_length,ainits);
-	 break;
+         if (array_length <= 1024) computeValues();
+         Map<Integer,DiruntimeGenericValue> ainits = new HashMap<>();
+         for (int i = 0; i < array_length; ++i) {
+            String key = "[" + i + "]";
+            String fullkey = getKey(key,null);
+            if (sub_values != null && sub_values.get(fullkey) != null) {
+               DiruntimeValueData fsvd = sub_values.get(fullkey);
+               fsvd = for_thread.getUniqueValue(fsvd);
+               ainits.put(i,fsvd.getDiadValue());
+             }
+            else {
+               DeferredLookup def = new DeferredLookup(key);
+               ainits.put(i,def);
+             }
+          }
+         result_value = DiruntimeValue.arrayValue(typ,array_length,ainits);
+         break;
       case CLASS :
-	 int idx2 = val_value.lastIndexOf("(");
-	 String tnm = val_value.substring(0,idx2).trim();
-	 if (tnm.startsWith("(")) {
-	    idx2 = tnm.lastIndexOf(")");
-	    tnm = tnm.substring(1,idx2).trim();
-	  }
+         int idx2 = val_value.lastIndexOf("(");
+         String tnm = val_value.substring(0,idx2).trim();
+         if (tnm.startsWith("(")) {
+            idx2 = tnm.lastIndexOf(")");
+            tnm = tnm.substring(1,idx2).trim();
+          }
          DiruntimeType ctyp = for_thread.findType(tnm);
-	 result_value = DiruntimeValue.classValue(
+         result_value = DiruntimeValue.classValue(
                for_thread.findType("java.lang.Class"),ctyp);
-	 break;
+         break;
       case UNKNOWN :
-	 break;
+         break;
     }
    
    if (result_value == null) {
@@ -277,10 +277,10 @@ String findValue(DiruntimeValue cv,int lvl)
    for (Map.Entry<String,DiruntimeValueData> ent : sub_values.entrySet()) {
       String r = ent.getValue().findValue(cv,lvl-1);
       if (r != null) {
-	 if (array_length > 0) {
-	    return "[" + ent.getKey() + "]";
-	  }
-	 else return "." + ent.getKey();
+         if (array_length > 0) {
+            return "[" + ent.getKey() + "]";
+          }
+         else return "." + ent.getKey();
        }
     }
    
@@ -289,9 +289,9 @@ String findValue(DiruntimeValue cv,int lvl)
 
 
 /********************************************************************************/
-/*										*/
-/*	Setup methods								*/
-/*										*/
+/*                                                                              */
+/*      Setup methods                                                           */
+/*                                                                              */
 /********************************************************************************/
 
 private void initialize(Element xml,String expr)
@@ -359,9 +359,9 @@ void merge(DiruntimeValueData bvd)
 }
 
 /********************************************************************************/
-/*										*/
-/*	Deferred value lookup							*/
-/*										*/
+/*                                                                              */
+/*      Deferred value lookup                                                   */
+/*                                                                              */
 /********************************************************************************/
 
 private class DeferredLookup implements DiruntimeDeferredValue {
@@ -409,14 +409,14 @@ private class DeferredLookup implements DiruntimeDeferredValue {
       return svd.getDiadValue();
     }
    
-}	// end of inner class DeferredLookup
+}       // end of inner class DeferredLookup
 
 
 
 /********************************************************************************/
-/*										*/
-/*	Debugging methods							*/
-/*										*/
+/*                                                                              */
+/*      Debugging methods                                                       */
+/*                                                                              */
 /********************************************************************************/
 
 @Override public String toString()

@@ -94,8 +94,8 @@ private DiruntimeType(String name)
       int idx = vtype.indexOf("<");
       int idx1 = vtype.lastIndexOf(">");
       if (idx >= 0) {
-	 vtype = type_name.substring(0,idx);
-	 if (idx1 > 0) vtype += type_name.substring(idx1+1);
+         vtype = type_name.substring(0,idx);
+         if (idx1 > 0) vtype += type_name.substring(idx1+1);
        }
     }
 }

@@ -114,9 +114,9 @@ private DiadStackFrame updateFrameForLocation(DiadStackFrame frm,DiadLocation lo
 
 
 /********************************************************************************/
-/*										*/
-/*	Find a frame on stack for doing execution from				*/
-/*										*/
+/*                                                                              */
+/*      Find a frame on stack for doing execution from                          */
+/*                                                                              */
 /********************************************************************************/
 
 private DiadStackFrame findValidStart(DiadStackFrame frm)
@@ -129,27 +129,27 @@ private DiadStackFrame findValidStart(DiadStackFrame frm)
    for (DiadStackFrame bf : for_thread.getStack().getFrames()) {
       if (bf == frm) fnd = true;
       else if (fnd) {
-	 File f = bf.getSourceFile();
-	 if (f != null && f.exists() && f.canRead()) {
-	    String proj = null;
-	    if (f != null) proj = srcmgr.getProjectForFile(f);
-	    ASTNode n = srcmgr.getSourceNode(proj,f,-1,
+         File f = bf.getSourceFile();
+         if (f != null && f.exists() && f.canRead()) {
+            String proj = null;
+            if (f != null) proj = srcmgr.getProjectForFile(f);
+            ASTNode n = srcmgr.getSourceNode(proj,f,-1,
                   bf.getLineNumber(),true,false);
-	    while (n != null) {
-	       if (n.getNodeType() == ASTNode.METHOD_DECLARATION) break;
-	       n = n.getParent();
-	     }
-	    // might want to check if method of n is not private
-	    if (n != null) {
-	       ++ct;
-	       prior = bf;
-	     }
-	    else f = null;
-	  }
-	 else f = null;
-	 if (f == null) {
-	    break;
-	  }
+            while (n != null) {
+               if (n.getNodeType() == ASTNode.METHOD_DECLARATION) break;
+               n = n.getParent();
+             }
+            // might want to check if method of n is not private
+            if (n != null) {
+               ++ct;
+               prior = bf;
+             }
+            else f = null;
+          }
+         else f = null;
+         if (f == null) {
+            break;
+          }
        }
     }
    

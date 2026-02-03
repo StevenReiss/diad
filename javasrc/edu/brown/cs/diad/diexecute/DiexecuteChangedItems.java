@@ -46,8 +46,8 @@ class DiexecuteChangedItems implements DiexecuteConstants
 /********************************************************************************/
 
 private DiexecuteManager exec_manager;
-private DiadThread	for_thread;
-private DiadStackFrame	start_frame;
+private DiadThread      for_thread;
+private DiadStackFrame  start_frame;
 private DiadSymptom     for_symptom;
 private DiexecuteChangeData change_data;
  
@@ -113,9 +113,9 @@ List<DiexecuteAction> getResetActions(DiexecuteManager mgr,DiexecuteExecution ve
 
 
 /********************************************************************************/
-/*										*/
-/*	Processing methods: Simple parameters           			*/
-/*										*/
+/*                                                                              */
+/*      Processing methods: Simple parameters                                   */
+/*                                                                              */
 /********************************************************************************/
 
 List<DiexecuteAction> getParameterActions()
@@ -129,7 +129,7 @@ List<DiexecuteAction> getParameterActions()
    Set<DiexecuteChangeVariable> params = new HashSet<>();
    for (DiexecuteChangeVariable tv : items) {
       if (tv.getVariableType() == DiexecuteVariableType.PARAMETER) {
-	 params.add(tv);
+         params.add(tv);
        }
     }
    if (!params.isEmpty()) {

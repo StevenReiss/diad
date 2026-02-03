@@ -147,24 +147,24 @@ public void setupBedrock(String workspace,String mint)
    
    try {
       for (int i = 0; i < 250; ++i) {
-	 try {
-	    Thread.sleep(1000);
-	  }
-	 catch (InterruptedException e) { }
-	 if (diad_control.pingEclipse()) { 
+         try {
+            Thread.sleep(1000);
+          }
+         catch (InterruptedException e) { }
+         if (diad_control.pingEclipse()) { 
             CommandArgs a1 = new CommandArgs("LEVEL","DEBUG");
-	    diad_control.sendBubblesMessage("LOGLEVEL",a1,null);
-	    diad_control.sendBubblesMessage("ENTER",null,null);
+            diad_control.sendBubblesMessage("LOGLEVEL",a1,null);
+            diad_control.sendBubblesMessage("ENTER",null,null);
             startFait();
             startSeede();
             startLimba();
             diad_control.bubblesReady(); 
-	    return;
-	  }
-	 if (i == 0) {
-	    new IvyExec(cmd);
-	    diad_control.pongEclipse();  
-	  }
+            return;
+          }
+         if (i == 0) {
+            new IvyExec(cmd);
+            diad_control.pongEclipse();  
+          }
        }
     }
    catch (IOException e) {
@@ -475,20 +475,20 @@ private boolean startLimba()
       StringBuffer buf = new StringBuffer();
       StringTokenizer tok = new StringTokenizer(xcp,":;");
       while (tok.hasMoreTokens()) {
-	 String elt = tok.nextToken();
-	 if (!elt.startsWith("/") &&  !elt.startsWith("\\")) {
-	    if (elt.equals("eclipsejar")) {
-	       elt = getEclipsePath();
-	     }
-	    else if (elt.equals("limba.jar") && jarfile != null) {
-	       elt = jarfile.getPath();
-	     }
-	    else {
+         String elt = tok.nextToken();
+         if (!elt.startsWith("/") &&  !elt.startsWith("\\")) {
+            if (elt.equals("eclipsejar")) {
+               elt = getEclipsePath();
+             }
+            else if (elt.equals("limba.jar") && jarfile != null) {
+               elt = jarfile.getPath();
+             }
+            else {
                elt = getLibraryPath(elt);
-	     }
-	  }
-	 if (buf.length() > 0) buf.append(File.pathSeparator);
-	 buf.append(elt);
+             }
+          }
+         if (buf.length() > 0) buf.append(File.pathSeparator);
+         buf.append(elt);
        }
       xcp = buf.toString();
     }
@@ -523,32 +523,32 @@ private boolean startLimba()
    for (int i = 0; i < 500; ++i) {
       Element rslt = diad_control.sendLimbaMessage("PING",null,null);
       if (rslt != null) {
-	 break;
+         break;
        }
       if (i == 0) {
-	 try {
+         try {
             // make IGNORE_OUTPUT to clean up otutput
             exec = new IvyExec(args,null,IvyExec.ERROR_OUTPUT);    
             isnew = true;
-	    IvyLog.logD("DITEST","Run " + exec.getCommand());
-	  }
-	 catch (IOException e) {
-	    break;
-	  }
+            IvyLog.logD("DITEST","Run " + exec.getCommand());
+          }
+         catch (IOException e) {
+            break;
+          }
        }
       else {
-	 try {
-	    if (exec != null) {
-	       int sts = exec.exitValue();
-	       IvyLog.logD("DITEST","Limba server disappeared with status " + sts);
-	       break;
-	     }
-	  }
-	 catch (IllegalThreadStateException e) { }
+         try {
+            if (exec != null) {
+               int sts = exec.exitValue();
+               IvyLog.logD("DITEST","Limba server disappeared with status " + sts);
+               break;
+             }
+          }
+         catch (IllegalThreadStateException e) { }
        }
       
       try {
-	 Thread.sleep(2000);
+         Thread.sleep(2000);
        }
       catch (InterruptedException e) { }
     }
@@ -612,7 +612,7 @@ private LaunchData startLaunch(String proj,String name)
    CommandArgs args = new CommandArgs("NAME",name,
          "MODE","debug","BUILD","TRUE",
          "PROJECT",proj,
-	 "REGISTER","TRUE");
+         "REGISTER","TRUE");
    Element xml = diad_control.sendBubblesMessage("START",args,null);
    Element ldata = IvyXml.getChild(xml,"LAUNCH");
    Assert.assertNotNull(ldata);
@@ -634,9 +634,9 @@ private void continueLaunch(String project,LaunchData ld)
    stopped_thread = null;
    
    CommandArgs args = new CommandArgs("LAUNCH",ld.getLaunchId(),
-	 "TARGET",ld.getTargetId(),
+         "TARGET",ld.getTargetId(),
          "PROJECT",project,
-	 "PROCESS",ld.getProcessId(),"ACTION","RESUME");
+         "PROCESS",ld.getProcessId(),"ACTION","RESUME");
    Element xml = diad_control.sendBubblesMessage("DEBUGACTION",args,null);
    Assert.assertNotNull(xml);
    String threadid = waitForStop();
@@ -651,10 +651,10 @@ private String waitForStop()
    synchronized (this) {
       for (int i = 0; i < 100; ++i) {
          if (stopped_thread != null) break;
-	 try {
-	    wait(1000);
-	  }
-	 catch (InterruptedException e) { }
+         try {
+            wait(1000);
+          }
+         catch (InterruptedException e) { }
        }
       return stopped_thread;
     }
@@ -675,16 +675,16 @@ private static class LaunchData {
       thread_id = thread;
     }
    
-   String getLaunchId() 			{ return lanuch_id; }
-   String getTargetId() 			{ return target_id; }
-   String getProcessId()			{ return process_id; }
+   String getLaunchId()                         { return lanuch_id; }
+   String getTargetId()                         { return target_id; }
+   String getProcessId()                        { return process_id; }
    
    @SuppressWarnings("unused")
-   String getThreadId() 			{ return thread_id; }
+   String getThreadId()                         { return thread_id; }
    
-   void setThreadId(String id)			{ thread_id = id; }
+   void setThreadId(String id)                  { thread_id = id; }
    
-}	// end of inner class LaunchData
+}       // end of inner class LaunchData
 
 
 /********************************************************************************/
@@ -702,11 +702,11 @@ public void handleRunEvent(Element re)
    String kind = IvyXml.getAttrString(re,"KIND");
    switch (kind) {
       case "SUSPEND" :
-	 synchronized (this) {
-	    stopped_thread = IvyXml.getAttrString(thread,"ID");
-	    notifyAll();
-	  }
-	 break;
+         synchronized (this) {
+            stopped_thread = IvyXml.getAttrString(thread,"ID");
+            notifyAll();
+          }
+         break;
     }   
 }
 

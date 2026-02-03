@@ -1,34 +1,34 @@
 /********************************************************************************/
-/*										*/
-/*		DicontrolMain.java						*/
-/*										*/
-/*	General Rewriting AI-base Nucleus core main program			*/
-/*										*/
+/*                                                                              */
+/*              DicontrolMain.java                                              */
+/*                                                                              */
+/*      General Rewriting AI-base Nucleus core main program                     */
+/*                                                                              */
 /********************************************************************************/
-/*	Copyright 2025 Brown University -- Steven P. Reiss		      */
+/*      Copyright 2025 Brown University -- Steven P. Reiss                    */
 /*********************************************************************************
- *  Copyright 2025, Brown University, Providence, RI.				 *
- *										 *
- *			  All Rights Reserved					 *
- *										 *
- *  Permission to use, copy, modify, and distribute this software and its	 *
- *  documentation for any purpose other than its incorporation into a		 *
- *  commercial product is hereby granted without fee, provided that the 	 *
- *  above copyright notice appear in all copies and that both that		 *
- *  copyright notice and this permission notice appear in supporting		 *
- *  documentation, and that the name of Brown University not be used in 	 *
- *  advertising or publicity pertaining to distribution of the software 	 *
- *  without specific, written prior permission. 				 *
- *										 *
- *  BROWN UNIVERSITY DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS		 *
- *  SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND		 *
- *  FITNESS FOR ANY PARTICULAR PURPOSE.  IN NO EVENT SHALL BROWN UNIVERSITY	 *
- *  BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY 	 *
- *  DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,		 *
- *  WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS		 *
- *  ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE 	 *
- *  OF THIS SOFTWARE.								 *
- *										 *
+ *  Copyright 2025, Brown University, Providence, RI.                            *
+ *                                                                               *
+ *                        All Rights Reserved                                    *
+ *                                                                               *
+ *  Permission to use, copy, modify, and distribute this software and its        *
+ *  documentation for any purpose other than its incorporation into a            *
+ *  commercial product is hereby granted without fee, provided that the          *
+ *  above copyright notice appear in all copies and that both that               *
+ *  copyright notice and this permission notice appear in supporting             *
+ *  documentation, and that the name of Brown University not be used in          *
+ *  advertising or publicity pertaining to distribution of the software          *
+ *  without specific, written prior permission.                                  *
+ *                                                                               *
+ *  BROWN UNIVERSITY DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS                *
+ *  SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND            *
+ *  FITNESS FOR ANY PARTICULAR PURPOSE.  IN NO EVENT SHALL BROWN UNIVERSITY      *
+ *  BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY          *
+ *  DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,              *
+ *  WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS               *
+ *  ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE          *
+ *  OF THIS SOFTWARE.                                                            *
+ *                                                                               *
  ********************************************************************************/
 
 
@@ -66,9 +66,9 @@ public final class DicontrolMain implements DicontrolConstants
 
 
 /********************************************************************************/
-/*										*/
-/*	Main program								*/
-/*										*/
+/*                                                                              */
+/*      Main program                                                            */
+/*                                                                              */
 /********************************************************************************/
 
 public static void main(String [] args)
@@ -80,9 +80,9 @@ public static void main(String [] args)
 
 
 /********************************************************************************/
-/*										*/
-/*	Private Storage 							*/
-/*										*/
+/*                                                                              */
+/*      Private Storage                                                         */
+/*                                                                              */
 /********************************************************************************/
 
 private String mint_id;
@@ -104,9 +104,9 @@ private Map<String,String> key_map;
 
 
 /********************************************************************************/
-/*										*/
-/*	Constructors								*/
-/*										*/
+/*                                                                              */
+/*      Constructors                                                            */
+/*                                                                              */
 /********************************************************************************/
 
 private DicontrolMain(String [] args)
@@ -158,9 +158,9 @@ private DicontrolMain(String [] args)
 
 
 /********************************************************************************/
-/*										*/
-/*	Access methods								*/
-/*										*/
+/*                                                                              */
+/*      Access methods                                                          */
+/*                                                                              */
 /********************************************************************************/
 
 DicontrolMonitor getMessageServer()             { return dicontrol_monitor; }
@@ -413,43 +413,43 @@ public Element waitForEvaluation(String id)
 
 
 /********************************************************************************/
-/*										*/
-/*	Argument processing							*/
-/*										*/
+/*                                                                              */
+/*      Argument processing                                                     */
+/*                                                                              */
 /********************************************************************************/
 
 private void scanArgs(String [] args)
 {
    for (int i = 0; i < args.length; ++i) {
       if (args[i].startsWith("-")) {
-	 if (i+1 < args.length) {
-	    if (args[i].startsWith("-m")) {                     // -m <mint id>
-	       mint_id = args[++i];
+         if (i+1 < args.length) {
+            if (args[i].startsWith("-m")) {                     // -m <mint id>
+               mint_id = args[++i];
                server_mode = true;
-	       continue;
-	     }
+               continue;
+             }
             else if (args[i].startsWith("-f")) {                // -f <input file>
                input_file = new File(args[++i]);
                continue;
              }
             else if (args[i].startsWith("-L")) {                // -Log <logfile>
-	       log_file = new File(args[++i]);
-	       continue;
-	     }
-	  }
-	 if (args[i].startsWith("-")) {
-	    if (args[i].startsWith("-D")) {                     // -DEBUG
-	       log_level = IvyLog.LogLevel.DEBUG;
-	       // set log level
-	     }
+               log_file = new File(args[++i]);
+               continue;
+             }
+          }
+         if (args[i].startsWith("-")) {
+            if (args[i].startsWith("-D")) {                     // -DEBUG
+               log_level = IvyLog.LogLevel.DEBUG;
+               // set log level
+             }
             else if (args[i].startsWith("-S")) {                // -STDERR
                log_stderr = true;
              }
-	    else badArgs();
-	  }
-	 else {
-	    badArgs();
-	  }
+            else badArgs();
+          }
+         else {
+            badArgs();
+          }
        }
     }
 }
@@ -465,9 +465,9 @@ private void badArgs()
 
 
 /********************************************************************************/
-/*										*/
-/*	Processing methods							*/
-/*										*/
+/*                                                                              */
+/*      Processing methods                                                      */
+/*                                                                              */
 /********************************************************************************/
 
 private void process()
@@ -498,16 +498,16 @@ private void process()
    if (server_mode && mint_id != null) {
       boolean haveping = dicontrol_monitor.sendPing();
       synchronized (this) {
-	 for ( ; ; ) {
-	    // wait for explicit exit command
-	    try {
-	       wait(10000);
-	     }
-	    catch (InterruptedException e) { }
-	    boolean chk = dicontrol_monitor.sendPing();
-	    if (haveping && !chk) break;
-	    else if (!haveping && chk) haveping = true;
-	  }
+         for ( ; ; ) {
+            // wait for explicit exit command
+            try {
+               wait(10000);
+             }
+            catch (InterruptedException e) { }
+            boolean chk = dicontrol_monitor.sendPing();
+            if (haveping && !chk) break;
+            else if (!haveping && chk) haveping = true;
+          }
        }
     }
 }
@@ -615,7 +615,7 @@ private final class RuntimeCallback implements DiadRuntimeCallback {
 
 
 
-}	// end of class DicontrolMain
+}       // end of class DicontrolMain
 
 
 

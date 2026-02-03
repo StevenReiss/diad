@@ -199,9 +199,9 @@ public void addFiles(DiadAnalysisFileMode mode,Collection<File> files,DiadThread
       String cnts = buf.toString();
       Element xw = sendFaitMessage("ADDFILE",null,cnts);
       if (IvyXml.isElement(xw,"RESULT")) {
-	 if (IvyXml.getAttrBool(xw,"ADDED")) {
+         if (IvyXml.getAttrBool(xw,"ADDED")) {
             analysis_state = DiadAnalysisState.PENDING;
-	  }
+          }
        }
     }
    else {
@@ -629,17 +629,17 @@ private Set<File> getProjectSourceFiles(String proj)
    
    for (Element fe : IvyXml.children(p1,"FILE")) {
       if (IvyXml.getAttrBool(fe,"SOURCE")) {
-	 File f2 = new File(IvyXml.getText(fe));
-	 if (f2.exists() && f2.getName().endsWith(".java")) {
-	    try {
-	       f2 = f2.getCanonicalFile();
-	     }
-	    catch (IOException e) {
-	       continue;
-	     }
+         File f2 = new File(IvyXml.getText(fe));
+         if (f2.exists() && f2.getName().endsWith(".java")) {
+            try {
+               f2 = f2.getCanonicalFile();
+             }
+            catch (IOException e) {
+               continue;
+             }
             IvyLog.logD("DIANALYSIS","Add source file " + f2);
-	    rslt.add(f2);
-	  }
+            rslt.add(f2);
+          }
        }
     }
    

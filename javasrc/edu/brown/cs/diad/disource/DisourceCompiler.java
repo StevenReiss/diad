@@ -66,14 +66,14 @@ private DicontrolMain   diad_control;
 private DisourceManager source_factory;
 private Map<SourceFile,JcompProject> project_map;
 private Map<String,JcodeFactory> binary_map;
-private Map<File,SourceFile>	file_map;
-private JcompControl		jcomp_control;
+private Map<File,SourceFile>    file_map;
+private JcompControl            jcomp_control;
 
 
 /********************************************************************************/
-/*										*/
-/*	Constructors								*/
-/*										*/
+/*                                                                              */
+/*      Constructors                                                            */
+/*                                                                              */
 /********************************************************************************/
 
 DisourceCompiler(DicontrolMain sm,DisourceManager fac)
@@ -89,9 +89,9 @@ DisourceCompiler(DicontrolMain sm,DisourceManager fac)
 
 
 /********************************************************************************/
-/*										*/
-/*	Processing methods							*/
-/*										*/
+/*                                                                              */
+/*      Processing methods                                                      */
+/*                                                                              */
 /********************************************************************************/
 
 void compileAll(String proj,Collection<File> use)
@@ -100,7 +100,7 @@ void compileAll(String proj,Collection<File> use)
    for (File f : use) {
       SourceFile sf = getSourceFile(f);
       if (proj == null) {
-	 proj = source_factory.getProjectForFile(f);
+         proj = source_factory.getProjectForFile(f);
        }
       files.add(sf);
     }
@@ -187,9 +187,9 @@ String getSourceContents(File f)
 
 
 /********************************************************************************/
-/*										*/
-/*	Handle getting Jcode factory for project				*/
-/*										*/
+/*                                                                              */
+/*      Handle getting Jcode factory for project                                */
+/*                                                                              */
 /********************************************************************************/
 
 private JcodeFactory getJcodeFactory(String proj)
@@ -207,34 +207,34 @@ private JcodeFactory getJcodeFactory(String proj)
       String bn = null;
       String ptyp = IvyXml.getAttrString(rpe,"TYPE");
       if (ptyp != null && ptyp.equals("SOURCE")) {
-	 bn = IvyXml.getTextElement(rpe,"OUTPUT");
-	 String sdir = IvyXml.getTextElement(rpe,"SOURCE");
-	 if (sdir != null) {
-	    File sdirf = new File(sdir);
-	    sourcepaths.add(sdirf);
-	  }
+         bn = IvyXml.getTextElement(rpe,"OUTPUT");
+         String sdir = IvyXml.getTextElement(rpe,"SOURCE");
+         if (sdir != null) {
+            File sdirf = new File(sdir);
+            sourcepaths.add(sdirf);
+          }
        }
       else {
-	 bn = IvyXml.getTextElement(rpe,"BINARY");
+         bn = IvyXml.getTextElement(rpe,"BINARY");
        }
       if (bn == null) continue;
       if (bn.endsWith("/lib/rt.jar")) {
-	 int idx = bn.lastIndexOf("rt.jar");
-	 ignore = bn.substring(0,idx);
+         int idx = bn.lastIndexOf("rt.jar");
+         ignore = bn.substring(0,idx);
        }
       if (bn.endsWith("/lib/jrt-fs.jar")) {
-	 int idx = bn.lastIndexOf("/lib/jrt-fs.jar");
-	 ignore = bn.substring(0,idx);
+         int idx = bn.lastIndexOf("/lib/jrt-fs.jar");
+         ignore = bn.substring(0,idx);
        }
       if (IvyXml.getAttrBool(rpe,"SYSTEM")) continue;
       if (!classpaths.contains(bn)) {
-	 classpaths.add(bn);
+         classpaths.add(bn);
        }
     }
    if (ignore != null) {
       for (Iterator<String> it = classpaths.iterator(); it.hasNext(); ) {
-	 String nm = it.next();
-	 if (nm.startsWith(ignore)) it.remove();
+         String nm = it.next();
+         if (nm.startsWith(ignore)) it.remove();
        }
     }
    
@@ -257,9 +257,9 @@ private JcodeFactory getJcodeFactory(String proj)
 
 
 /********************************************************************************/
-/*										*/
-/*	Handle getting file information 					*/
-/*										*/
+/*                                                                              */
+/*      Handle getting file information                                         */
+/*                                                                              */
 /********************************************************************************/
 
 private synchronized SourceFile getSourceFile(File f)
@@ -282,9 +282,9 @@ private synchronized SourceFile getSourceFile(File f)
 
 
 /********************************************************************************/
-/*										*/
-/*	Handle getting AST for file						*/
-/*										*/
+/*                                                                              */
+/*      Handle getting AST for file                                             */
+/*                                                                              */
 /********************************************************************************/
 
 private CompilationUnit getAstForFile(String proj,SourceFile file,boolean resolve)
@@ -297,7 +297,7 @@ private CompilationUnit getAstForFile(String proj,SourceFile file,boolean resolv
    
    for (JcompSemantics js : jproj.getSources()) {
       if (js.getFile() == file) {
-	 return (CompilationUnit) js.getAstNode();
+         return (CompilationUnit) js.getAstNode();
        }
     }
    
@@ -323,7 +323,7 @@ private JcompProject getJcompProject(String proj,SourceFile file)
       JcompProject njp = project_map.putIfAbsent(file,jp);
       if (njp != null) jp = njp;
       for (JcompSource src : srcs) {
-	 project_map.putIfAbsent((SourceFile) src,njp);
+         project_map.putIfAbsent((SourceFile) src,njp);
        }
     }
    
@@ -334,9 +334,9 @@ private JcompProject getJcompProject(String proj,SourceFile file)
 
 
 /********************************************************************************/
-/*										*/
-/*	Find node for given offset\\\						*/
-/*										*/
+/*                                                                              */
+/*      Find node for given offset\\\                                           */
+/*                                                                              */
 /********************************************************************************/
 
 private int getLineOffset(CompilationUnit cu,SourceFile sf,int line)
@@ -366,9 +366,9 @@ private ASTNode findNode(CompilationUnit cu,int offset)
 
 
 /********************************************************************************/
-/*										*/
-/*	Augment sources as needed						*/
-/*										*/
+/*                                                                              */
+/*      Augment sources as needed                                               */
+/*                                                                              */
 /********************************************************************************/
 
 private void addRelatedSources(List<JcompSource> srcs)
@@ -384,12 +384,12 @@ private void addRelatedSources(List<JcompSource> srcs)
       File f = sf.getFile();
       File dir = f.getParentFile();
       for (File srcf : dir.listFiles()) {
-	 if (srcf.getName().endsWith(".java")) {
-	    if (used.contains(srcf.getPath())) continue;
-	    SourceFile sf1 = getSourceFile(srcf);
-	    used.add(sf1.getFileName());
-	    add.add(sf1);
-	  }
+         if (srcf.getName().endsWith(".java")) {
+            if (used.contains(srcf.getPath())) continue;
+            SourceFile sf1 = getSourceFile(srcf);
+            used.add(sf1.getFileName());
+            add.add(sf1);
+          }
        }
     }
    
@@ -397,9 +397,9 @@ private void addRelatedSources(List<JcompSource> srcs)
 }
 
 /********************************************************************************/
-/*										*/
-/*	File representation							*/
-/*										*/
+/*                                                                              */
+/*      File representation                                                     */
+/*                                                                              */
 /********************************************************************************/
 
 private static class SourceFile implements JcompSource {
@@ -413,9 +413,9 @@ private static class SourceFile implements JcompSource {
       file_body = null;
     }
    
-   File getFile()				{ return for_file; }
+   File getFile()                               { return for_file; }
    
-   @Override public String getFileName()	{ return for_file.getPath(); }
+   @Override public String getFileName()        { return for_file.getPath(); }
    
    @Override public String getFileContents() {
       if (file_body != null) return file_body;
@@ -427,7 +427,7 @@ private static class SourceFile implements JcompSource {
       return null;
     }
    
-}	// end of inner class SourceFile
+}       // end of inner class SourceFile
 
 
 
