@@ -76,8 +76,8 @@
 	 <fileset dir='${PRO}/diadbb' includes='Bird.props' />
 	 <fileset dir='${PRO}/diadbb' includes='diadbb.palette' />
       </jar>
-<!--  <copy file='diad.jar' tofile='${PRO}/bubbles/dropins/diad.jar' verbose='true' />
-      <copy file='diad.jar' tofile='${PRO}/bubbles/dropins.export/diad.jar' verbose='true' /> -->
+      <copy file='diad.jar' tofile='${PRO}/bubbles/dropins/diad.jar' verbose='true' />
+      <copy file='diad.jar' tofile='${PRO}/bubbles/dropins.export/diad.jar' verbose='true' />
    </target>
 
 </project>

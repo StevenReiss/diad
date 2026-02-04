@@ -6,7 +6,6 @@
 </DIAD>
 <DIAD DO='SETUPBUBBLES' MINT='BUBBLES_spr_nanoxml' WORKSPACE='nanoxml' />
 <DIAD DO='TEST' PROJECT='nanoxml' LAUNCH='testParsing16' CONTINUE='0' />
-<!-- <DIAD DO='DELAY' TIME='120000' /> -->
 <DIAD DO='WAITFORSTATE' STATE='READY' />
 <DIAD DO='Q_STACK' DEBUGID='$ID' />
 <DIAD DO='Q_LOCATIONS' DEBUGID='$ID' ALL='false' />
@@ -23,7 +22,7 @@
 <DIAD DO='Q_VARHISTORY' DEBUGID='$ID' CALLID='3'
 	VARIABLE='xml?children?elementData?[0]?qualifiedName'
 	WHEN='55626' />
-<DIAD DO='Q_METHODCALLS' DEBUGID='$ID' METHOD='new.n3.namoxml.XMLElement.getChildAtIndex(int)' />
+<DIAD DO='Q_METHODCALLS' DEBUGID='$ID' METHOD='net.n3.nanoxml.XMLElement.getChildAtIndex(int)' />
 
 <DIAD DO='ASKLIMBA' DEBUGID='$ID' TYPE='EXPLAIN' />
 <DIAD DO='ASKLIMBA' DEBUGID='$ID' TYPE='TEST1' />

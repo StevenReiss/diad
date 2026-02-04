@@ -28,6 +28,7 @@
       (getFaultLocations) or throughout the whole program (getAllFaultLocations).
       The history of a particular variable or primitive value, i.e. how and where
       and when it was changed during the execution, is also available (getVariableHistory).
+      The calls to a particular method, identified by name, is also available (getMethodCalls).
 
       In this case the program has stopped at line $(LINE) in the method $(METHOD).
       The identified symptom is: $(SYMPTOM).

@@ -1056,16 +1056,44 @@ private void addMethodCalls(String callid,String method,JSONArray rslt)
 {
    DiexecuteCall call = callid_map.get(callid);
    if (call == null) return;
-   if (call.getMethod().equals(method)) {
+   if (matchMethod(method,call.getMethod())) {
       JSONObject jo = new JSONObject();
       jo.put("CALLID",callid);
       jo.put("START",call.getStartTime());
       jo.put("END",call.getEndTime());
+      jo.put("METHOD",call.getMethod());
       rslt.put(jo);
     }
    for (DiexecuteCall c1 : call.getInnerCalls()) {
       addMethodCalls(c1.getCallId(),method,rslt);
     }
+}
+
+
+private boolean matchMethod(String user0,String seede0)
+{
+   String user = user0;
+   String seede = seede0;
+   
+   if (user.equals(seede)) return true;
+   if (!user.contains("(")) {
+      int idx = seede.indexOf("(");
+      if (idx >= 0) {
+         seede = seede.substring(0,idx);
+       }
+    }
+   if (user.equals(seede)) return true;
+   if (!user.contains(".")) {
+      int idx = seede.indexOf("(");
+      if (idx < 0) idx = seede.length()-1;
+      int idx1 = seede.lastIndexOf(".",idx);
+      if (idx1 > 0) {
+         seede = seede.substring(idx1+1);
+       }
+    }
+   if (user.equals(seede)) return true;
+   
+   return false;
 }
 
 
