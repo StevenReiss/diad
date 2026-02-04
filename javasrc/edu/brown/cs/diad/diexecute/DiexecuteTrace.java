@@ -1042,6 +1042,33 @@ JSONObject getJsonVarValue(String callid,String var,int line,long when0)
 }
 
 
+JSONArray getJsonMethodCalls(String method)
+{
+   JSONArray rslt = new JSONArray();
+   
+   addMethodCalls(problem_context.getCallId(),method,rslt);
+   
+   return rslt; 
+}
+
+
+private void addMethodCalls(String callid,String method,JSONArray rslt)
+{
+   DiexecuteCall call = callid_map.get(callid);
+   if (call == null) return;
+   if (call.getMethod().equals(method)) {
+      JSONObject jo = new JSONObject();
+      jo.put("CALLID",callid);
+      jo.put("START",call.getStartTime());
+      jo.put("END",call.getEndTime());
+      rslt.put(jo);
+    }
+   for (DiexecuteCall c1 : call.getInnerCalls()) {
+      addMethodCalls(c1.getCallId(),method,rslt);
+    }
+}
+
+
 
 @Override public String toString()
 {

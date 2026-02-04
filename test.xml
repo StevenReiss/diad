@@ -23,6 +23,8 @@
 <DIAD DO='Q_VARHISTORY' DEBUGID='$ID' CALLID='3'
 	VARIABLE='xml?children?elementData?[0]?qualifiedName'
 	WHEN='55626' />
+<DIAD DO='Q_METHODCALLS' DEBUGID='$ID' METHOD='new.n3.namoxml.XMLElement.getChildAtIndex(int)' />
+
 <DIAD DO='ASKLIMBA' DEBUGID='$ID' TYPE='EXPLAIN' />
 <DIAD DO='ASKLIMBA' DEBUGID='$ID' TYPE='TEST1' />
 <DIAD DO='ASKLIMBA' DEBUGID='$ID' TYPE='TEST2' />

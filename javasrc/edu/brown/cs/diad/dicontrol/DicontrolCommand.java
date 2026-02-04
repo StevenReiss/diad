@@ -78,6 +78,8 @@ static DicontrolCommand createCommand(DicontrolMain ctrl,Element xml)
          return new QueryVarHistory(ctrl,xml);
       case "Q_VARVALUE" :
          return new QueryVarValue(ctrl,xml);
+      case "Q_METHODCALLS" :
+         return new QueryMethodCalls(ctrl,xml);
       case "ASKLIMBA" :
          return new CommandAskLimba(ctrl,xml);
       case "PARAMETER" :
@@ -484,6 +486,20 @@ private static class QueryVarValue extends QueryCommand {
 }       // end of inner class QueryVarValue
 
 
+private static class QueryMethodCalls extends QueryCommand {
+
+   private String method_name;
+   
+   QueryMethodCalls(DicontrolMain ctrl,Element xml) {
+      super(ctrl,xml);
+      method_name = IvyXml.getAttrString(xml,"METHOD");
+    }
+   
+   @Override protected JSONArray getJsonArray() {
+      return getCandidate().getJsonMethodCalls(method_name);
+    }
+   
+}       // end of inner class QueryMethodCalls
 
 /********************************************************************************/
 /*                                                                              */

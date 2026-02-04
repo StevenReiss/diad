@@ -58,6 +58,8 @@ JSONObject getJsonVarHistory(String callid,String var,int line,long when);
 
 JSONObject getJsonVarValue(String callid,String var,int line,long when);
 
+JSONArray getJsonMethodCalls(String method);
+
 }       // end of interface DiadExecution
 
 

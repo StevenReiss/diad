@@ -482,6 +482,12 @@ synchronized void noteSeedeLength(long t,DiadRepair repair,double score)
 }
 
 
+@Override public JSONArray getJsonMethodCalls(String method) 
+{
+   return base_execution.getSeedeResult().getJsonMethodCalls(method); 
+}
+
+
 
 }       // end of class DiexecuteBaseExecution
 

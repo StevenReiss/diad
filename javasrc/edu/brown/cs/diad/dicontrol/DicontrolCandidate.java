@@ -445,6 +445,12 @@ JSONObject getJsonVarValue(String callid,String var,int line,long when)
 }
 
 
+JSONArray getJsonMethodCalls(String method)
+{
+   return base_execution.getJsonMethodCalls(method); 
+}
+
+
 /********************************************************************************/
 /*                                                                              */
 /*      LLM interface methods                                                   */

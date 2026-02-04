@@ -105,6 +105,11 @@ DiexecuteCall(DiexecuteTrace vt,Element ctx)
    return IvyXml.getAttrInt(context_element,"ID");
 }
 
+@Override public String getCallId()
+{
+   return IvyXml.getAttrString(context_element,"ID");
+}
+
 boolean sameAs(DiexecuteCall call)
 {
    if (call == null) return false;
