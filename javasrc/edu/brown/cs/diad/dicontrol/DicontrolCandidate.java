@@ -487,7 +487,10 @@ Element askLimba(IvyXmlWriter xw,DiadAskType typ,String query)
          "TOOLS","PROJECT,DEBUG");
    
    IvyXmlWriter xw1 = new IvyXmlWriter();
-   xw1.cdataElement("PROMPT",prompt);
+   xw1.begin("PROMPT");
+   xw1.field("REPLACE",true);
+   xw1.cdata(prompt);
+   xw1.end("PROMPT");
    xw1.begin("CONTEXT");
    xw1.field("KEY","DEBUGID");
    xw1.field("VALUE",candidate_id);

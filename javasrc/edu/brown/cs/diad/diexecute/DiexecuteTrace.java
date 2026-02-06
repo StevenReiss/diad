@@ -1062,6 +1062,8 @@ private void addMethodCalls(String callid,String method,JSONArray rslt)
       jo.put("START",call.getStartTime());
       jo.put("END",call.getEndTime());
       jo.put("METHOD",call.getMethod());
+      DiexecuteCall par = call.getParentCall();
+      if (par != null) jo.put("CALLER_CALLID",par.getCallId());
       rslt.put(jo);
     }
    for (DiexecuteCall c1 : call.getInnerCalls()) {

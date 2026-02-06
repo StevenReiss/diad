@@ -10,19 +10,36 @@
       the particular value could be null at the stopping point.
    </QUERY>
    <QUERY COMMAND='TEST1'>
-      That analysis of the problem seems correct.  Use this information to
-      find a set of possible repairs that will correct the symptom $(SYMPTOM).
-      Return one or more possible patches.
+      You should return an explanation of the root cause of the problem
+      that led to the symptom.	This should be an analysis that starts
+      with the symptom and indicates what in the program caused it.  It
+      can be specific, identifying the lines that led to the problem,
+      or can be general, indicating the overall problem and what types of
+      things to look for.
+      For example, if the fault is a NullPointerException, explain how
+      the particular value could be null at the stopping point.
+
+      You should use the provided tools to look at the execution to determine
+      why and how the failure occurred.  This should be combined with looking
+      at the corresponding source lines.
+
+      Please return a detailed description of why this particular error occurred.
+      Do not return a description of the program in part or in total.  Be very
+      specific and ensure your response deals explicitly with the failure.
    </QUERY>
    <QUERY COMMAND='TEST2'>
-      Your job is to identify the most likely repairs to the program that
-      will fix the symptom $(SYMPTOM).	Tools are provided to provide a
-      set of possibly faulty locations, but only one or two of these are actually
-      faulty.  You should look at detailed knowledge of the symptom, consider
-      the sample execution to see where the fault might have occurred, and look
-      at the source code to see if there are obvious problems,	In the end you
-      should provde a set of possible patches that are likely to fix the problem.
-      Providing multiple alternatives is fine.
+      You should return an explanation of the root cause of the problem
+      that led to the symptom.	This should be an analysis that starts
+      with the symptom and indicates what in the program caused it.  It
+      can be specific, identifying the lines that led to the problem,
+      or can be general, indicating the overall problem and what types of
+      things to look for.
+      For example, if the fault is a NullPointerException, explain how
+      the particular value could be null at the stopping point.
+
+      Be sure to use the various tools cited above to obtain all the
+      necessary information about the program and its execution.  Be
+      sure that your answer address the symptom: $(SYMPTOM).
    </QUERY>
    <QUERY COMMAND='TEST3'>
       You should return three possible explanations of the root cause of the problem
