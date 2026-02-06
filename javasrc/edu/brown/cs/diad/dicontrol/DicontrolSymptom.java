@@ -27,6 +27,7 @@ import org.w3c.dom.Element;
 import edu.brown.cs.diad.dicore.DiadSymptom;
 import edu.brown.cs.diad.dicore.DiadConstants.DiadSymptomType;
 import edu.brown.cs.diad.dicore.DiadConstants.DiadValueOperator;
+import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.xml.IvyXml;
 import edu.brown.cs.ivy.xml.IvyXmlWriter;
 
@@ -205,6 +206,8 @@ DicontrolSymptom(Element xml)
              buf.append(target_value);
              return buf.toString();
           }
+         IvyLog.logD("DICONTROL","Bad assertion check " + original_value + " " + 
+               target_value);
          return "assertion failed";
       case EXCEPTION :
       case CAUGHT_EXCEPTION :

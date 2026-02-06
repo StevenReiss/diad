@@ -296,6 +296,12 @@ public boolean getProperty(String id,boolean dflt)
 
 
 
+public void setWorkspace(File ws)
+{
+   test_factory.setWorkspace(ws);
+}
+
+
 /********************************************************************************/
 /*                                                                              */
 /*      Get prompt from resource file                                           */

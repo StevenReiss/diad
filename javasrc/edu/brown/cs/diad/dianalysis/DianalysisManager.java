@@ -159,6 +159,26 @@ public Collection<File> getSeedeFiles(DiadThread thrd)
 }
 
 
+private Element getProjects() 
+{
+   Element r = diad_control.sendBubblesMessage("PROJECTS",null,null);
+   if (!IvyXml.isElement(r,"RESULT")) {
+      IvyLog.logE("DIANALYSIS","Problem getting project information: " + 
+            IvyXml.convertXmlToString(r));
+    }
+   else {
+      for (Element pe : IvyXml.children(r,"PROJECT")) {
+         String ws = IvyXml.getAttrString(pe,"WORKSPACE");
+         if (ws != null) {
+            File wsf = new File(ws); 
+            diad_control.setWorkspace(wsf);
+          }
+       }
+    }
+   
+   return r;
+}
+
 /********************************************************************************/
 /*                                                                              */
 /*      Methods to add files and setup analysis                                 */
@@ -215,18 +235,20 @@ private Set<File> getInitialFileSet(DiadAnalysisFileMode mode,DiadThread thrd)
 {
    Set<File> add = null;
    
+   Element projs = getProjects();
+   
    switch (mode) {
       case ALL_FILES :
          if (!done_allfiles){
-            add = findAllSourceFiles();
+            add = findAllSourceFiles(projs);
             done_allfiles = true;
           } 
          break;
       case COMPUTED_FILES:
-         add = findComputedFiles(thrd);
+         add = findComputedFiles(thrd,projs);
          break;
       case FAIT_FILES :
-         add = findFaitFiles(thrd);
+         add = findFaitFiles(thrd,projs);
          break;
       case STACK_FILES :
          add = findStackFiles(thrd);
@@ -373,9 +395,9 @@ private Set<File> findStackFiles(DiadThread thrd)
 
 
 
-private Set<File> findComputedFiles(DiadThread thrd)
+private Set<File> findComputedFiles(DiadThread thrd,Element projs)
 {
-   if (thrd == null) return findAllSourceFiles();
+   if (thrd == null) return findAllSourceFiles(projs);
    Set<File> rslt = new HashSet<>();
    Set<File> roots = new HashSet<>();
    
@@ -390,16 +412,16 @@ private Set<File> findComputedFiles(DiadThread thrd)
         }
     }
    
-   findFilesForUnits(roots,rslt);
+   findFilesForUnits(roots,rslt,projs);
    
    return rslt;
 }
 
 
 
-private Set<File> findFaitFiles(DiadThread thrd) throws RuntimeException
+private Set<File> findFaitFiles(DiadThread thrd,Element projs) throws RuntimeException
 {
-   Set<File> base = findAllSourceFiles();
+   Set<File> base = findAllSourceFiles(projs);
    if (base == null || base.size() < 40) return base;
    
    if (thrd == null) return base;
@@ -429,20 +451,15 @@ private Set<File> findFaitFiles(DiadThread thrd) throws RuntimeException
       String cnm = IvyXml.getText(celt);
       clsset.add(cnm);
     }
-   findFilesForClasses(clsset,rslt);
+   findFilesForClasses(clsset,rslt,projs);
    
    return rslt; 
 }
 
 
-private File findFilesForClasses(Set<String> clsset,Set<File> rslt)
+private File findFilesForClasses(Set<String> clsset,Set<File> rslt,Element projs)
 {
    IvyLog.logD("DIANALYSIS","FIND FILES FOR CLASSES " + clsset);
-   
-   Element r = diad_control.sendBubblesMessage("PROJECTS",null,null);
-   if (!IvyXml.isElement(r,"RESULT")) {
-      IvyLog.logE("DIANALYSIS","Problem getting project information: " + IvyXml.convertXmlToString(r));
-    }
    
    File dir = null;
    String pkg = null;
@@ -459,7 +476,7 @@ private File findFilesForClasses(Set<String> clsset,Set<File> rslt)
     }
    
    Map<String,String> classmap = new HashMap<>();
-   for (Element pe : IvyXml.children(r,"PROJECT")) {
+   for (Element pe : IvyXml.children(projs,"PROJECT")) {
       String pnm = IvyXml.getAttrString(pe,"NAME");
       CommandArgs args = new CommandArgs("CLASSES",true,
             "PROJECT",pnm);
@@ -508,19 +525,14 @@ private boolean isAnonymousClass(String s)
 
 
 
-private void findFilesForUnits(Set<File> roots,Set<File> rslt)
+private void findFilesForUnits(Set<File> roots,Set<File> rslt,Element projs)
 {
    Queue<File> todo = new ArrayDeque<>(roots);
    
    IvyLog.logD("DIANALYSIS","FIND FILES FOR UNITS " + roots);
    
-   Element r = diad_control.sendBubblesMessage("PROJECTS",null,null);
-   if (!IvyXml.isElement(r,"RESULT")) {
-      IvyLog.logE("DIANALYSIS","Problem getting project information: " + IvyXml.convertXmlToString(r));
-    }
-   
    Map<String,String> classmap = new HashMap<>();
-   for (Element pe : IvyXml.children(r,"PROJECT")) {
+   for (Element pe : IvyXml.children(projs,"PROJECT")) {
       String pnm = IvyXml.getAttrString(pe,"NAME");
       CommandArgs args = new CommandArgs("CLASSES",true,
             "PROJECT",pnm);
@@ -597,16 +609,10 @@ private void addAllFilesForPackage(String pkg,Map<String,String> classmap,Set<St
 
 
 
-private Set<File> findAllSourceFiles()
+private Set<File> findAllSourceFiles(Element projs)
 {
-   Element r = diad_control.sendBubblesMessage("PROJECTS",null,null);
-   if (!IvyXml.isElement(r,"RESULT")) {
-      IvyLog.logE("DIANALYSIS","Problem getting project information: " + IvyXml.convertXmlToString(r));
-      return null;
-    }
-   
    Set<File> allfiles = new HashSet<>();
-   for (Element pe : IvyXml.children(r,"PROJECT")) {
+   for (Element pe : IvyXml.children(projs,"PROJECT")) {
       String pnm = IvyXml.getAttrString(pe,"NAME");
       allfiles.addAll(getProjectSourceFiles(pnm));
     }

@@ -25,7 +25,9 @@
       Some analysis of the execution has been done and is made available as well.
       The set of possible lines that affect the symptom and hence may be buggy can
       be obtained either for those lines that are executed in the above execution
-      (getFaultLocations) or throughout the whole program (getAllFaultLocations).
+      (getFaultLocations) or throughout the whole program (getAllFaultLocations).  Most
+      of thsee are not suspicious, but any line that should be changed should be in
+      this set.
       The history of a particular variable or primitive value, i.e. how and where
       and when it was changed during the execution, is also available (getVariableHistory).
       The calls to a particular method, identified by name, is also available (getMethodCalls).

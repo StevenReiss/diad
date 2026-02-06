@@ -56,6 +56,7 @@ private String          stopped_thread;
 private boolean         debug_fait;
 private boolean         trace_fait;
 private boolean         debug_limba;
+private boolean         trace_limba;
 private boolean         debug_seede;
 private boolean         trace_seede;
 private int             seede_timeout;
@@ -99,6 +100,7 @@ public DitestFactory(DicontrolMain ctrl)
    debug_seede = true;
    trace_seede = false;
    debug_limba = true;
+   trace_limba = true;
    seede_timeout = 0;
    fait_starting = false;
    seede_starting = false;
@@ -174,6 +176,11 @@ public void setupBedrock(String workspace,String mint)
    throw new Error("Problem running Eclipse: " + cmd);
 }
 
+
+public void setWorkspace(File wd)
+{
+   workspace_dir = wd;
+}
 
 
 /********************************************************************************/
@@ -458,6 +465,7 @@ private boolean startLimba()
    File wd =  workspace_dir;
    if (wd == null) wd = new File(System.getProperty("user.home"));
    File logf = new File(wd,"limba.log");
+   File trans = new File(wd,"limbatrans.html");
    
    List<String> args = new ArrayList<>();
    args.add(IvyExecQuery.getJavaPath());
@@ -502,6 +510,10 @@ private boolean startLimba()
    args.add(logf.getPath());
    if (debug_limba) {
       args.add("-D");
+    }
+   if (trace_limba) {
+      args.add("-T");
+      args.add(trans.getPath());
     }
    String oh = diad_control.getProperty("Diad.ollama.host");
    if (oh != null && !oh.isEmpty()) {

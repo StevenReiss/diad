@@ -81,12 +81,16 @@ DianalysisAssertionHistory(DianalysisManager fac,DiadSymptom symp,DiadThread thr
    getAnalysis().waitForAnalysis();
    
    ASTNode stmt = getSourceStatement();
+   IvyLog.logD("DIANALYSIS","Start assertion history " + stmt);
    AssertionChecker checker = new AssertionChecker();
    if (stmt != null) stmt.accept(checker);
    
    String expr = checker.generateResult();
    
-   if (expr == null) throw new DiadException("Can't find exception cause"); 
+   if (expr == null) {
+      IvyLog.logE("DIANALYSIS","Can't find exception cause");
+      throw new DiadException("Can't find exception cause"); 
+    }
    
    CommandArgs args = new CommandArgs("QTYPE","EXPRESSION");
    args = addCommandArgs(args);
@@ -150,6 +154,9 @@ private class AssertionChecker extends ASTVisitor implements DiadAssertionData {
     }
    
    String generateResult() {
+      IvyLog.logD("DIANALYSIS","Finished assertion analysis " + use_node + 
+            " " + orig_value + " " + orig_expr + " " + target_value + " " +
+            value_op + " " + precision_value);
       if (use_node == null) return null;
       if (orig_value != null) getSymptom().setOriginalValue(orig_value);
       if (orig_expr != null) getSymptom().setOriginalExpression(orig_expr);
