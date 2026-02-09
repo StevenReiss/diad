@@ -10,22 +10,14 @@
       the particular value could be null at the stopping point.
    </QUERY>
    <QUERY COMMAND='TEST1'>
-      You should return an explanation of the root cause of the problem
-      that led to the symptom.	This should be an analysis that starts
-      with the symptom and indicates what in the program caused it.  It
+      You should return a detailed explanation of the root cause of the problem
+      that led to the symptom ($(SYMPTOM)).  This should be an analysis that starts
+      with the symptom and indicates what code in the program caused it.  It
       can be specific, identifying the lines that led to the problem,
       or can be general, indicating the overall problem and what types of
       things to look for.
       For example, if the fault is a NullPointerException, explain how
       the particular value could be null at the stopping point.
-
-      You should use the provided tools to look at the execution to determine
-      why and how the failure occurred.  This should be combined with looking
-      at the corresponding source lines.
-
-      Please return a detailed description of why this particular error occurred.
-      Do not return a description of the program in part or in total.  Be very
-      specific and ensure your response deals explicitly with the failure.
    </QUERY>
    <QUERY COMMAND='TEST2'>
       You should return an explanation of the root cause of the problem
