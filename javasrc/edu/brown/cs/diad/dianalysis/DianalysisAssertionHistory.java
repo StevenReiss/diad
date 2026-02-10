@@ -26,6 +26,7 @@ import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.AssertStatement;
 import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.InfixExpression;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.NumberLiteral;
 import org.eclipse.jdt.core.dom.SimpleName;
@@ -338,14 +339,72 @@ private class AssertionChecker extends ASTVisitor implements DiadAssertionData {
     }
    
    @Override public boolean visit(AssertStatement stmt) {
+      Expression e = stmt.getExpression();
+      switch (e.getNodeType()) {
+         case ASTNode.INFIX_EXPRESSION :
+            handleAssertExpression((InfixExpression) e);
+            break;
+         default :
+            break;
+       }
       useNode(stmt.getExpression(),"false","true");
+      
       return false;
     }
+   
+   private void handleAssertExpression(InfixExpression e) {
+      InfixExpression.Operator eop = e.getOperator();
+      DiadValueOperator op = null;
+      switch (eop.toString()) {
+         case "EQUALS" :
+            op = DiadValueOperator.EQL;
+            break;
+         case "NOT_EQUAL" :
+            op = DiadValueOperator.NEQ;
+            break;
+         case "LESS" :
+            op = DiadValueOperator.LSS;
+            break;
+         case "LESS_EQUALS" :
+            op = DiadValueOperator.LEQ;
+            break;
+         case "GREATER" :
+            op = DiadValueOperator.GTR;
+            break;
+         case "GREATER_EQUALS" :
+            op = DiadValueOperator.GEQ;
+            break;
+       }
+      
+      if (op == null) return;
+      Expression e1 = e.getLeftOperand();
+      Expression e2 = e.getRightOperand();
+      ExprChecker c1 = new ExprChecker();
+      e1.accept(c1);
+      ExprChecker c2 = new ExprChecker();
+      e2.accept(c2);
+      boolean flip = false;
+      if (!c1.foundCall() && !c1.foundVariable()) flip = true;
+      else if (!c1.foundCall() && c2.foundCall()) flip = true;
+      if (flip) {
+         Expression ex = e1;
+         e1 = e2;
+         e2 = ex;
+       }
+      DiadValue v1 = getThread().evaluate(e1.toString());
+      DiadValue v2 = getThread().evaluate(e2.toString());
+      if (v1 != null && v2 != null) {
+         String s1 = "(" + v1.getDataType().getName() + ") " + v1.toString();
+         String s2 = v2.toString();
+         useNode(e,s1,s2);
+       }
+    }
+   
    
    private String getSourceValue(MethodInvocation mi,int idx) {
       DiadValue bv = getDiadValue(mi,idx);
       if (bv == null) return null;
-      return "(" + bv.getDataType().getName() + ") " + " " + bv.toString();
+      return "(" + bv.getDataType().getName() + ") " + bv.toString();
     }
    
    private String getTargetValue(MethodInvocation mi,int idx) {

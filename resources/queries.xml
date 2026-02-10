@@ -11,14 +11,15 @@
    </QUERY>
    <QUERY COMMAND='TEST1'>
       You should return a detailed explanation of the root cause of the problem
-      that led to the symptom ($(SYMPTOM)).  This should be an analysis that starts
+      that led to the symptom.	This should be an analysis that starts
       with the symptom and indicates what code in the program caused it.  It
-      can be specific, identifying the lines that led to the problem,
+      should be specific, identifying the lines that led to the problem,
       or can be general, indicating the overall problem and what types of
-      things to look for.
-      For example, if the fault is a NullPointerException, explain how
-      the particular value could be null at the stopping point.
-   </QUERY>
+      things to look for.  Use the various tool agents to get the information
+      you need to achieve this explanation.  In particular you should explore
+      the call trace using the tools getCallTrace, getLineNumberTrace, getVariableTrace,
+      getVariableValue, and getReturnValue.
+   </QUERY>				
    <QUERY COMMAND='TEST2'>
       You should return an explanation of the root cause of the problem
       that led to the symptom.	This should be an analysis that starts
