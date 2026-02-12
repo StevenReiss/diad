@@ -10,8 +10,7 @@
       The system has stopped at a breakpoint and the developer has identified
       something that is symptomatic of the problem.  Tools are provided to let
       you access the program source (getSourceCode and getSourceLine),
-      information about the program (getConstructorsForClass, getMethodInforamtion),
-      about the current stopping point (getStackFrames),
+      information about the current stopping point (getStackFrames),
       and about the execution of the program
       from some prior point on the current stack up to the stopping point (getCallTrace).
       This execution is available
@@ -75,7 +74,7 @@
 	* getStackFrames: returns the information about the frames on the stack at the stopping point.
 
       The following tools are provided as agents to access the execution that led to the symptom.  These are
-      organized by CALLID which specifies a particular method execution:
+      organized by callid which specifies a particular method execution:
 	* getCallTrace:  return information about a particular method execution,
 	* getLineNumberTrace: return information about the sequence of lines executed in a method,		      -
 	* getVariableTrace: return information about the values a variable took on in a method,
@@ -96,41 +95,3 @@
      can ignore any other problems.
    ]]></PROMPT>
 </PROMPTS>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

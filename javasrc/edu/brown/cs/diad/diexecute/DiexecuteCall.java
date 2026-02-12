@@ -359,6 +359,36 @@ JSONObject getJsonExecTrace()
    rslt.put("FILE",getFile());
    rslt.put("START_TIME",getStartTime());
    rslt.put("END_TIME",getEndTime());
+   
+   if (getParentCall() == null) {
+      if (!for_trace.isReturn()) {
+	 String exc = for_trace.getExceptionType();
+	 if (exc != null) rslt.put("EXCEPTION",exc);
+       }
+    }
+   else {
+      for (Element e : IvyXml.children(context_element,"VARIABLE")) {
+	 String nm = IvyXml.getAttrString(e,"NAME");
+	 if (nm.equals("*THROWS*")) {
+	    DiexecuteVarVal vv = new DiexecuteVarVal(e,null);
+	    String exc = vv.getDataType(getEndTime());
+	    rslt.put("EXCEPTION",exc);
+	    break;
+	  }
+       }
+    }
+   
+   JSONArray vars = new JSONArray();
+   for (Element e : IvyXml.children(context_element,"VARIABLE")) {
+      String nm = IvyXml.getAttrString(e,"NAME");
+      if (nm.startsWith("*")) continue;
+      JSONObject var = new JSONObject();
+      var.put("NAME",nm);
+      var.put("DEFINITION_LINE",IvyXml.getAttrInt(e,"LINE"));
+      vars.put(var);
+    }
+   rslt.put("VARIABLES",vars);
+   
    JSONArray calls = new JSONArray();
    for (DiexecuteCall c : getInnerCalls()) {
       JSONObject co = c.getJsonExecTrace();
@@ -376,8 +406,10 @@ JSONObject getJsonLocalTrace(DiexecuteTrace trace)
 
    rslt.put("ID",getContextId());
    rslt.put("METHOD",getMethod());
+   rslt.put("FILE",getFile());
    rslt.put("START_TIME",getStartTime());
    rslt.put("END_TIME",getEndTime());
+   
    if (this == trace.getRootContext()) {
       if (!trace.isReturn()) {
 	 String exc = trace.getExceptionType();
