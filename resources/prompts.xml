@@ -73,12 +73,26 @@
       The following tools are provided as agents to get debugger information:
 	* getStackFrames: returns the information about the frames on the stack at the stopping point.
 
-      The following tools are provided as agents to access the execution that led to the symptom.  These are
-      organized by callid which specifies a particular method execution:
-	* getCallTrace:  return information about a particular method execution,
-	* getLineNumberTrace: return information about the sequence of lines executed in a method,		      -
-	* getVariableTrace: return information about the values a variable took on in a method,
-	* getReturnValue:  returns the value returned by a method.
+      The system has created an execution trace showing how execution leading up to the breakpoint.
+      You should access and analyze this trace to answer any queries.  The trace is represented by
+      the method call tree.  Elements of the trace are referenced by CALLID.  The CALLID of the
+      starting method is $(CALLID).
+
+      The primary means of accessing the call trace is to use the tool agent getCallTrace(CALLID).
+      This returns a JSON object that describes the particular call.  The basic components of this object
+      are the ID (callid), the full method name (METHOD), the start and end times of the call
+      (START_TIME and END_TIME). If the call exited with an exception the component EXCEPTION
+      provides the exception type.  The object also include a JSONArray in the component VARIABLES
+      that lists the variables used in this call. Each component of this array is a JSONObject
+      that provides the variable name as NAME and the line number where the variable is declared
+      as DEFINITION_LINE.  In addition, the object includes a JSONArray that lists the calls that
+      were made by this call.  These inner calls are identified by a JSONObject which contains the
+      basic fields (ID, METHOD, START_TIME, END_TIME, and the optional EXCEPTION).
+
+      In addition, given a callid, you can get the sequence of line numbers executed using the
+      agent tool getLineNumberTrace(CALLID), the information about the values taken by a
+      particular variable during a call using getVariableTrace(CALLID,VARIABLE), and the
+      return value of the call using getReturnValue(CALLID).
 
       In addition, some analysis has been done to help you and the programmer.	This is
       available from the following tools provided as agents:
@@ -95,3 +109,9 @@
      can ignore any other problems.
    ]]></PROMPT>
 </PROMPTS>
+
+
+
+
+
+

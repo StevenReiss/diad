@@ -405,14 +405,6 @@ private static class LocationSummary {
 /*                                                                              */
 /********************************************************************************/
 
-JSONObject getJsonExecTrace()
-{
-   if (base_execution == null) return null;
-   
-   return base_execution.getJsonExecTrace(); 
-}
-
-
 JSONObject getJsonLocalTrace(String callid)
 {
    return base_execution.getJsonLocalTrace(callid); 

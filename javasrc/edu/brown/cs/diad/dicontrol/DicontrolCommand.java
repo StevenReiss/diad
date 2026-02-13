@@ -385,12 +385,7 @@ private static class QueryExecTrace extends QueryCommand {
     }
    
    @Override protected JSONObject getJsonObject() {
-      if (call_id != null && !call_id.isEmpty()) {
-         return getCandidate().getJsonLocalTrace(call_id); 
-       }
-      else {
-         return getCandidate().getJsonExecTrace();  
-       }
+      return getCandidate().getJsonLocalTrace(call_id); 
     }
    
 

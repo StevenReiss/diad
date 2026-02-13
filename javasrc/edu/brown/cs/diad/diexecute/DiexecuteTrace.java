@@ -321,7 +321,9 @@ DiexecuteManager getManager()
 
 private DiexecuteCall getCallFromId(String callid)
 {
-   if (callid == null) return getRootContext();
+   if (callid == null || callid.isEmpty() || callid.equals("0")) {
+      return getRootContext();
+    }
    
    DiexecuteCall ctx = callid_map.get(callid);
    if (ctx == null) {
@@ -869,8 +871,6 @@ Element dereference(Element val)
 }
 
 
-
-
 /********************************************************************************/
 /*                                                                              */
 /*      Location methods                                                        */
@@ -890,17 +890,11 @@ void getExecutedLocations(Set<String> rslt)
 /*                                                                              */
 /********************************************************************************/
 
-JSONObject getJsonExecTrace()
-{
-   return problem_context.getJsonExecTrace(); 
-}
-
-
 JSONObject getJsonLocalTrace(String callid)
 {
    DiexecuteCall ctx = getCallFromId(callid);
    
-   return ctx.getJsonLocalTrace(this);  
+   return ctx.getJsonExecTrace(false);  
 }
 
 

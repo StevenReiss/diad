@@ -1,0 +1,33 @@
+<FAIT>
+   <PACKAGE NAME='com.sun.org.apache.xerces.internal' />
+   <PACKAGE NAME='org.eclipse.jdt.internal' />
+   <PACKAGE NAME='org.eclipse.jdt.core.dom' />
+   <PACKAGE NAME='org.objectweb.asm' />
+   <METHOD NAME='java.lang.Object.equals' />
+   <CLASS NAME='edu.brown.cs.ivy.file.IvyLog' />
+   <PACKAGE NAME='edu.brown.cs.ivy.jcode' />
+   <PACKAGE NAME='edu.brown.cs.ivy.jcomp' />
+   <CLASS NAME="edu.brown.cs.ivy.mint.MintConstants$HostPort" />
+   <CLASS NAME='edu.brown.cs.ivy.xml.IvyXml' />
+   <CLASS NAME='edu.brown.cs.ivy.xml.IvyXmlWriter' />
+   <METHOD NAME='edu.brown.cs.ivy.mint.MintControl.register'
+	 CALLBACK='receive' CBARGS='2' />
+</FAIT>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

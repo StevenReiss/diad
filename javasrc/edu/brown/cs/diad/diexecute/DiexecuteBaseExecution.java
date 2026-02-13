@@ -446,12 +446,6 @@ synchronized void noteSeedeLength(long t,DiadRepair repair,double score)
 /*                                                                              */
 /********************************************************************************/
 
-@Override public JSONObject getJsonExecTrace()
-{
-   return base_execution.getSeedeResult().getJsonExecTrace();
-}
-
-
 @Override public JSONObject getJsonLocalTrace(String callid) 
 {
    return base_execution.getSeedeResult().getJsonLocalTrace(callid);  
