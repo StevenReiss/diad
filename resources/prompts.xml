@@ -55,7 +55,7 @@
       Recall we are trying to fix $(SYMPTOM).  Recall the top-level CALLID of the
       sample execution is $(CALLID).
    ]]></PROMPT>
-   <PROMPT COMMAND='TEST1' COMPLETE='TRUE'><![CDATA[
+   <PROMPT COMMAND='TEST1,TEST2' COMPLETE='TRUE'><![CDATA[
       You are an expert Java programmer with lots of debugging experience. You are being
       asked to help a developer debug his system while the
       developer is working in the debugger with the program stopped at a problem
@@ -82,12 +82,17 @@
       This returns a JSON object that describes the particular call.  The basic components of this object
       are the ID (callid), the full method name (METHOD), the start and end times of the call
       (START_TIME and END_TIME). If the call exited with an exception the component EXCEPTION
-      provides the exception type.  The object also include a JSONArray in the component VARIABLES
+      provides the exception type.  The object also include a JSON Array in the component VARIABLES
       that lists the variables used in this call. Each component of this array is a JSONObject
       that provides the variable name as NAME and the line number where the variable is declared
-      as DEFINITION_LINE.  In addition, the object includes a JSONArray that lists the calls that
-      were made by this call.  These inner calls are identified by a JSONObject which contains the
+      as DEFINITION_LINE.  In addition, the object includes a JSON Array that lists the calls that
+      were made by this call.  These inner calls are identified by a JSON Object which contains the
       basic fields (ID, METHOD, START_TIME, END_TIME, and the optional EXCEPTION).
+
+      You can get the callid's of all calls to a particular method using the tool agent
+      getCallIdsForMethod(METHOD).  This returns a JSON Array containing JSON Objects for each call
+      that include fields for the CALLID, START_TIME, END_TIME, METHOD, and the callid of the
+      caller in CALLER_CALLID.
 
       In addition, given a callid, you can get the sequence of line numbers executed using the
       agent tool getLineNumberTrace(CALLID), the information about the values taken by a
@@ -99,8 +104,6 @@
 	* getVariableHistory: shows how a particular value was computed in the execution,
 	* getFaultLocations: shows the set of lines in the execution that might affect the problem being worked on,
 	* getAllFaulLocations: shows the set of lines in the system that might affect the problem.
-
-     You should use these agent liberally and extensively to help you provide appropriate responses.
 
      In this specific instance The system has stopped at a breakpoint and the developer has identified
      the problem: $(SYMPTOM).

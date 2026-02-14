@@ -449,7 +449,7 @@ JSONArray getJsonMethodCalls(String method)
 /*                                                                              */
 /********************************************************************************/
 
-Element askLimba(IvyXmlWriter xw,DiadAskType typ,String query)
+Element askLimba(IvyXmlWriter xw,DiadAskType typ,String query,boolean nohistory)
 {
    if (candidate_state != DiadCandidateState.READY) return null;
    
@@ -476,6 +476,7 @@ Element askLimba(IvyXmlWriter xw,DiadAskType typ,String query)
    
    CommandArgs args = new CommandArgs("USECONTEXT",true,
          "ID",getId(),
+         "NOHISTORY",nohistory,
          "TOOLS","PROJECT,DEBUG");
    
    IvyXmlWriter xw1 = new IvyXmlWriter();

@@ -167,6 +167,52 @@ DiexecuteVarVal(Element v,DiexecuteVarVal par)
        }
     }
    
+   // Handle bad specifications from the LLM
+   
+   // First, check for [#] with a List or Vector
+   String typ = IvyXml.getAttrString(val.var_element,"TYPE");
+   if (name.startsWith("[")) {
+      if (typ != null) {
+         String collfld = null;
+         switch (typ) {
+            case "java.util.Vector" :
+            case "java.util.Stack" :
+               collfld = "elementData";
+               break;
+          }
+         if (collfld != null) {
+            for (Element fe : IvyXml.children(val.var_element,"FIELD")) {
+               String fn = IvyXml.getAttrString(fe,"NAME");
+               int idx = fn.lastIndexOf(".");
+               if (idx > 0) fn = fn.substring(idx+1);
+               if (fn.equals(collfld)) {
+                  DiexecuteVarVal vv = new DiexecuteVarVal(fe,this);
+                  vv = vv.getValueAtTime(when);
+                  DiexecuteVarVal vv0 = vv.getChild(name,when);
+                  if (vv0 != null) return vv0;
+                }
+             }
+          }
+       }
+    }
+   
+   // next check for missing intermediate element
+   for (Element fe : IvyXml.children(val.var_element)) {
+      if (IvyXml.isElement(fe,"FIELD")) {
+         DiexecuteVarVal vv1 = new DiexecuteVarVal(fe,this);
+         DiexecuteVarVal vv2 = vv1.getChild(name,when);
+         if (vv2 != null) return vv2;
+       }
+      else if (IvyXml.isElement(fe,"ELEMENT")) {
+         int idx = IvyXml.getAttrInt(fe,"INDEX");
+         if (idx == 0) {
+            DiexecuteVarVal vv1 = new DiexecuteVarVal(fe,this);
+            DiexecuteVarVal vv2 = vv1.getChild(name,when);
+            if (vv2 != null) return vv2;
+          }
+       }
+    }
+   
    return null;
 }
 

@@ -156,7 +156,7 @@ DicontrolSymptom(Element xml)
                 int idx = original_value.indexOf(") ");
                 if (idx > 0) {
                    typ = original_value.substring(1,idx).trim();
-                   v = original_value.substring(idx+3);
+                   v = original_value.substring(idx+2);
                  }
               }
              StringBuffer buf = new StringBuffer();

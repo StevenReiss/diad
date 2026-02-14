@@ -1053,8 +1053,8 @@ private void addMethodCalls(String callid,String method,JSONArray rslt)
    if (matchMethod(method,call.getMethod())) {
       JSONObject jo = new JSONObject();
       jo.put("CALLID",callid);
-      jo.put("START",call.getStartTime());
-      jo.put("END",call.getEndTime());
+      jo.put("START_TIME",call.getStartTime());
+      jo.put("END_TIME",call.getEndTime());
       jo.put("METHOD",call.getMethod());
       DiexecuteCall par = call.getParentCall();
       if (par != null) jo.put("CALLER_CALLID",par.getCallId());

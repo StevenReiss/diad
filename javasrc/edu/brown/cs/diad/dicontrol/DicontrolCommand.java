@@ -506,15 +506,18 @@ private static class CommandAskLimba extends QueryCommand {
 
    private DiadAskType ask_type; 
    private String ask_text;
+   private boolean no_history;
    
    CommandAskLimba(DicontrolMain ctrl,Element xml) {
       super(ctrl,xml);
       ask_type = IvyXml.getAttrEnum(xml,"TYPE",DiadAskType.GENERAL);
       ask_text = IvyXml.getTextElement(xml,"QUESTION");
+      no_history = IvyXml.getAttrBool(xml,"NOHISTORY");
     }
    
    @Override public void process(IvyXmlWriter xw) {
-      Element rslt = getCandidate().askLimba(xw,ask_type,ask_text); 
+      Element rslt = getCandidate().askLimba(xw,ask_type,ask_text,
+            no_history); 
       String resp = IvyXml.getTextElement(rslt,"RESPONSE");
       if (resp != null) xw.cdataElement("RESPONSE",resp);
     }
