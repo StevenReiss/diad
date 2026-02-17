@@ -347,7 +347,10 @@ private class AssertionChecker extends ASTVisitor implements DiadAssertionData {
          default :
             break;
        }
-      useNode(stmt.getExpression(),"false","true");
+      if (use_node == null) {
+         useNode(stmt.getExpression(),"false","true");
+         value_op = DiadValueOperator.EQL;
+       }
       
       return false;
     }

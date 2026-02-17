@@ -129,10 +129,10 @@ public ASTNode getAssertionExpression(DiadSymptom symp,DiadThread thrd)
 }
 
 
-public ASTNode getExceptionNode(DiadSymptom symp)
+public ASTNode getExceptionNode(DiadSymptom symp,DiadThread thrd)
 {
    if (symp.getSymptomType() == DiadSymptomType.EXCEPTION) {
-      DianalysisExceptionHistory query = new DianalysisExceptionHistory(this,symp,null);
+      DianalysisExceptionHistory query = new DianalysisExceptionHistory(this,symp,thrd);
       return query.getExceptionNode();
     }
    

@@ -497,6 +497,7 @@ private void findContextTime(Element ctx,DiadThread thread)
          findContextTime(ctx,thread,lnoi,linetime,time-1);
          linetime = -1;
        }
+      // ACTUALLY NEED TO CHECK IF ERROR STATEMENT SPANS MULTIPLE LINES
       if (lno.equals(IvyXml.getText(val))) {
          linetime = time;
        }
@@ -680,6 +681,7 @@ private Boolean compareObject(DiadLocalVariable local,Element valelt0,
       int idx = ltyp.indexOf("<");
       if (idx > 0) {
          ltyp = ltyp.substring(0,idx);
+         ltyp = ltyp.replace("$",".");
          if (!ltyp.equals(vtype)) return false;
        }
     }

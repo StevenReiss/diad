@@ -172,9 +172,12 @@ DicontrolSymptom(Element xml)
                 if (typ.equals("java.lang.String")) typ = "string";
                 buf.append("the " + typ + " value ");
               }
+             else {
+                buf.append("the value ");
+              }
              if (original_expr != null && 
                    !original_value.contains(original_expr)) {
-                buf.append(" computed from " + original_expr + ", ");
+                buf.append("computed from " + original_expr + ", ");
                 buf.append(v);
                 buf.append(", ");
               }
@@ -206,7 +209,7 @@ DicontrolSymptom(Element xml)
              buf.append(target_value);
              return buf.toString();
           }
-         IvyLog.logD("DICONTROL","Bad assertion check " + original_value + " " + 
+         IvyLog.logE("DICONTROL","Bad assertion check " + original_value + " " + 
                target_value);
          return "assertion failed";
       case EXCEPTION :

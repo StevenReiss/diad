@@ -80,7 +80,12 @@ DianalysisHistory(DianalysisManager fac,DiadSymptom symp,DiadThread thrd)
    for_analysis = fac;
    for_symptom = symp;
    for_thread = thrd;
-   for_frame = for_thread.getStack().getUserFrame();
+   if (thrd == null) {
+      for_frame = null;
+    }
+   else {
+      for_frame = for_thread.getStack().getUserFrame();
+    }
    node_context = null;
 }
 
@@ -109,6 +114,8 @@ protected DicontrolMain getDiadControl()
 
 protected String getProject()
 {
+   if (for_thread == null) return null;
+   
    File f1 = for_thread.getStack().getUserFrame().getSourceFile();
    return getSourceManager().getProjectForFile(f1);
 }

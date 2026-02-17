@@ -64,22 +64,35 @@ private boolean         fait_starting;
 private boolean         seede_starting;
 private boolean         limba_starting;
 private File            workspace_dir;
+private LaunchData      active_launch;
 
 public static final String [] OPENS;
 
 static {
-   OPENS = new String [] { "java.desktop/sun.font",
-         "java.base/jdk.internal.icu.impl",
+   OPENS = new String [] {
+         "java.desktop/sun.font",
          "java.desktop/sun.awt",
          "java.desktop/sun.swing",
          "java.desktop/javax.swing", 
-         "java.base/jdk.internal.math", 
+         "java.base/jdk.internal.math",
          "java.base/sun.nio.cs", 
          "java.base/java.nio",
          "java.base/sun.util.locale.provider",
          "java.base/jdk.internal.math",
          "java.base/jdk.internal.misc",
+         "java.base/java.util",
+         "java.base/java.lang",
+         "java.base/java.util.concurrent",
+         "java.base/sun.util.locale",
+         "java.desktop/sun.java2d",
+         "java.desktop/sun.java2d.loops",
+         "java.desktop/sun.java2d.metal",
+         "java.desktop/sun.java2d.pipe",
+         "java.desktop/java.awt.geom",
          "java.base/sun.util.calendar",
+         "java.base/sun.security.provider",
+         "java.base/jdk.internal.util",
+         "java.base/java.time",
     };
 }
 
@@ -98,7 +111,7 @@ public DitestFactory(DicontrolMain ctrl)
    debug_fait = true;
    trace_fait = false;
    debug_seede = true;
-   trace_seede = false;
+   trace_seede = true;
    debug_limba = true;
    trace_limba = true;
    seede_timeout = 0;
@@ -106,6 +119,7 @@ public DitestFactory(DicontrolMain ctrl)
    seede_starting = false;
    limba_starting = false;
    workspace_dir = null;
+   active_launch = null;
 }
 
 
@@ -359,10 +373,10 @@ public boolean startSeede()
    List<String> args = new ArrayList<String>();
    args.add(IvyExecQuery.getJavaPath());
    
-   for (String s : OPENS) {
-      String arg = "--add-opens=" + s + "=ALL-UNNAMED";
-      args.add(arg);
-    }
+// for (String s : OPENS) {
+//    String arg = "--add-opens=" + s + "=ALL-UNNAMED";
+//    args.add(arg);
+//  }
    
    File f2 = getDropinDirectory();
    File seedejar = new File(f2,"seede.jar");
@@ -605,6 +619,11 @@ private boolean startLimba()
 
 public LaunchData setupTest(String project,String launch,int contct)
 {
+   if (active_launch != null) {
+      terminateLaunch(project,active_launch);
+      active_launch = null;
+    }
+   
    LaunchData ld = startLaunch(project,launch);
    for (int i = 0; i < contct; ++i) {
       continueLaunch(project,ld);
@@ -612,6 +631,8 @@ public LaunchData setupTest(String project,String launch,int contct)
    
    startFait();
    startSeede();
+   
+   active_launch = ld;
    
    return ld;
 }
@@ -621,9 +642,17 @@ private LaunchData startLaunch(String proj,String name)
 {
    stopped_thread = null;
    
+   String dargs = null;
+   for (String s : OPENS) {
+      String arg = "--add-opens=" + s + "=ALL-UNNAMED";
+      if (dargs == null) dargs = arg;
+      else dargs += " " + arg;
+    }
+   
    CommandArgs args = new CommandArgs("NAME",name,
          "MODE","debug","BUILD","TRUE",
          "PROJECT",proj,
+         "VMARG",dargs,
          "REGISTER","TRUE");
    Element xml = diad_control.sendBubblesMessage("START",args,null);
    Element ldata = IvyXml.getChild(xml,"LAUNCH");
@@ -658,6 +687,19 @@ private void continueLaunch(String project,LaunchData ld)
 }
 
 
+private void terminateLaunch(String project,LaunchData ld)
+{
+   CommandArgs args = new CommandArgs("LAUNCH",ld.getLaunchId(),
+         "TARGET",ld.getTargetId(),
+         "PROJECT",project,
+         "PROCESS",ld.getProcessId(),"ACTION","TERMINATE");
+   Element xml = diad_control.sendBubblesMessage("DEBUGACTION",args,null);
+   Assert.assertNotNull(xml);
+   waitForTerminate();
+}
+
+
+
 private String waitForStop()
 {
    synchronized (this) {
@@ -669,6 +711,20 @@ private String waitForStop()
          catch (InterruptedException e) { }
        }
       return stopped_thread;
+    }
+}
+
+
+private void waitForTerminate()
+{
+   synchronized (this) {
+      for (int i = 0; i < 100; ++i) {
+         if (stopped_thread == null) break;
+         try {
+            wait(1000);
+          }
+         catch (InterruptedException e) { }
+       }
     }
 }
 
@@ -718,6 +774,17 @@ public void handleRunEvent(Element re)
             stopped_thread = IvyXml.getAttrString(thread,"ID");
             notifyAll();
           }
+         break;
+      case "TERMINATE" :
+         synchronized (this) {
+            String thr = IvyXml.getAttrString(thread,"ID");
+            if (thr.equals(stopped_thread)) {
+               stopped_thread = null;
+             }
+          }
+         break;
+      default :
+         IvyLog.logD("DITEST","Handle thread event " + kind);
          break;
     }   
 }

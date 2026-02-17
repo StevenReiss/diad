@@ -44,6 +44,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.w3c.dom.Element;
 
@@ -142,7 +143,7 @@ private DicontrolMain(String [] args)
    dicontrol_monitor = null;
    run_manager = new DiruntimeManager(this);  
    
-   debug_candidates = new HashMap<>();
+   debug_candidates = new ConcurrentHashMap<>();
    run_manager.addRuntimeListener(new RuntimeCallback());
    
    source_factory = null;
@@ -533,6 +534,7 @@ private void processXmlFile(FileReader fr)
                xmlstr = xmlstr.replace("$ID",cand.getId());
                break;
              }
+            IvyLog.logD("DICONTROL","Edited XML command: " + xmlstr);
           }
          Element xml = IvyXml.convertStringToXml(xmlstr);
          try {

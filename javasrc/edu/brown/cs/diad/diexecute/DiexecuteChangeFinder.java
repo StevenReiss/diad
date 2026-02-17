@@ -220,7 +220,7 @@ DiexecuteChangeMap findProblemVariables(ASTNode base,DiadSymptom symp,DiadThread
          n = analmgr.getAssertionExpression(symp,thrd);
          break;
       case EXCEPTION :
-         n = analmgr.getExceptionNode(symp);
+         n = analmgr.getExceptionNode(symp,thrd);
          break;
       case VARIABLE :
          JcompSymbol js = findVariableSymbol(base,symp.getSymptomItem());

@@ -571,7 +571,7 @@ private final class CandidateThread extends Thread {
                   if (checkInterrupted()) break;
                   if (candidate_symptom != null) {
                      IvyLog.logD("DICONTROL","Candidate Symptom " + 
-                           candidate_symptom.getText());
+                           candidate_symptom.getSymptomType());
                      setState(DiadCandidateState.DOING_ANALYSIS);
                    }
                   else {
