@@ -242,12 +242,14 @@ DiexecuteVarVal getTraceVarValueFlex(String name,long when)
 
    // look up this.name and use if found
    DiexecuteVarVal thisv = getTraceVariable("this");
-   thisv = thisv.getValueAtTime(for_trace,getStartTime()+1);
    if (thisv != null) {
-      DiexecuteVarVal var1 = thisv.getChild(name,when);
-      if (var1 != null) return var1;
+      thisv = thisv.getValueAtTime(for_trace,getStartTime()+1);
+      if (thisv != null) {
+         DiexecuteVarVal var1 = thisv.getChild(name,when);
+         if (var1 != null) return var1;
+       }
     }
-
+   
    // replace name.field with name?field
    // replace name[idx] with name?[idx]
    String name1 = name;
@@ -257,6 +259,8 @@ DiexecuteVarVal getTraceVarValueFlex(String name,long when)
       // if either replacement worked, then try with new value
       return getTraceVarValueFlex(name1,when);
     }
+   
+   // try a different context if given starting context -- use end context?
 
    return null;
 }

@@ -72,6 +72,7 @@
 	 <fileset dir='${PRO}/diadbb/java' includes='**/*.class' />
 	 <fileset dir='${DIAD}/resources' includes='*.xml' />
 	 <fileset dir='${DIAD}/resources' includes='images/*.png' />
+	 <fileset dir='${DIAD}/resources' includes='Diad.props' />
 <!--	 <fileset dir='${PRO}/ivy/java' includes='**/*.class' />                        -->
 	 <fileset dir='${PRO}/diadbb' includes='Bird.props' />
 	 <fileset dir='${PRO}/diadbb' includes='diadbb.palette' />
@@ -81,4 +82,10 @@
    </target>
 
 </project>
+
+
+
+
+
+
 

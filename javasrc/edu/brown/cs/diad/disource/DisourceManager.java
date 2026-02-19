@@ -48,6 +48,7 @@ private DicontrolMain   diad_control;
 private DisourceCompiler the_compiler;
 private Map<File,String> project_map;
 private String          default_project;
+private String          workspace_name;
 
 
 
@@ -62,6 +63,7 @@ public DisourceManager(DicontrolMain ctrl)
    diad_control = ctrl;
    project_map = new HashMap<>();
    default_project = null;
+   workspace_name = null;
    the_compiler = new DisourceCompiler(ctrl,this);
    
    buildProjectMap();
@@ -84,6 +86,16 @@ public ASTNode getSourceNode(String proj,File f,int offset,int line,
    if (stmt) n = DisourceCompiler.getStatementOfNode(n);
    
    return n;
+}
+
+
+public String getWorksapceShortName()
+{
+   String s = workspace_name;
+   if (s == null) return "";
+   int idx = s.lastIndexOf("/");
+   if (idx > 0) s = s.substring(idx+1);
+   return s;
 }
 
 
@@ -112,6 +124,9 @@ private void buildProjectMap()
    
    Element xml = diad_control.sendBubblesMessage("PROJECTS",null,null);
    for (Element p : IvyXml.children(xml,"PROJECT")) {
+      if (workspace_name == null) {
+         workspace_name = IvyXml.getAttrString(p,"WORKSPACE");
+       }
       String nm = IvyXml.getAttrString(p,"NAME");
       CommandArgs args = new CommandArgs("PROJECT",nm,"FILES",true);
       Element pxml = diad_control.sendBubblesMessage("OPENPROJECT",args,null);

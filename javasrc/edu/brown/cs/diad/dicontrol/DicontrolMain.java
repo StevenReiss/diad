@@ -123,7 +123,7 @@ private DicontrolMain(String [] args)
    File f3 = new File(f2,"Diad.props");
    diad_properties = new Properties();
    try {
-      InputStream ins = getClass().getClassLoader().getResourceAsStream("Diad.properties");
+      InputStream ins = getClass().getClassLoader().getResourceAsStream("Diad.props");
       if (ins != null) diad_properties.loadFromXML(ins);
     }
    catch (IOException e) {
@@ -206,6 +206,12 @@ public void bubblesReady()
 }
 
 
+Collection<DicontrolCandidate> getActiveCandidates()
+{
+   return debug_candidates.values();
+}
+
+
 public String getProperty(String id)
 {
    return diad_properties.getProperty(id);
@@ -216,12 +222,6 @@ public void setProperty(String id,Object val)
    if (val == null) diad_properties.remove(id);
    else diad_properties.put(id,val.toString());
 }
-
-Collection<DicontrolCandidate> getActiveCandidates()
-{
-   return debug_candidates.values();
-}
-
 
 @SuppressWarnings("unchecked")
 public <T extends Enum<T>> T getProperty(String id,T dflt)

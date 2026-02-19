@@ -29,11 +29,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
+import java.util.StringTokenizer;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.w3c.dom.Element;
 
+import edu.brown.cs.diad.dicontrol.DicontrolMain;
 import edu.brown.cs.diad.dicore.DiadDataType;
 import edu.brown.cs.diad.dicore.DiadException;
 import edu.brown.cs.diad.dicore.DiadLocalVariable;
@@ -64,6 +66,7 @@ private Map<Element,DiexecuteCall> call_map;
 private Map<String,DiexecuteCall> callid_map;
 private String          session_id;
 private DiexecuteExecution for_exec;
+private Set<String>     ignore_names;
 
 
 
@@ -88,6 +91,18 @@ DiexecuteTrace(DiexecuteExecution exec,Element rslt,DiadThread thrd)
    callid_map.put("0",root);
    callid_map.put("*",root);
    callid_map.put("-1",root);
+   
+   ignore_names = new HashSet<>();
+   DicontrolMain diad = exec.getContext().getManager().getDiadControl();
+   String ws = diad.getSourceManager().getWorksapceShortName();
+   String ign = diad.getProperty("Diad." + ws + ".ignore");
+   if (ign != null) {
+      StringTokenizer tok = new StringTokenizer(ign," \t,;");
+      while (tok.hasMoreTokens()) {
+         String ig = tok.nextToken();
+         ignore_names.add(ig);
+       }
+    }
 }
 
 
@@ -599,6 +614,10 @@ private Element findVariableInContext(Element ctx,String nm,int lno)
 private Boolean compareVariable(DiadLocalVariable local,Element valelt,
       DiadThread thread,long from,long to)
 {
+   if (ignore_names.contains(local.getName())) {
+      return null;
+    }
+      
    switch (local.getKind()) {
       case "PRIMITIVE" :
          String typ = IvyXml.getAttrString(valelt,"TYPE");
@@ -693,6 +712,7 @@ private Boolean compareObject(DiadLocalVariable local,Element valelt0,
    for (Element fldelt : IvyXml.children(valelt,"FIELD")) {
       String nm = IvyXml.getAttrString(fldelt,"NAME");
       if (nm.startsWith("@")) continue;
+      if (ignore_names.contains(nm)) continue;
       try {
          DiadValue fldval = localval.getFieldValue(nm);
          if (fldval == null) continue;
