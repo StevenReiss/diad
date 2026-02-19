@@ -162,11 +162,10 @@ private class AssertionChecker extends ASTVisitor implements DiadAssertionData {
       if (orig_value != null) getSymptom().setOriginalValue(orig_value);
       if (orig_expr != null) getSymptom().setOriginalExpression(orig_expr);
       if (target_value != null) getSymptom().setTargetValue(target_value); 
-      if (value_op != null) {
+      if (value_op != null && value_op != DiadValueOperator.NONE) {
          getSymptom().setPrecision(precision_value);
          getSymptom().setOperator(value_op);
        }
-      // should set precision
       return getXmlForLocation("EXPR",use_node,true);
     }
    

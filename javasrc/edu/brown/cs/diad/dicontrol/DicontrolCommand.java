@@ -31,6 +31,7 @@ import org.w3c.dom.Element;
 
 import edu.brown.cs.diad.dicore.DiadConstants.DiadCommand;
 import edu.brown.cs.ivy.file.IvyLog;
+import edu.brown.cs.ivy.mint.MintConstants.CommandArgs;
 import edu.brown.cs.ivy.xml.IvyXml;
 import edu.brown.cs.ivy.xml.IvyXmlWriter;
 
@@ -62,6 +63,8 @@ static DicontrolCommand createCommand(DicontrolMain ctrl,Element xml)
          return new CommandDelay(ctrl,xml);
       case "EXIT" :
          return new CommandExit(ctrl,xml);
+      case "SETMODEL" :
+         return new CommandSetModel(ctrl,xml);
       case "WAITFORSTATE" :
          return new WaitForState(ctrl,xml);
       case "Q_STACK" :
@@ -666,7 +669,31 @@ private static class CommandStartFrame extends QueryCommand {
       getCandidate().setStartFrame(frame_id); 
     }
    
-}       // end of inner class CommandSymptom
+}       // end of inner class CommandStartFrame
+
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Set model   command                                                     */
+/*                                                                              */
+/********************************************************************************/
+
+private static class CommandSetModel extends QueryCommand {
+
+   private String model_name;
+   
+   CommandSetModel(DicontrolMain ctrl,Element xml) {
+      super(ctrl,xml);
+      model_name = IvyXml.getAttrString(xml,"MODEL");
+    }
+   
+   @Override public void process(IvyXmlWriter xw) {
+      CommandArgs args = new CommandArgs("MODEL",model_name);
+      diad_control.sendLimbaMessage("SETMODEL",args,null);
+    }
+
+}       // end of inner class CommandSetModel
 
 
 

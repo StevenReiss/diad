@@ -260,8 +260,18 @@ DiexecuteVarVal getTraceVarValueFlex(String name,long when)
       return getTraceVarValueFlex(name1,when);
     }
    
+   
    // try a different context if given starting context -- use end context?
-
+   if (getParentCall() == null) {
+      long t = for_trace.getSymptomTime();
+      DiexecuteCall cc = for_trace.getContextForTime(t);
+      if (cc != this) {
+         return cc.getTraceVarValueFlex(name,t);
+       }
+      
+      // find correct context
+    }
+   
    return null;
 }
 
@@ -451,6 +461,10 @@ JSONObject getJsonVarTrace(String varname)
    JSONObject rslt = new JSONObject();
 
    DiexecuteVarVal var = getTraceVarValueFlex(varname,getEndTime());
+   if (var == null) {
+      rslt.put("ERROR","Variable " + varname + "not found");
+      return rslt;
+    }
 
    DiexecuteVarVal linv = getLineNumbers();
 

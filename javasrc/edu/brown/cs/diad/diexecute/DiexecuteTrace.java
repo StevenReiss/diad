@@ -30,6 +30,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 import java.util.StringTokenizer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -67,6 +69,8 @@ private Map<String,DiexecuteCall> callid_map;
 private String          session_id;
 private DiexecuteExecution for_exec;
 private Set<String>     ignore_names;
+
+private static final Pattern UUID_PATTERN = Pattern.compile("\\p{XDigit}{8}");
 
 
 
@@ -650,14 +654,7 @@ private Boolean compareVariable(DiadLocalVariable local,Element valelt,
       case "STRING" :
          valtxt = IvyXml.getText(valelt);
          String ltxt = local.getValue();
-         if (ltxt == null && valtxt == null) return true;
-         if (ltxt == null || valtxt == null)
-            return false;
-         boolean fg = ltxt.equals(valtxt);
-         if (fg) return true;
-         // UTF-16 strings are not correct when reported from bedrock
-         if (ltxt.getBytes().length != ltxt.length()) return null;
-         return false;
+         return compareStrings(ltxt,valtxt);
       case "ARRAY" :
          if (local.getType().equals("null")) {
             if (IvyXml.getAttrBool(valelt,"NULL")) return true;
@@ -712,14 +709,24 @@ private Boolean compareObject(DiadLocalVariable local,Element valelt0,
    for (Element fldelt : IvyXml.children(valelt,"FIELD")) {
       String nm = IvyXml.getAttrString(fldelt,"NAME");
       if (nm.startsWith("@")) continue;
-      if (ignore_names.contains(nm)) continue;
+      if (!ignore_names.isEmpty()) {
+         if (ignore_names.contains(nm)) continue;
+         int idx = nm.lastIndexOf(".");
+         if (idx > 0) {
+            String n1 = nm.substring(idx+1);
+            if (ignore_names.contains(n1)) continue;
+          }
+       }
       try {
          DiadValue fldval = localval.getFieldValue(nm);
          if (fldval == null) continue;
          Boolean fg = checkValueAtTime(fldval,fldelt,
                thread,from,to);
          if (fg == null) continue;
-         if (!fg) return false;
+         if (!fg) {
+            IvyLog.logI("DIEXECUTE","Matching failed for " + nm);
+            return false;
+          }
          ++ct;  // if matched
        }
       catch (DiadException e) { }
@@ -834,7 +841,7 @@ private Boolean compareValueAtTime(DiadValue actval,Element valctx,DiadThread th
          return null;
       case "java.lang.String" :
          if (ctxtyp.equals("java.lang.String")) {
-            return actval.getString().equals(ctxval);
+            return compareStrings(actval.getString(),ctxval);
           }
          break;
     }
@@ -859,6 +866,26 @@ private Boolean compareValueAtTime(DiadValue actval,Element valctx,DiadThread th
    
    return null;
 } 
+
+
+
+private Boolean compareStrings(String s1,String s2)
+{
+   if (s1 == null && s2 == null) return true;
+   if (s1 == null || s2 == null) return false;
+   if (s1.equals(s2)) return true;
+   
+   // UTF-16 strings are not correct when reported by bedrock
+   if (s1.getBytes().length != s1.length()) return null;
+   if (s2.getBytes().length != s2.length()) return null;
+   
+   // Random UUIDs will differ
+   Matcher m1 = UUID_PATTERN.matcher(s1);
+   Matcher m2 = UUID_PATTERN.matcher(s2);
+   if (m1.find() && m2.find()) return null;
+   
+   return false;
+}
 
 
 
@@ -1010,9 +1037,18 @@ private long getActualTime(DiexecuteCall ctx,DiexecuteVarVal linevar,
             break;
           }
        }
+      if (when < 0 && ctx.getParentCall() == null) {
+         long t = getSymptomTime();
+         DiexecuteCall cc = getContextForTime(t);
+         if (cc != ctx) {
+            DiexecuteVarVal lv = cc.getLineNumbers();
+            when = getActualTime(cc,lv,-1,line);
+          }
+       }
       if (when < 0) {
          if (!next) {
-            IvyLog.logE("DIEXECUTE","Get actual time given bad line " + line);
+            IvyLog.logE("DIEXECUTE","Get actual time given bad line " + line + 
+                  " " + when);
           }
          when = ctx.getEndTime() - 1;
        }

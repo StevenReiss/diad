@@ -703,7 +703,7 @@ private void terminateLaunch(String project,LaunchData ld)
 private String waitForStop()
 {
    synchronized (this) {
-      for (int i = 0; i < 100; ++i) {
+      for (int i = 0; i < 400; ++i) {
          if (stopped_thread != null) break;
          try {
             wait(1000);
