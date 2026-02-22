@@ -217,6 +217,8 @@ DiexecuteVarVal getTraceVariable(String name)
 
 DiexecuteVarVal getTraceVarValueFlex(String name,long when)
 {
+   if (name == null) return null;
+   
    int idx = name.lastIndexOf("?");
    if (idx > 0) {
       // handle ? sequence of names
@@ -460,7 +462,11 @@ JSONObject getJsonVarTrace(String varname)
 {
    JSONObject rslt = new JSONObject();
 
-   DiexecuteVarVal var = getTraceVarValueFlex(varname,getEndTime());
+   DiexecuteVarVal var = null;
+   if (!varname.contains("(")) {
+      // ensure we aren't being passed a call
+      var = getTraceVarValueFlex(varname,getEndTime());
+    }
    if (var == null) {
       rslt.put("ERROR","Variable " + varname + "not found");
       return rslt;
