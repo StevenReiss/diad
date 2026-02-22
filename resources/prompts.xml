@@ -109,7 +109,8 @@
      the problem: $(SYMPTOM).
 
      Your job it to help the debugger fix the problem relative to this symptom.  You
-     can ignore any other problems.
+     can ignore any other problems.  You should use the agents provided, not output the steps
+     to solve the problem using the agents.
    ]]></PROMPT>
 </PROMPTS>
 
