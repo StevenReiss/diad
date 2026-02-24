@@ -206,7 +206,7 @@ DiexecuteVarVal getTraceVariable(String name)
       if (nm.equals(mnm)) {
 	 if (line > 0) {
 	    int lno = IvyXml.getAttrInt(e,"LINE");
-	    if (lno > 0 && lno != line) continue;
+	    if (line > 0 && lno != line) continue;
 	  }
 	 return new DiexecuteVarVal(e,null);
        }
@@ -268,10 +268,9 @@ DiexecuteVarVal getTraceVarValueFlex(String name,long when)
       long t = for_trace.getSymptomTime();
       DiexecuteCall cc = for_trace.getContextForTime(t);
       if (cc != this) {
-         return cc.getTraceVarValueFlex(name,t);
+         DiexecuteVarVal vv = cc.getTraceVarValueFlex(name,t);
+         if (vv != null) return vv;
        }
-      
-      // find correct context
     }
    
    return null;
@@ -458,17 +457,28 @@ private JSONObject buildLineObject(int lno,long start,long end)
 }
 
 
-JSONObject getJsonVarTrace(String varname)
+JSONObject getJsonVarTrace(String varname,int vline)
 {
    JSONObject rslt = new JSONObject();
+   
+   if (varname == null) {
+      rslt.put("ERROR","No variable give tot trace");
+      return rslt;
+    }
 
    DiexecuteVarVal var = null;
    if (!varname.contains("(")) {
       // ensure we aren't being passed a call
       var = getTraceVarValueFlex(varname,getEndTime());
     }
+   if (var == null && vline > 0 && getParentCall() == null) {
+      DiexecuteCall vcall = getCallFromLineVar(vline,varname);
+      if (vcall != null && vcall != this) {
+         return vcall.getJsonVarTrace(varname,-1);
+       }
+    }
    if (var == null) {
-      rslt.put("ERROR","Variable " + varname + "not found");
+      rslt.put("ERROR","Variable " + varname + " not found");
       return rslt;
     }
 
@@ -489,6 +499,24 @@ JSONObject getJsonVarTrace(String varname)
    rslt.put("VALUES",vals);
 
    return rslt;
+}
+
+
+private DiexecuteCall getCallFromLineVar(int line,String var0)
+{
+   String var = var0;
+   if (!var.contains("@")) {
+      var = var + "@" + line;
+    }
+   DiexecuteVarVal vv = getTraceVariable(var);
+   if (vv != null) return this;
+   
+   for (DiexecuteCall sctx : getInnerCalls()) {
+      DiexecuteCall call = sctx.getCallFromLineVar(line,var);
+      if (call != null) return call;
+    }
+   
+   return null;
 }
 
 

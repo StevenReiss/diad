@@ -136,11 +136,13 @@ private void addDependentNodes(VarNode vn)
    Element dep = null;
    if (line == getLine(pctx,1)) {
       DiexecuteCall par = pctx.getParentCall();
-      int nline = getLine(par,prev);
-      // handle call node
-      dep = getCallDependencies(vnm,pctx,par,line,nline,prev);
-      pctx = par;
-      line = nline;
+      if (par != null) {
+         int nline = getLine(par,prev);
+         // handle call node
+         dep = getCallDependencies(vnm,pctx,par,line,nline,prev);
+         pctx = par;
+         line = nline;
+       }
     }
    else {
       dep = getVariableDependencies(vnm,pctx,line,prev);
@@ -315,6 +317,8 @@ private Element getCallDependencies(String name,DiexecuteCall ctx,DiexecuteCall 
 
 private int getLine(DiexecuteCall ctx,long time)
 {
+   if (ctx == null) return 0;
+   
    DiexecuteVarVal lins = ctx.getLineNumbers();
    if (lins == null) return 0;
    

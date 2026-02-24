@@ -55,7 +55,7 @@
       Recall we are trying to fix $(SYMPTOM).  Recall the top-level CALLID of the
       sample execution is $(CALLID).
    ]]></PROMPT>
-   <PROMPT COMMAND='TEST1,TEST2' COMPLETE='TRUE'><![CDATA[
+   <PROMPT COMMAND='TEST1,TEST2,TEST3' COMPLETE='TRUE'><![CDATA[
       You are an expert Java programmer with lots of debugging experience. You are being
       asked to help a developer debug his system while the
       developer is working in the debugger with the program stopped at a problem

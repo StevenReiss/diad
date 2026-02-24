@@ -57,6 +57,8 @@ static DicontrolCommand createCommand(DicontrolMain ctrl,Element xml)
          return new CommandPing(ctrl,xml);
       case "SETUPBUBBLES" :
          return new CommandSetupBubbles(ctrl,xml);
+      case "TRANSCRIPT" :
+         return new CommandTranscript(ctrl,xml);
       case "TEST" :
          return new CommandTest(ctrl,xml);
       case "DELAY" :
@@ -138,6 +140,20 @@ protected DicontrolCommand(DicontrolMain ctrl,Element xml)
 
 @Override public abstract void process(IvyXmlWriter xw) throws Exception;
  
+
+/********************************************************************************/
+/*                                                                              */
+/*      Helper methods                                                          */
+/*                                                                              */
+/********************************************************************************/
+
+protected boolean isInteger(String v)
+{
+   if (v == null || v.isEmpty()) return false;
+   
+   return v.matches("[0-9]+");
+}
+
 
 
 /********************************************************************************/
@@ -422,13 +438,21 @@ private static class QueryVarTrace extends QueryCommand {
       super(ctrl,xml);
       call_id = IvyXml.getAttrString(xml,"CALLID");
       var_name = IvyXml.getAttrString(xml,"VARIABLE");
+      if (!isInteger(call_id) && isInteger(var_name)) {
+         String s = call_id;
+         call_id = var_name;
+         var_name = s;
+       }
+      else if (var_name == null && !isInteger(call_id)) {
+         var_name = call_id;
+         call_id = "0";
+       }
     }
    
    @Override protected JSONObject getJsonObject() {
       return getCandidate().getJsonVarTrace(call_id,var_name);    
     }
    
-
 }       // end of inner class QueryVarTrace
 
 
@@ -675,7 +699,7 @@ private static class CommandStartFrame extends QueryCommand {
 
 /********************************************************************************/
 /*                                                                              */
-/*      Set model   command                                                     */
+/*      Set model command                                                       */
 /*                                                                              */
 /********************************************************************************/
 
@@ -697,6 +721,35 @@ private static class CommandSetModel extends QueryCommand {
 
 
 
+/********************************************************************************/
+/*                                                                              */
+/*      TRANSCRIPT command                                                      */
+/*                                                                              */
+/********************************************************************************/
+
+private static class CommandTranscript extends QueryCommand {
+
+   private String file_name;
+   private boolean do_append;
+   
+   CommandTranscript(DicontrolMain ctrl,Element xml) {
+      super(ctrl,xml);
+      file_name = IvyXml.getAttrString(xml,"FILE");
+      do_append = IvyXml.getAttrBool(xml,"APPEND");
+    }
+   
+   @Override public void process(IvyXmlWriter xw) {
+      CommandArgs args = new CommandArgs("FILE",file_name,
+            "APPEND",do_append);
+      diad_control.sendLimbaMessage("TRANSCRIPT",args,null);
+    }
+
+}       // end of inner class CommandTranscript
+
+
+
+
+
 
 /********************************************************************************/
 /*                                                                              */
@@ -715,6 +768,8 @@ private static class CommandExit extends DicontrolCommand {
     }
 
 }       // end of inner class CommandPing
+
+
 
 
 

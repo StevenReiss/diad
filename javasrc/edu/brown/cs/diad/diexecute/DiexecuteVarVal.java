@@ -156,7 +156,7 @@ DiexecuteVarVal(Element v,DiexecuteVarVal par)
          key1 = "[" + key + "]";
        }
       if (key == null || key1 == null) {
-         IvyLog.logE("DIEXECUTE","Unknown child of varval: " + name + " " +
+         IvyLog.logI("DIEXECUTE","Unknown child of varval: " + name + " " +
                val.getChildNames(when) + " " +
                IvyXml.convertXmlToString(e));
        }

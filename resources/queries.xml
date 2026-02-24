@@ -24,6 +24,9 @@
       $(SYMPTOM).
    </QUERY>
    <QUERY COMMAND='TEST3'>
+      You should invoke the agents directly to get the information needed.  You should
+      not respond with what agents to call or what to do to get the answer.
+
       You should return three possible explanations of the root cause of the problem
       that led to the symptom.	This should be an analysis that starts
       with the symptom and indicates what in the program caused it.  It

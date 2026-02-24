@@ -361,6 +361,9 @@ private DiexecuteCall getCallFromId(String callid)
 }
 
 
+
+
+
 private DiexecuteCall findContextByName(DiexecuteCall call,String cid) 
 {
    if (call.getMethod().equals(cid)) {
@@ -959,9 +962,16 @@ JSONArray getJsonLineTrace(String callid)
 JSONObject getJsonVarTrace(String callid,String var)
 {
    DiexecuteCall ctx = getCallFromId(callid);
-   if (ctx == null) return null;
    
-   return ctx.getJsonVarTrace(var);  
+   if (ctx == null) ctx = getRootContext();
+   
+   int lno = -1;
+   try {
+      lno = Integer.parseInt(callid);
+    }
+   catch (NumberFormatException e) { }
+   
+   return ctx.getJsonVarTrace(var,lno);   
 }
 
 
@@ -991,7 +1001,6 @@ JSONObject getJsonVarHistory(String callid,String var,int line,long when0)
       err.put("ERROR","Invalid variable " + var);
       return err;
     }
-   
    
    DiexecuteVarHistory hist = new DiexecuteVarHistory(this,ctx,
          execvar,var,when); 
