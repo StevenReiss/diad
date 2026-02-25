@@ -986,6 +986,7 @@ JSONObject getJsonVarHistory(String callid,String var,int line,long when0)
    
    long when = when0;
    DiexecuteVarVal linevar = ctx.getLineNumbers(); 
+   if (when == 0) when = ctx.getEndTime()-1;
    when = getActualTime(ctx,linevar,when,line);
    if (when < 0) {
       IvyLog.logE("DIEXECUTE","Bad time computed " + when + " " + line +

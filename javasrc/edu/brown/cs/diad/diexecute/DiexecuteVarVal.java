@@ -233,6 +233,11 @@ DiexecuteVarVal(Element v,DiexecuteVarVal par)
    
    // should also take into account time changes for subeleemnts
    
+   if (IvyXml.isElement(var_element,"VALUE")) {
+      long vtime = IvyXml.getAttrLong(var_element,"TIME");
+      if (vtime > 0) rslt.add(vtime); 
+    }
+   
    if (rslt.isEmpty()) return Collections.singletonList(0L);
    
    return rslt; 

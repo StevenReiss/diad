@@ -115,7 +115,7 @@ private void addDependentNodes(VarNode vn)
     }
    else if (prev == 0) prev = now;
    
-   DiexecuteCall pctx = exec_trace.getContextForTime(prev+1); 
+   DiexecuteCall pctx = exec_trace.getContextForTime(prev); 
    IvyLog.logD("DIEXECUTE","DEPENDENT CONTEXT " + pctx);
    if (pctx == null) return;
    
@@ -129,12 +129,13 @@ private void addDependentNodes(VarNode vn)
    int idx = vnm.lastIndexOf("?");
    if (idx > 0) vnm = vnm.substring(idx+1);
    
+   if (prev < pctx.getStartTime()) prev = pctx.getStartTime();
    int line = getLine(pctx,prev);
-   IvyLog.logD("DIEXECUTE","DEPENDENT LINE " + line);
+   IvyLog.logD("DIEXECUTE","DEPENDENT LINE " + line + " @ " + prev);
    if (line <= 0) return;
    
    Element dep = null;
-   if (line == getLine(pctx,1)) {
+   if (line == getLine(pctx,pctx.getStartTime())) {
       DiexecuteCall par = pctx.getParentCall();
       if (par != null) {
          int nline = getLine(par,prev);
