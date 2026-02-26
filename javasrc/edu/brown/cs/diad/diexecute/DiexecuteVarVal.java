@@ -26,8 +26,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -241,6 +243,46 @@ DiexecuteVarVal(Element v,DiexecuteVarVal par)
    if (rslt.isEmpty()) return Collections.singletonList(0L);
    
    return rslt; 
+}
+
+
+Collection<Long> getAllTimeChanges(DiexecuteTrace trace)
+{
+   Set<Long> rslt = new TreeSet<>();
+   addAllTimeChanges(var_element,rslt);
+   
+   DiexecuteCall pctx = null;
+   int pline = 0;
+   for (Iterator<Long> it = rslt.iterator(); it.hasNext(); ) {
+      Long time = it.next();
+      DiexecuteCall ctx = trace.getContextForTime(time);
+      if (ctx == pctx) {
+         DiexecuteVarVal lins = ctx.getLineNumbers();
+         if (lins != null) {
+            int lin = lins.getLineValue(time);
+            if (lin == pline) it.remove();
+            else pline = lin;
+          }
+       }
+      else {
+         pline = 0;
+       }
+      pctx = ctx;
+    }
+   
+   return rslt;
+}
+
+
+private void addAllTimeChanges(Element xml,Set<Long> rslt)
+{
+   if (IvyXml.isElement(xml,"VALUE")) {
+      long vtime = IvyXml.getAttrLong(xml,"TIME");
+      if (vtime > 0) rslt.add(vtime);
+    }
+   for (Element sub : IvyXml.elementsByTag(xml,"VALUE")) {
+      addAllTimeChanges(sub,rslt);
+    }
 }
 
 @Override public long getUpdateTime(long when)

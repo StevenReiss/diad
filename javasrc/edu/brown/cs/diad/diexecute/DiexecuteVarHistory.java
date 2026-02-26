@@ -24,6 +24,7 @@ package edu.brown.cs.diad.diexecute;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -106,23 +107,39 @@ private void addDependentNodes(VarNode vn)
 {
    long now = vn.getTime();
    long prev = -1;
-   for (Long when : vn.getValue().getTimeChanges()) {
-      if (when <= now) prev = when;
-      else if (when > now) break;
+   if (vn.getValue().hasChildren(now)) {
+      for (Long when : vn.getValue().getAllTimeChanges(exec_trace)) { 
+         if (when < now) {
+            addDependentNodes(vn,when);
+          }
+       }
     }
-   if (prev < 0) {
-      prev = now-1;
+   else {
+      for (Long when : vn.getValue().getTimeChanges()) { 
+         if (when <= now) prev = when;
+         else if (when > now) break;
+       }
+      if (prev < 0) {
+         prev = now-1;
+       }
+      else if (prev == 0) prev = now;
+      addDependentNodes(vn,prev);
     }
-   else if (prev == 0) prev = now;
-   
+}
+
+
+private void addDependentNodes(VarNode vn,long prev)
+{
    DiexecuteCall pctx = exec_trace.getContextForTime(prev); 
    IvyLog.logD("DIEXECUTE","DEPENDENT CONTEXT " + pctx);
    if (pctx == null) return;
    
    VarNode vn1 = new VarNode(VarNodeType.SET,pctx,prev,vn.getName(),vn.getValue());
    if (prev != vn.getTime()) {
-      vn.addDependent(vn1);
-      vn = vn1;
+      if (!duplicateNode(vn,start_node)) {
+         vn.addDependent(vn1);
+         vn = vn1;
+       }
     }
    
    String vnm = vn.getName();
@@ -150,14 +167,31 @@ private void addDependentNodes(VarNode vn)
     }
    
    List<VarNode> vns = findDependents(vn,dep,pctx,line,prev-1);
-   if (vns == null) return;
+   if (vns == null || vns.isEmpty()) return;
    
    for (VarNode nvn : vns) {
-      vn.addDependent(nvn);
-      addDependentNodes(nvn);
+      if (!duplicateNode(nvn,start_node)) {
+         vn.addDependent(nvn);
+         addDependentNodes(nvn);
+       }
+      else {
+         IvyLog.logD("DIEXECUTE","Duplicate node " + nvn);
+       }
     }
 }
 
+
+
+private boolean duplicateNode(VarNode vn,VarNode at)
+{
+   if (at.matches(vn)) return true;
+   if (at.getDependents() != null) {
+      for (VarNode next : at.getDependents()) {
+         if (duplicateNode(vn,next)) return true;
+       }
+    }
+   return false;
+}
 
 /********************************************************************************/
 /*                                                                              */
@@ -192,7 +226,6 @@ List<VarNode> findDependents(VarNode vnorig,Element dep,DiexecuteCall ctx,int ln
    
    List<VarNode> deps = new ArrayList<>();
    Set<Element> done = new HashSet<>(); 
-   boolean chng = true;
    List<DiexecuteVarVal> comps = new ArrayList<>();
    DiexecuteVarVal thisv = ctx.getTraceVariable("this");
    if (thisv != null) comps.add(thisv);
@@ -202,6 +235,7 @@ List<VarNode> findDependents(VarNode vnorig,Element dep,DiexecuteCall ctx,int ln
       comps.add(thisnv);
     }
    
+   boolean chng = true;
    while (chng) {
       chng = false;
       for (Element var : IvyXml.children(dep,"VAR")) {
@@ -228,7 +262,6 @@ List<VarNode> findDependents(VarNode vnorig,Element dep,DiexecuteCall ctx,int ln
             case CLASS :
             case INTERFACE :
             case ENUM :
-            case METHOD :
             case CONSTRUCTOR :
             case PACKAGE :
             case ANNOTATION :
@@ -236,14 +269,20 @@ List<VarNode> findDependents(VarNode vnorig,Element dep,DiexecuteCall ctx,int ln
                done.add(var);
                break;
                
+            case METHOD :
+               done.add(var);
+               break;
+               
             case LOCAL :
                done.add(var);
+               IvyLog.logD("DIEXECUTE","LOCAL " + vnm + " " + vty);
                String lclnm = ctx.getVariableName(vnm,lno);
                if (lclnm == null) break;
                DiexecuteVarVal varval = ctx.getTraceVariable(lclnm);
                DiexecuteVarVal val = varval.getValueAtTime(exec_trace,when);
                if (val == null) break;
-               if (!val.hasChildren(when)) { 
+               boolean systyp = IvyXml.getAttrBool(var,"BINARY");
+               if (!val.hasChildren(when) || systyp) { 
                   bvs.add(varval);
                 }
                else {
@@ -263,7 +302,6 @@ List<VarNode> findDependents(VarNode vnorig,Element dep,DiexecuteCall ctx,int ln
           }
        }
     }
-   
    
    return deps;
 }
@@ -425,6 +463,17 @@ private static class VarNode {
    
    boolean isReturn() {
       return var_name != null && var_name.endsWith("*RETURNS*");
+    }
+   
+   boolean matches(VarNode vn) {
+      if (var_name != null && !var_name.equals(vn.var_name)) return false;
+      else if (var_name == null && vn.var_name != null) return false;
+      if (at_time != vn.at_time) return false;
+      if (in_context != vn.in_context) return false;
+      if (node_type != vn.node_type) return false;
+   // if (other_data != null && !other_data.equals(vn.other_data)) return false;
+   // else if (other_data == null && vn.other_data != null) return false;
+      return true;
     }
    
    JSONObject toJson() {
