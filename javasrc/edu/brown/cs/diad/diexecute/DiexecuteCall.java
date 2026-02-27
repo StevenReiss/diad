@@ -287,7 +287,7 @@ DiexecuteVarVal getValueAtTime(DiadTrace trace,String name,long when)
     }
    else if (var0 == null) {
       IvyLog.logE("DIEXECUTE","Variable not found " + name + " " + when +
-	    " " + IvyXml.convertXmlToString(context_element));
+	    " " + getMethod());
       return null;
     }
    else {

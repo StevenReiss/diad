@@ -47,6 +47,7 @@ import edu.brown.cs.diad.dicore.DiadThread;
 import edu.brown.cs.diad.dicore.DiadTrace;
 import edu.brown.cs.diad.dicore.DiadValue;
 import edu.brown.cs.ivy.file.IvyLog;
+import edu.brown.cs.ivy.file.Pair;
 import edu.brown.cs.ivy.xml.IvyXml;
 
 class DiexecuteTrace implements DiadTrace, DiexecuteConstants
@@ -1055,6 +1056,12 @@ private long getActualTime(DiexecuteCall ctx,DiexecuteVarVal linevar,
             when = getActualTime(cc,lv,-1,line);
           }
        }
+      if (when < 0 && line > 10000) {
+         IvyLog.logE("DIEXECUTE","Line and time confused in call " + line + 
+               " " + when);
+         when = line;
+         line = -1;
+       }
       if (when < 0) {
          if (!next) {
             IvyLog.logE("DIEXECUTE","Get actual time given bad line " + line + 
@@ -1072,8 +1079,10 @@ JSONObject getJsonVarValue(String callid,String var,int line,long when0)
    DiexecuteCall ctx = getCallFromId(callid);
    if (ctx == null) return null;
    
-   DiexecuteVarVal linevar = ctx.getLineNumbers();
-   long when = getActualTime(ctx,linevar,when0,line);
+   Pair<DiexecuteVarVal,Long> find = findVarValue(ctx,when0,line,var);
+   DiexecuteVarVal execvar = find.first();
+   long when = find.second();
+   
    if (when < 0) {
       IvyLog.logE("DIEXECUTE","Bad time computed " + when + " " + line +
             " " + when0);
@@ -1081,11 +1090,15 @@ JSONObject getJsonVarValue(String callid,String var,int line,long when0)
       err.put("ERROR","No time or line given");
       return err;
     }
-   
-   DiexecuteVarVal execvar = ctx.getValueAtTime(this,var,when);
    if (execvar == null) {
-      DiexecuteVarVal var0 = ctx.getTraceVarValueFlex(var,when);
-      if (var0 != null) execvar = var0.getValueAtTime(this,when);
+      for (DiexecuteCall inner : ctx.getInnerCalls()) {
+         find = findVarValue(inner,when0,-1,var);
+         execvar = find.first();
+         if (execvar != null) {
+            when = find.second();
+            ctx = inner;
+          }
+       }
     }
    if (execvar == null) {
       JSONObject err = new JSONObject();
@@ -1101,6 +1114,29 @@ JSONObject getJsonVarValue(String callid,String var,int line,long when0)
          execvar.toJsonValue(this,when,new HashSet<>()));
    
    return jo;
+}
+
+
+
+private Pair<DiexecuteVarVal,Long> findVarValue(DiexecuteCall ctx,long when0,int line,String var)
+{
+   if (ctx == null) return null;
+   
+   DiexecuteVarVal linevar = ctx.getLineNumbers();
+   long when = getActualTime(ctx,linevar,when0,line);
+   if (when < 0) {
+      IvyLog.logE("DIEXECUTE","Bad time computed " + when + " " + line +
+            " " + when0);
+      return new Pair<>(null,when);
+    }
+   
+   DiexecuteVarVal execvar = ctx.getValueAtTime(this,var,when);
+   if (execvar == null) {
+      DiexecuteVarVal var0 = ctx.getTraceVarValueFlex(var,when);
+      if (var0 != null) execvar = var0.getValueAtTime(this,when);
+    }
+   
+   return new Pair<>(execvar,when);
 }
 
 

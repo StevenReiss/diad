@@ -23,6 +23,9 @@
 	VARIABLE='xml?children?elementData?[0]?qualifiedName'
 	WHEN='55626' />
 <DIAD DO='Q_VARHISTORY' DEBUGID='$ID' CALLID='0'
+	VARIABLE='xml'
+	WHEN='59116' />
+<DIAD DO='Q_VARHISTORY' DEBUGID='$ID' CALLID='0'
 	VARIABLE='xml?children?elementData?[0]?qualifiedName'
 	WHEN='0' />
 <DIAD DO='Q_METHODCALLS' DEBUGID='$ID' METHOD='net.n3.nanoxml.XMLElement.getChildAtIndex(int)' />

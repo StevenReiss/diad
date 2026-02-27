@@ -55,7 +55,7 @@
       programming in general.
       In the end you should provide a set of possible patches
       that are likely to fix the problem.  Providing multiple alternatives
-      is fine.
+      is fine.	Also provide the patches in a format suitable for the Linux patch command.
    </QUERY>
    <QUERY COMMAND='USER'>
    </QUERY>

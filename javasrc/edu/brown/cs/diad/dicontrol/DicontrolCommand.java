@@ -194,6 +194,10 @@ private static class CommandSetupBubbles extends DicontrolCommand {
    
    @Override public void process(IvyXmlWriter xw) { 
       diad_control.getTestManager().setupBedrock(workspace_name,mint_name); 
+      
+      CommandArgs args = new CommandArgs("MESSAGE",
+            "Start workspace " + workspace_name);
+      diad_control.sendLimbaMessage("MESSAGE",args,null);
     }
 
 }       // end of inner class CommandSetupBubbles
@@ -221,7 +225,12 @@ private static class CommandTest extends DicontrolCommand {
    @Override public void process(IvyXmlWriter xw) {
       diad_control.getTestManager().setupTest(project_name,launch_name,
             continue_count);
+      
+      CommandArgs args = new CommandArgs("MESSAGE","Start test " +
+            project_name + "::" + launch_name);
+      diad_control.sendLimbaMessage("MESSAGE",args,null);
     }
+   
    
 }       // end of inner class CommandTest
 

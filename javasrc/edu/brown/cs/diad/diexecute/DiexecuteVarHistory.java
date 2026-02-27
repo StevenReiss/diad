@@ -24,7 +24,6 @@ package edu.brown.cs.diad.diexecute;
 
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -53,6 +52,7 @@ class DiexecuteVarHistory implements DiexecuteConstants
 private DiexecuteTrace  exec_trace;
 private long            start_time; 
 private VarNode         start_node;
+private List<VarNode>   all_nodes;
 
 private static AtomicInteger node_counter = new AtomicInteger(0);
 
@@ -77,6 +77,8 @@ DiexecuteVarHistory(DiexecuteTrace trace,DiexecuteCall ctx,
    
    start_node = new VarNode(VarNodeType.VALUE,ctx,start_time,
          name,val);
+   all_nodes = new ArrayList<>();
+   all_nodes.add(start_node);
 }
 
 
@@ -136,7 +138,7 @@ private void addDependentNodes(VarNode vn,long prev)
    
    VarNode vn1 = new VarNode(VarNodeType.SET,pctx,prev,vn.getName(),vn.getValue());
    if (prev != vn.getTime()) {
-      if (!duplicateNode(vn,start_node)) {
+      if (canAddNode(vn1)) {
          vn.addDependent(vn1);
          vn = vn1;
        }
@@ -170,14 +172,29 @@ private void addDependentNodes(VarNode vn,long prev)
    if (vns == null || vns.isEmpty()) return;
    
    for (VarNode nvn : vns) {
-      if (!duplicateNode(nvn,start_node)) {
+      if (canAddNode(nvn)) {
+         IvyLog.logD("DIEXECUTE","Add DEPENDNCY " + nvn);
          vn.addDependent(nvn);
          addDependentNodes(nvn);
        }
       else {
-         IvyLog.logD("DIEXECUTE","Duplicate node " + nvn);
+         IvyLog.logD("DIEXECUTE","Duplicate node " + all_nodes.size() + " " + nvn);
        }
     }
+}
+
+
+
+private boolean canAddNode(VarNode vn)
+{
+   if (all_nodes.size() >= 50) {
+      return false;
+    }
+   if (duplicateNode(vn,start_node)) {
+      return false;
+    }
+   all_nodes.add(vn);
+   return true;
 }
 
 
@@ -496,6 +513,11 @@ private static class VarNode {
        }
       
       return rslt;
+    }
+   
+   @Override public String toString() {
+      return node_id + "(" + in_context.getMethod() + "@" + at_time + " " +
+         var_name + " " + node_type + ")";
     }
    
 }       // end of inner class VarNode
