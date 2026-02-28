@@ -464,6 +464,8 @@ Element askLimba(IvyXmlWriter xw,DiadAskType typ,String query,boolean nohistory)
    keymap.put("PROCESS",for_thread.getProcessId());
    int cid = base_execution.getExecutionTrace().getRootContext().getContextId();
    keymap.put("CALLID",String.valueOf(cid));
+   int cid1 = base_execution.getExecutionTrace().getSymptomContext().getContextId();
+   keymap.put("STOPID",String.valueOf(cid1));
    
    String prompt = diad_control.getPrompt(typ.toString());
    prompt = IvyFile.expandName(prompt,keymap);

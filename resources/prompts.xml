@@ -37,6 +37,7 @@
       In order to answer questions, you
       should first determine how execution got to this point with the values
       indicated.  The top-level CALLID of the sample execution is $(CALLID).
+      The CALLID of the stopping point is $(STOPID).
 
       You can assume that the programmer understands the purpose of the system,
       its various classes and components,
@@ -76,7 +77,7 @@
       The system has created an execution trace showing how execution leading up to the breakpoint.
       You should access and analyze this trace to answer any queries.  The trace is represented by
       the method call tree.  Elements of the trace are referenced by CALLID.  The CALLID of the
-      starting method is $(CALLID).
+      starting method is $(CALLID).  The CALLID of the stopping point is $(STOPID).
 
       The primary means of accessing the call trace is to use the tool agent getCallTrace(CALLID).
       This returns a JSON object that describes the particular call.  The basic components of this object

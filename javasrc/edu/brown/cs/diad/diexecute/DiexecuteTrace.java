@@ -1140,11 +1140,51 @@ private Pair<DiexecuteVarVal,Long> findVarValue(DiexecuteCall ctx,long when0,int
 }
 
 
-JSONArray getJsonMethodCalls(String method)
+JSONArray getJsonMethodCalls(String method0)
 {
+   String method = method0;
    JSONArray rslt = new JSONArray();
    
    addMethodCalls(problem_context.getCallId(),method,rslt);
+   if (rslt.isEmpty()) {
+      addMethodCalls("0",method,rslt);
+    }
+   
+   if (rslt.isEmpty()) {
+      int idx1 = method.indexOf("(");
+      if (idx1 < 0) idx1 = method.length();
+      int idx2 = method.lastIndexOf(".", idx1);
+      if (idx2 > 0) {
+         String mnm = method.substring(idx2+1,idx1);
+         IvyLog.logD("DIEXECUTE","Use simple name " + mnm);
+         addMethodCalls(problem_context.getCallId(),mnm,rslt);
+         if (rslt.isEmpty()) {
+            addMethodCalls("0",method,rslt);
+          }
+         if (rslt.isEmpty()) {
+            method = mnm;
+            idx1 = method.length();
+          }
+       }
+      if (rslt.isEmpty() && idx1 < method.length()) {
+         String mnm = method.substring(0,idx1);
+         IvyLog.logD("DIEXECUTE","Use simple name " + mnm);
+         addMethodCalls(problem_context.getCallId(),mnm,rslt);
+         if (rslt.isEmpty()) {
+            addMethodCalls("0",method,rslt);
+          }
+         else {
+            method = mnm;
+          }
+       }
+      if (rslt.isEmpty() && !method0.contains("<init>")) {
+         String mnm = method0 + ".<init>";
+         addMethodCalls("0",mnm,rslt);
+       }
+    }
+   if (rslt.isEmpty()) {
+      IvyLog.logD("DIEXECUTE","Not method calls found for " + method);
+    }
    
    return rslt; 
 }
@@ -1180,18 +1220,21 @@ private boolean matchMethod(String user0,String seede0)
       int idx = seede.indexOf("(");
       if (idx >= 0) {
          seede = seede.substring(0,idx);
+         if (user.equals(seede)) return true;
        }
     }
-   if (user.equals(seede)) return true;
-   if (!user.contains(".")) {
+   int idx3 = user.indexOf("(");
+   if (idx3 < 0) idx3 = user.length();
+   int idx2 = user.lastIndexOf(".",idx3);
+   if (idx2 < 0) {
       int idx = seede.indexOf("(");
       if (idx < 0) idx = seede.length()-1;
       int idx1 = seede.lastIndexOf(".",idx);
       if (idx1 > 0) {
          seede = seede.substring(idx1+1);
+         if (user.equals(seede)) return true;
        }
     }
-   if (user.equals(seede)) return true;
    
    return false;
 }
