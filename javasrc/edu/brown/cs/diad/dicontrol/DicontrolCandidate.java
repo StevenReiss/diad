@@ -74,13 +74,17 @@ private DiadStackFrame  start_frame;
 private DiadStackFrame  user_frame;
 private DiadExecution   base_execution;
 private Collection<DiadLocation> exec_locations;
+private String          query_response;
 private String          candidate_id;
 private SwingEventListenerList<DiadCandidateCallback> candidate_listeners;
 private CandidateThread candidate_processor;
 private Set<File>       candidate_files;
 private DiadAnalysisFileMode file_mode;
+private DicontrolCommand query_command;
 
 private static AtomicInteger candidate_counter = new AtomicInteger(0);
+private static final String QUERY_COMMAND =
+   "<DIAD DO='ASKLIMBA' DEBUGID='$ID' TYPE='EXPLAIN' />";
 
 
 
@@ -102,6 +106,7 @@ DicontrolCandidate(DicontrolMain ctrl,DiadThread thrd)
    exec_locations = null;
    user_symptom = null;
    user_frame = null;
+   query_response = null;
    
    candidate_listeners = new SwingEventListenerList<>(DiadCandidateCallback.class);
    candidate_processor = null;
@@ -110,6 +115,10 @@ DicontrolCandidate(DicontrolMain ctrl,DiadThread thrd)
    
    file_mode = diad_control.getProperty("Diad.file.mode",
          DiadAnalysisFileMode.FAIT_FILES);
+   
+   String cmd = QUERY_COMMAND.replace("$ID",candidate_id);
+   Element xml = IvyXml.convertStringToXml(cmd);
+   query_command = DicontrolCommand.createCommand(ctrl,xml);
    
    IvyLog.logD("DICONTROL","Setup candidate " + candidate_id + " for " + thrd);
 }
@@ -161,6 +170,7 @@ void setState(DiadCandidateState st)
       start_frame = null;
       base_execution = null;
       exec_locations = null;
+      query_response = null;
       candidate_files.clear();
     }
    
@@ -514,6 +524,7 @@ void outputXml(IvyXmlWriter xw)
    xw.begin("CANDIDATE");
    xw.field("ID",candidate_id);
    xw.field("STATE",candidate_state);
+   xw.field("AUTO_QUERY",diad_control.getProperty("Diad.auto.query",false));
    if (for_thread != null) for_thread.outputXml(xw);
    if (for_frame != null) for_frame.outputXml(xw);
    if (candidate_symptom != null) {
@@ -537,6 +548,9 @@ void outputXml(IvyXmlWriter xw)
          loc.outputXml(xw);
        }
       xw.end("EXECLOCATIONS");
+    }
+   if (query_response != null && !query_response.isEmpty()) {
+      xw.cdataElement("RESPONSE",query_response);
     }
    xw.end("CANDIDATE");
 }
@@ -648,6 +662,20 @@ private final class CandidateThread extends Thread {
                   break;
                case PREPARING_DATA :
                   // might want to find repairs 
+                  if (diad_control.getProperty("Diad.auto.query",false)) {
+                     setState(DiadCandidateState.READY);
+                   }
+                  else {
+                     setState(DiadCandidateState.DOING_QUERY);
+                   }
+                  break;
+               case DOING_QUERY : 
+                  if (checkInterrupted()) break;
+                  IvyXmlWriter xw = new IvyXmlWriter();
+                  query_command.process(xw);
+                  if (checkInterrupted()) break; 
+                  Element resp = IvyXml.convertStringToXml(xw.toString());
+                  query_response = IvyXml.getTextElement(resp,"REPONSE");
                   setState(DiadCandidateState.READY);
                   break;
                case NO_SYMPTOM_FOUND :

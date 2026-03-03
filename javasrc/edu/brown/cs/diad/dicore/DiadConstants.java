@@ -59,6 +59,7 @@ enum DiadCandidateState {
    DOING_BASE_EXECUTION,
    FINDING_EXECUTED_LOCATIONS,
    PREPARING_DATA,
+   DOING_QUERY,
    READY,
    NO_USER_STACK,
    NO_ANALYSIS,
@@ -120,6 +121,8 @@ enum DiadAskType {
    TEST1,
    TEST2,
    TEST3,
+   TEST4,
+   TEST5,
 }
 
 

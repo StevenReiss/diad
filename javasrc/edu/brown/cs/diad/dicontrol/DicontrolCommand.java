@@ -599,6 +599,9 @@ private static class CommandParameter extends DicontrolCommand {
    @Override public void process(IvyXmlWriter xw) {
       for (Map.Entry<String,String> ent : set_values.entrySet()) {
          switch (ent.getKey()) {
+            case "AUTO_QUERY" :
+               diad_control.setProperty("Diad.auto.query",ent.getValue());
+               break;
             case "FILEMODE" :
                DiadAnalysisFileMode mode = findFileMode(ent.getValue());
                if (debug_candidate == null && mode != null) {
@@ -642,6 +645,8 @@ private static class CommandParameter extends DicontrolCommand {
       int mxdepth = diad_control.getProperty("Diad.max.seede.depth",MAX_SEEDE_DEPTH); 
       xw.field("SEEDE_STEPS",mxtime);
       xw.field("SEEDE_DEPTH",mxdepth);
+      xw.field("AUTO_QUERY",diad_control.getProperty("Diad.auto.query",false));
+      xw.field("MODEL",diad_control.getProperty("Diad.ollama.model"));
       xw.end("PARAMETERS");
     }
    
@@ -722,8 +727,21 @@ private static class CommandSetModel extends QueryCommand {
     }
    
    @Override public void process(IvyXmlWriter xw) {
-      CommandArgs args = new CommandArgs("MODEL",model_name);
-      diad_control.sendLimbaMessage("SETMODEL",args,null);
+      if (model_name != null) {
+         CommandArgs args = new CommandArgs("MODEL",model_name);
+         diad_control.setProperty("Diad.ollama.model",model_name);
+         diad_control.sendLimbaMessage("SETMODEL",args,null);
+       }
+      Element mdls = diad_control.sendLimbaMessage("LIST",null,null);
+      xw.begin("MDOELS");
+      for (Element mxml : IvyXml.children(mdls,"MODEL")) {
+         String mdl = IvyXml.getText(mxml);
+         xw.begin("MODEL");
+         xw.field("NAME",mdl);
+         if (mdl.equals(model_name)) xw.field("ACTIVE",true);
+         xw.end("MODEL");
+       }
+      xw.end("MODELS");
     }
 
 }       // end of inner class CommandSetModel

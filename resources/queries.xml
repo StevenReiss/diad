@@ -1,13 +1,11 @@
 <QUERIES>
    <QUERY COMMAND='EXPLAIN'>
       You should return an explanation of the root cause of the problem
-      that led to the symptom.	This should be an analysis that starts
-      with the symptom and indicates what in the program caused it.  It
-      can be specific, identifying the lines that led to the problem,
-      or can be general, indicating the overall problem and what types of
-      things to look for.
-      For example, if the fault is a NullPointerException, explain how
-      the particular value could be null at the stopping point.
+      that led to the symptom.	You should start with the methods that are
+      returned by getFaultLocations, examine the trace for those methods (you
+      can get the callids using getCallIdsForMethod and the actual trace using
+      getCallTrace) and determine how this trace is relevant to the symptom
+      $(SYMPTOM).
    </QUERY>
    <QUERY COMMAND='TEST1'>
       You should return a detailed explanation of the root cause of the problem
@@ -28,6 +26,16 @@
       not respond with what agents to call or what to do to get the answer.
 
       You should return three possible explanations of the root cause of the problem
+      that led to the symptom.	This should be an analysis that starts
+      with the symptom and indicates what in the program caused it.  It
+      can be specific, identifying the lines that led to the problem,
+      or can be general, indicating the overall problem and what types of
+      things to look for.
+      For example, if the fault is a NullPointerException, explain how
+      the particular value could be null at the stopping point.
+   </QUERY>
+   <QUERY COMMAND='TEST4'>
+      You should return an explanation of the root cause of the problem
       that led to the symptom.	This should be an analysis that starts
       with the symptom and indicates what in the program caused it.  It
       can be specific, identifying the lines that led to the problem,
