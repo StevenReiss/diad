@@ -80,7 +80,6 @@ private SwingEventListenerList<DiadCandidateCallback> candidate_listeners;
 private CandidateThread candidate_processor;
 private Set<File>       candidate_files;
 private DiadAnalysisFileMode file_mode;
-private DicontrolCommand query_command;
 
 private static AtomicInteger candidate_counter = new AtomicInteger(0);
 private static final String QUERY_COMMAND =
@@ -116,9 +115,7 @@ DicontrolCandidate(DicontrolMain ctrl,DiadThread thrd)
    file_mode = diad_control.getProperty("Diad.file.mode",
          DiadAnalysisFileMode.FAIT_FILES);
    
-   String cmd = QUERY_COMMAND.replace("$ID",candidate_id);
-   Element xml = IvyXml.convertStringToXml(cmd);
-   query_command = DicontrolCommand.createCommand(ctrl,xml);
+  
    
    IvyLog.logD("DICONTROL","Setup candidate " + candidate_id + " for " + thrd);
 }
@@ -461,7 +458,10 @@ JSONArray getJsonMethodCalls(String method)
 
 Element askLimba(IvyXmlWriter xw,DiadAskType typ,String query,boolean nohistory)
 {
-   if (candidate_state != DiadCandidateState.READY) return null;
+   if (candidate_state != DiadCandidateState.READY &&
+         candidate_state != DiadCandidateState.DOING_QUERY) {
+      return null;
+    }
    
    Map<String,String> keymap = diad_control.getKeyMap();
    keymap.put("SYMPTOM",candidate_symptom.getText()); 
@@ -661,21 +661,18 @@ private final class CandidateThread extends Thread {
                   // restrict location set by base execution
                   break;
                case PREPARING_DATA :
-                  // might want to find repairs 
                   if (diad_control.getProperty("Diad.auto.query",false)) {
-                     setState(DiadCandidateState.READY);
+                     setState(DiadCandidateState.DOING_QUERY);
                    }
                   else {
-                     setState(DiadCandidateState.DOING_QUERY);
+                     setState(DiadCandidateState.READY);
                    }
                   break;
                case DOING_QUERY : 
                   if (checkInterrupted()) break;
-                  IvyXmlWriter xw = new IvyXmlWriter();
-                  query_command.process(xw);
-                  if (checkInterrupted()) break; 
-                  Element resp = IvyXml.convertStringToXml(xw.toString());
-                  query_response = IvyXml.getTextElement(resp,"REPONSE");
+                  runQuery();
+                  if (checkInterrupted()) break;
+                  // nandle null response here?
                   setState(DiadCandidateState.READY);
                   break;
                case NO_SYMPTOM_FOUND :
@@ -706,17 +703,22 @@ private final class CandidateThread extends Thread {
                   return;
              }
           }
-         catch (Throwable e) {
+         catch (InterruptedException e) {
+            IvyLog.logD("DICONTROL","Interrupted exception");
             if (isInterrupted()) {
                return;
              }
+          }
+         catch (Throwable e) {
             IvyLog.logE("DICONTROL","Problem processing candidate",e);
+            if (isInterrupted()) {
+               return;
+             }
             setState(DiadCandidateState.DEAD);
             return;
           }
        }
     }
-   
    
    private void findSymptom() {
       candidate_symptom = null;
@@ -746,6 +748,20 @@ private final class CandidateThread extends Thread {
          candidate_symptom = user_symptom;
        }
     }
+   
+   private void runQuery() throws Exception {
+      query_response = null;
+      String cmd = QUERY_COMMAND.replace("$ID",candidate_id);
+      IvyLog.logD("DICONTROL","Run query " + cmd);
+      Element xml = IvyXml.convertStringToXml(cmd);
+      DicontrolCommand qcmd = DicontrolCommand.createCommand(diad_control,xml);
+      IvyXmlWriter xw = new IvyXmlWriter();
+      qcmd.process(xw);
+      Element resp = IvyXml.convertStringToXml(xw.toString());
+      IvyLog.logD("DICONTROL","Query returned " + IvyXml.convertXmlToString(resp));
+      query_response = IvyXml.getTextElement(resp,"RESPONSE");
+      IvyLog.logD("DICONTROL","Query text " + query_response);
+   }
    
    private boolean checkInterrupted() {
       if (isInterrupted()) {

@@ -733,7 +733,8 @@ private static class CommandSetModel extends QueryCommand {
          diad_control.sendLimbaMessage("SETMODEL",args,null);
        }
       Element mdls = diad_control.sendLimbaMessage("LIST",null,null);
-      xw.begin("MDOELS");
+      
+      xw.begin("MODELS");
       for (Element mxml : IvyXml.children(mdls,"MODEL")) {
          String mdl = IvyXml.getText(mxml);
          xw.begin("MODEL");
