@@ -96,8 +96,14 @@ DicontrolMonitor(DicontrolMain gm,String mintid)
 private String processCommand(String cmd,Element xml) throws DiadException
 {
    try (IvyXmlWriter xw = new IvyXmlWriter()) {
-      xw.begin("RESULT");
       DiadCommand dcmd = diad_control.setupDiadCommand(xml);
+      if (dcmd == null) {
+         xw.begin("ERROR");
+         xw.field("MESSAGE","Unknown command " + cmd);
+         xw.end("ERROR");
+         return xw.toString();
+       }
+      xw.begin("RESULT");
       if (dcmd.isImmediate()) { 
          try {
             dcmd.process(xw);

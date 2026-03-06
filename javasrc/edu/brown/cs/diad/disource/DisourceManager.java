@@ -33,6 +33,7 @@ import edu.brown.cs.diad.dicontrol.DicontrolMain;
 import edu.brown.cs.ivy.file.IvyFile;
 import edu.brown.cs.ivy.mint.MintConstants.CommandArgs;
 import edu.brown.cs.ivy.xml.IvyXml;
+import edu.brown.cs.ivy.xml.IvyXmlWriter;
 
 public class DisourceManager implements DisourceConstants
 {
@@ -96,6 +97,16 @@ public String getWorksapceShortName()
    int idx = s.lastIndexOf("/");
    if (idx > 0) s = s.substring(idx+1);
    return s;
+}
+
+
+public void getExpressionsInStatement(IvyXmlWriter xw,String proj,String file,int offset,int line)
+{
+   File f1 = null;
+   if (file != null) f1 = new File(file);
+   ASTNode src = getSourceNode(proj,f1,offset,line,false,true);
+   DisourceExpressionQuery deq = new DisourceExpressionQuery(diad_control,src);
+   deq.process(xw);  
 }
 
 

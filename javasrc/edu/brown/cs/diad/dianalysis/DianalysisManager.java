@@ -179,6 +179,13 @@ private Element getProjects()
    return r;
 }
 
+
+public static void addXmlForLocation(String elt,ASTNode node,boolean next,IvyXmlWriter xw)
+{
+   DianalysisHistory.addXmlForLocation(elt,node,next,xw);
+}
+
+
 /********************************************************************************/
 /*                                                                              */
 /*      Methods to add files and setup analysis                                 */

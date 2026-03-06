@@ -30,6 +30,7 @@ import org.json.JSONObject;
 import org.w3c.dom.Element;
 
 import edu.brown.cs.diad.dicore.DiadConstants.DiadCommand;
+import edu.brown.cs.diad.disource.DisourceManager;
 import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.mint.MintConstants.CommandArgs;
 import edu.brown.cs.ivy.xml.IvyXml;
@@ -85,6 +86,8 @@ static DicontrolCommand createCommand(DicontrolMain ctrl,Element xml)
          return new QueryVarValue(ctrl,xml);
       case "Q_METHODCALLS" :
          return new QueryMethodCalls(ctrl,xml);
+      case "EXPRESSIONS" :
+         return new CommandExpressions(ctrl,xml);
       case "ASKLIMBA" :
          return new CommandAskLimba(ctrl,xml);
       case "PARAMETER" :
@@ -776,6 +779,34 @@ private static class CommandTranscript extends QueryCommand {
 
 
 
+/********************************************************************************/
+/*                                                                              */
+/*      Command EXPRESSIONS -- find expressions at a line                       */
+/*                                                                              */
+/********************************************************************************/
+
+private static class CommandExpressions extends QueryCommand {
+   
+   private String project_name;
+   private String file_name;
+   private int source_offset; 
+   private int line_number;
+   
+   CommandExpressions(DicontrolMain ctrl,Element xml) {
+      super(ctrl,xml);
+      project_name = IvyXml.getAttrString(xml,"PROJECT");
+      file_name = IvyXml.getAttrString(xml,"FILE");
+      source_offset = IvyXml.getAttrInt(xml,"OFFSET");
+      line_number = IvyXml.getAttrInt(xml,"LINE");
+    }
+   
+   @Override public void process(IvyXmlWriter xw) {
+      DisourceManager srcmgr = diad_control.getSourceManager();
+      srcmgr.getExpressionsInStatement(xw,project_name,file_name,
+            source_offset,line_number);
+    }
+   
+}       // end of inner class CommandExpressions
 
 
 

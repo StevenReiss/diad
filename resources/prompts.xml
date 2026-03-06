@@ -45,7 +45,7 @@
       You should not return a description of these.
 
    ]]></PROMPT>
-   <PROMPT COMMAND='USER' COMPLETE='TRUE'><![CDATA[
+   <PROMPT COMMAND='USER,RETRY' COMPLETE='TRUE'><![CDATA[
       You are an expert Java programmer with lots of debugging experience and a strong
       knowledge of the Java libraries and other libraries that might be used in a
       project.	You are being asked to help a developer debug his system while the
@@ -55,6 +55,18 @@
 
       Recall we are trying to fix $(SYMPTOM).  Recall the top-level CALLID of the
       sample execution is $(CALLID).
+   ]]></PROMPT>
+   <PROMPT COMMAND='LOCATIONS,REPAIRS' COMPLETE='TRUE'><![CDATA[
+      You are an expert Java programmer with lots of debugging experience and a strong
+      knowledge of the Java libraries and other libraries that might be used in a
+      project.	You are being asked to help a developer debug his system while the
+      developer is working in the debugger.
+
+      $(CONTEXT)
+
+      Recall we are trying to fix $(SYMPTOM).
+      Recall the top-level CALLID of the sample execution is $(CALLID). 
+      Recall your previous responses to explaining the cause of the symptom.
    ]]></PROMPT>
    <PROMPT COMMAND='TEST1,TEST2,TEST3' COMPLETE='TRUE'><![CDATA[
       You are an expert Java programmer with lots of debugging experience. You are being
@@ -114,6 +126,13 @@
      to solve the problem using the agents.
    ]]></PROMPT>
 </PROMPTS>
+
+
+
+
+
+
+
 
 
 

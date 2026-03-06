@@ -7,6 +7,11 @@
       getCallTrace) and determine how this trace is relevant to the symptom
       $(SYMPTOM).
    </QUERY>
+   <QUERY COMMAND='RETRY'>
+      That was either a bad explanation (i.e., you are telling what to do rather
+      than doing it yourself), or it is incorrect or incomplete.  Please try
+      again and do a better job.
+   </QUERY>
    <QUERY COMMAND='TEST1'>
       You should return a detailed explanation of the root cause of the problem
       that led to the symptom.	You should explore
@@ -44,15 +49,7 @@
       For example, if the fault is a NullPointerException, explain how
       the particular value could be null at the stopping point.
    </QUERY>
-   <QUERY COMMAND='LOCATIONS'>
-      Your should identify the most likely program locations that can
-      be repaired to fix the problem.	Tools are provided that identify the
-      set of locations that might affect the problem, but these are not prioritized or evaluated
-      for appropriateness.  Given your understanding of the cause of the
-      problem you should determine which of these locations are the most
-      likely to be buggy.
-   </QUERY>
-   <QUERY COMMAND='REPAIRS'>
+   <QUERY COMMAND='TEST5'>
       Your job here is to identify the most likely repairs to the
       program that will fix the problem.   Tools are provided that identify the
       overall set of locations, but these are not prioritized or evaluated
@@ -64,6 +61,23 @@
       In the end you should provide a set of possible patches
       that are likely to fix the problem.  Providing multiple alternatives
       is fine.	Also provide the patches in a format suitable for the Linux patch command.
+   </QUERY>
+   <QUERY COMMAND='TEST6'>
+      Your should identify the most likely program locations that can
+      be repaired to fix the problem.	Tools are provided that identify the
+      set of locations that might affect the problem, but these are not prioritized or evaluated
+      for appropriateness.  Given your understanding of the cause of the
+      problem you should determine which of these locations are the most
+      likely to be buggy.
+   </QUERY>
+   <QUERY COMMAND='LOCATIONS'>
+      That seems correct.  Please provide a set of relevant source locations based on that
+      in the either the form ```method:line``` or ```file:line```.
+   </QUERY>
+   <QUERY COMMAND='REPAIRS'>
+      That analysis seems correct.
+
+      Please provide the necessary patches based on that as input to the Linux patch command.
    </QUERY>
    <QUERY COMMAND='USER'>
    </QUERY>
