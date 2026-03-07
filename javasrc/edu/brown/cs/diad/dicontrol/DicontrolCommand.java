@@ -683,7 +683,10 @@ private static class CommandSymptom extends QueryCommand {
    
    @Override public void process(IvyXmlWriter xw) {
       DicontrolSymptom symp = null;
-      if (symptom_xml != null) symp = new DicontrolSymptom(symptom_xml);
+      if (symptom_xml != null) {
+         symp = new DicontrolSymptom(symptom_xml);
+         if (symp.getSymptomType() == DiadSymptomType.NONE) symp = null;
+       }
       getCandidate().setSymptom(symp);
     }
    
