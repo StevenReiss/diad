@@ -72,11 +72,11 @@
    </QUERY>
    <QUERY COMMAND='LOCATIONS'>
       That seems correct.  Please provide a set of relevant source locations based on that
-      in the either the form ```method:line``` or ```file:line```.
+      in the the form ```LOC::filename::line``` where filename is the full name of the
+      relevant source file and line is a relevant line number.
    </QUERY>
    <QUERY COMMAND='REPAIRS'>
       That analysis seems correct.
-
       Please provide the necessary patches based on that as input to the Linux patch command.
    </QUERY>
    <QUERY COMMAND='USER'>
