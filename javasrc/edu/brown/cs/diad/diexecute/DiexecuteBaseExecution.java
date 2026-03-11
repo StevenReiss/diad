@@ -35,6 +35,7 @@ import org.w3c.dom.Element;
 
 import edu.brown.cs.diad.dianalysis.DianalysisManager;
 import edu.brown.cs.diad.dicontrol.DicontrolMain;
+import edu.brown.cs.diad.dicore.DiadEdits;
 import edu.brown.cs.diad.dicore.DiadExecution;
 import edu.brown.cs.diad.dicore.DiadLocation;
 import edu.brown.cs.diad.dicore.DiadRepair;
@@ -69,9 +70,6 @@ private String          base_session;
 private int             num_checked;
 private long            seede_total;
 private double          best_score;
-private double          location_priority;
-private double          repair_priority;
-private double          finder_priority;
 
 private boolean         show_all;
 private boolean         show_strings;
@@ -102,9 +100,6 @@ DiexecuteBaseExecution(DiexecuteManager mgr,DiadSymptom symp,DiadThread thrd,
    base_session = null;
    num_checked = 0;
    seede_total = 0;
-   location_priority = 1.0;
-   repair_priority = 1.0;
-   finder_priority = 1.0;
    best_score = 0;
    setup_actions = new ArrayList<>();
    
@@ -348,6 +343,18 @@ String handleEdits(String ssid,String edits)
 
 /********************************************************************************/
 /*                                                                              */
+/*      Validate methods                                                        */
+/*                                                                              */
+/********************************************************************************/
+
+@Override public void validate(IvyXmlWriter xw,DiadEdits edits)
+{
+}
+  
+
+
+/********************************************************************************/
+/*                                                                              */
 /*      Execution comparison methods                                            */
 /*                                                                              */
 /********************************************************************************/
@@ -407,12 +414,12 @@ public boolean haveGoodResult()
 
 public boolean forceCheck(double locpri,double findpri)
 {
-   if (locpri < location_priority * 0.8) return false;
+// if (locpri < location_priority * 0.8) return false;
    
-   double usepri = 0.95;
-   double bestrepair = (locpri/4.0 + 0.75 +  1.0  + usepri)/3.0 * findpri;
-   if (bestrepair < repair_priority) return false;
-   
+// double usepri = 0.95;
+// double bestrepair = (locpri/4.0 + 0.75 +  1.0  + usepri)/3.0 * findpri;
+// if (bestrepair < repair_priority) return false;
+ 
    IvyLog.logD("VALDIATE","Force check at this point");
    
    return true;
@@ -427,15 +434,7 @@ synchronized void noteSeedeLength(long t,DiadRepair repair,double score)
    seede_total += t;
    if (score > best_score) { 
       best_score = score;
-      double p = repair.getLocation().getPriority();
-      if (p < location_priority) location_priority = p;
-      double p1 = repair.getPriority();
-      if (p1 < repair_priority) repair_priority = p1;
-      double p2 = repair.getFinderPriority();
-      if (p2 < finder_priority) finder_priority = p2;
     }
-   repair.setCount(num_checked); 
-   repair.setSeedeCount(seede_total);
 }
 
 

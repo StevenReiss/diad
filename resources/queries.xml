@@ -72,8 +72,9 @@
    </QUERY>
    <QUERY COMMAND='LOCATIONS'>
       That seems correct.  Please provide a set of relevant source locations based on that
-      in the the form ```LOC::filename::line``` where filename is the full name of the
-      relevant source file and line is a relevant line number.
+      in either the form ```LOC::filename::line``` or ```LOC::methodname::line```
+      where filename is the full name of the relevant source file, methodname
+      is the method name, and line is a relevant line number.
    </QUERY>
    <QUERY COMMAND='REPAIRS'>
       That analysis seems correct.

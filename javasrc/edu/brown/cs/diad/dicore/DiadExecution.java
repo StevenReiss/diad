@@ -40,6 +40,8 @@ import java.util.Collection;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import edu.brown.cs.ivy.xml.IvyXmlWriter;
+
 public interface DiadExecution
 {
 
@@ -59,6 +61,8 @@ JSONObject getJsonVarHistory(String callid,String var,int line,long when);
 JSONObject getJsonVarValue(String callid,String var,int line,long when);
 
 JSONArray getJsonMethodCalls(String method);
+
+void validate(IvyXmlWriter xw,DiadEdits edits);
 
 }       // end of interface DiadExecution
 

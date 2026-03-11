@@ -39,6 +39,7 @@ import org.w3c.dom.Element;
 
 import edu.brown.cs.diad.dianalysis.DianalysisManager;
 import edu.brown.cs.diad.dicore.DiadCandidateCallback;
+import edu.brown.cs.diad.dicore.DiadEdits;
 import edu.brown.cs.diad.dicore.DiadExecution;
 import edu.brown.cs.diad.dicore.DiadLocation;
 import edu.brown.cs.diad.dicore.DiadStack;
@@ -452,6 +453,27 @@ JSONArray getJsonMethodCalls(String method)
 
 /********************************************************************************/
 /*                                                                              */
+/*      Validate interface                                                      */
+/*                                                                              */
+/********************************************************************************/
+
+void validate(IvyXmlWriter xw,DiadEdits edits)
+{
+   if (base_execution == null) {
+      xw.begin("ERROR");
+      xw.field("REASON","No base execution");
+      xw.end("ERROR");
+      return;
+    }
+   
+   base_execution.validate(xw,edits); 
+}
+
+
+
+
+/********************************************************************************/
+/*                                                                              */
 /*      LLM interface methods                                                   */
 /*                                                                              */
 /********************************************************************************/
@@ -757,10 +779,17 @@ private final class CandidateThread extends Thread {
       DicontrolCommand qcmd = DicontrolCommand.createCommand(diad_control,xml);
       IvyXmlWriter xw = new IvyXmlWriter();
       qcmd.process(xw);
-      Element resp = IvyXml.convertStringToXml(xw.toString());
-      IvyLog.logD("DICONTROL","Query returned " + IvyXml.convertXmlToString(resp));
-      query_response = IvyXml.getTextElement(resp,"RESPONSE");
-      IvyLog.logD("DICONTROL","Query text " + query_response);
+      try {
+         Element resp = IvyXml.convertStringToXml(xw.toString());
+         IvyLog.logD("DICONTROL","Query returned " + IvyXml.convertXmlToString(resp));
+         query_response = IvyXml.getTextElement(resp,"RESPONSE");
+         IvyLog.logD("DICONTROL","Query text " + query_response);
+       }
+      catch (Exception e) {
+         IvyLog.logE("DICONTROL","Problem parsing response",e);
+         IvyLog.logD("DICONTROL","Response: " + xw.toString());
+         query_response = "Bad response from LLM";
+       }
    }
    
    private boolean checkInterrupted() {

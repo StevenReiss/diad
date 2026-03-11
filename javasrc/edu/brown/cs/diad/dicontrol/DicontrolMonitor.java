@@ -526,6 +526,9 @@ protected class IDEHandler implements MintHandler {
       switch (cmd) {
          case "ELISION" :
             return;
+         case "CONSOLE" :
+            msg.replyTo();
+            return;
        }
       
       IvyLog.logD("DICONTROL","Message from IDE " + cmd + " " + msg.getText());

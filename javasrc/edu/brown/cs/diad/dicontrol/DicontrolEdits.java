@@ -1,8 +1,8 @@
 /********************************************************************************/
 /*                                                                              */
-/*              DiadRepair.java                                                 */
+/*              DicontrolEdits.java                                             */
 /*                                                                              */
-/*      Representation of a possible bug fixing repair                          */
+/*      description of class                                                    */
 /*                                                                              */
 /********************************************************************************/
 /*      Copyright 2025 Brown University -- Steven P. Reiss                    */
@@ -20,25 +20,41 @@
 
 
 
-package edu.brown.cs.diad.dicore;
+package edu.brown.cs.diad.dicontrol;
 
-import java.io.File;
+import org.w3c.dom.Element;
 
+import edu.brown.cs.diad.dicore.DiadEdits;
 
-public interface DiadRepair extends DiadConstants
+class DicontrolEdits implements DiadEdits
 {
 
 
-default int getMappedLine(File f,int line)
+/********************************************************************************/
+/*                                                                              */
+/*      Private Storage                                                         */
+/*                                                                              */
+/********************************************************************************/
+
+private Element         base_edits;
+
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Constructors                                                            */
+/*                                                                              */
+/********************************************************************************/
+
+DicontrolEdits(Element edits)
 {
-   return line;
+   base_edits = edits;
 }
 
-
-}       // end of class DiadRepair
-
+}       // end of class DicontrolEdits
 
 
 
-/* end of DiadRepair.java */
+
+/* end of DicontrolEdits.java */
 

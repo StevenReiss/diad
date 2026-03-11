@@ -29,6 +29,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.w3c.dom.Element;
 
+import edu.brown.cs.diad.dicore.DiadEdits;
 import edu.brown.cs.diad.dicore.DiadConstants.DiadCommand;
 import edu.brown.cs.diad.disource.DisourceManager;
 import edu.brown.cs.ivy.file.IvyLog;
@@ -96,6 +97,8 @@ static DicontrolCommand createCommand(DicontrolMain ctrl,Element xml)
          return new CommandSymptom(ctrl,xml);
       case "STARTFRAME" :
          return new CommandStartFrame(ctrl,xml);
+      case "VALIDATE" :
+         return new CommandValidate(ctrl,xml);
       default :
          IvyLog.logE("DICONTROL","Unknown command " + cmd + " " +
                IvyXml.convertXmlToString(xml));
@@ -559,6 +562,12 @@ private static class CommandAskLimba extends QueryCommand {
             no_history); 
       String resp = IvyXml.getTextElement(rslt,"RESPONSE");
       if (resp != null) xw.cdataElement("RESPONSE",resp);
+      for (Element c : IvyXml.children(rslt,"PATCH")) {
+         String txt = IvyXml.getText(c);
+         if (txt != null) {
+            xw.cdataElement("PATCH",txt);
+          }
+       }
     }
    
 }       // end of inner class AskLimba
@@ -812,6 +821,25 @@ private static class CommandExpressions extends QueryCommand {
 }       // end of inner class CommandExpressions
 
 
+/********************************************************************************/
+/*                                                                              */
+/*      Validate command                                                        */
+/*                                                                              */
+/********************************************************************************/
+
+private static class CommandValidate extends QueryCommand {
+   
+   private DiadEdits edit_set;
+   
+   CommandValidate(DicontrolMain ctrl,Element xml) {
+      super(ctrl,xml);
+      edit_set = new DicontrolEdits(IvyXml.getChild(xml,"EDITS"));
+    }
+   
+   @Override public void process(IvyXmlWriter xw) {
+      getCandidate().validate(xw,edit_set);  
+    }
+}
 
 /********************************************************************************/
 /*                                                                              */

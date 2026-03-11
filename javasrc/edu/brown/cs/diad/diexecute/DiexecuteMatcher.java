@@ -210,11 +210,11 @@ private void matchLines(DiexecuteCall origctx,DiexecuteCall matchctx)
    File file = matchctx.getFile();
    
    int checkrepair = -1;
-   if (for_repair != null && matchFiles(for_repair.getLocation().getFile(),file)) {
-      checkrepair = for_repair.getLocation().getStatementLine();  
-      IvyLog.logD("DIEXECUTE","CHECK REPAIR " + checkrepair + " " + 
-            origctx.getContextId() + " " + matchctx.getContextId());
-    }
+// if (for_repair != null && matchFiles(for_repair.getLocation().getFile(),file)) {
+//    checkrepair = for_repair.getLocation().getStatementLine();  
+//    IvyLog.logD("DIEXECUTE","CHECK REPAIR " + checkrepair + " " + 
+//          origctx.getContextId() + " " + matchctx.getContextId());
+//  }
    
    if (origline == null || matchline == null) return;
    
