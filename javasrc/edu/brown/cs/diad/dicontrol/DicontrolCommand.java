@@ -29,7 +29,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.w3c.dom.Element;
 
-import edu.brown.cs.diad.dicore.DiadEdits;
+import edu.brown.cs.diad.dicore.DiadRepair;
 import edu.brown.cs.diad.dicore.DiadConstants.DiadCommand;
 import edu.brown.cs.diad.disource.DisourceManager;
 import edu.brown.cs.ivy.file.IvyLog;
@@ -829,15 +829,15 @@ private static class CommandExpressions extends QueryCommand {
 
 private static class CommandValidate extends QueryCommand {
    
-   private DiadEdits edit_set;
+   private DiadRepair for_repair;
    
    CommandValidate(DicontrolMain ctrl,Element xml) {
       super(ctrl,xml);
-      edit_set = new DicontrolEdits(IvyXml.getChild(xml,"EDITS"));
+      for_repair = new DicontrolRepair(IvyXml.getChild(xml,"EDITS")); 
     }
    
    @Override public void process(IvyXmlWriter xw) {
-      getCandidate().validate(xw,edit_set);  
+      getCandidate().validate(xw,for_repair);  
     }
 }
 

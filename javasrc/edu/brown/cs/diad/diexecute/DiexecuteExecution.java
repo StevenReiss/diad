@@ -47,6 +47,7 @@ private String          session_id;
 private DiexecuteTrace  seede_result;
 private ExecState       exec_state;
 private DiexecuteBaseExecution for_context;
+private DiadRepair      for_repair;
 
 
 
@@ -62,6 +63,7 @@ DiexecuteExecution(String sid,DiexecuteBaseExecution ctx,DiadRepair repair)
    for_context = ctx;
    seede_result = null;
    exec_state = ExecState.INITIAL;
+   for_repair = repair;
 }
 
 
@@ -82,7 +84,7 @@ long getExecutionTime()
 
 DiexecuteBaseExecution getContext()             { return for_context; }
 
-DiadRepair getRepair()                          { return null; }
+DiadRepair getRepair()                          { return for_repair; }
 
 
 

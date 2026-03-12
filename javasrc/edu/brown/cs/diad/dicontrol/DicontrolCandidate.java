@@ -39,7 +39,7 @@ import org.w3c.dom.Element;
 
 import edu.brown.cs.diad.dianalysis.DianalysisManager;
 import edu.brown.cs.diad.dicore.DiadCandidateCallback;
-import edu.brown.cs.diad.dicore.DiadEdits;
+import edu.brown.cs.diad.dicore.DiadRepair;
 import edu.brown.cs.diad.dicore.DiadExecution;
 import edu.brown.cs.diad.dicore.DiadLocation;
 import edu.brown.cs.diad.dicore.DiadStack;
@@ -457,16 +457,16 @@ JSONArray getJsonMethodCalls(String method)
 /*                                                                              */
 /********************************************************************************/
 
-void validate(IvyXmlWriter xw,DiadEdits edits)
+void validate(IvyXmlWriter xw,DiadRepair repair)
 {
-   if (base_execution == null) {
-      xw.begin("ERROR");
-      xw.field("REASON","No base execution");
-      xw.end("ERROR");
-      return;
+   DiadValidationStatus sts = DiadValidationStatus.NO_BASE_EXECUTION;
+   if (base_execution != null) {
+      sts = base_execution.validate(repair);  
     }
    
-   base_execution.validate(xw,edits); 
+   xw.begin("VALIDATION");
+   xw.field("STATUS",sts);
+   xw.end("VALIDATOIN");
 }
 
 

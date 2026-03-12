@@ -23,7 +23,6 @@
 package edu.brown.cs.diad.diexecute;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -267,17 +266,7 @@ private void matchLines(DiexecuteCall origctx,DiexecuteCall matchctx)
 
 
 
-private boolean matchFiles(File f1,File f2)
-{
-   if (f1.equals(f2)) return true;
-   try {
-      f1 = f1.getCanonicalFile();
-      f2 = f2.getCanonicalFile();
-    }
-   catch (IOException e) { }
-   if (f1.equals(f2)) return true;
-   return false;
-}
+
 
 
 

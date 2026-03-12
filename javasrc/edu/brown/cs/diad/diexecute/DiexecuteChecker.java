@@ -64,12 +64,11 @@ DiexecuteChecker(DiexecuteBaseExecution ctx,DiexecuteTrace orig,DiexecuteTrace c
 /*                                                                              */
 /********************************************************************************/
 
-double check()
+DiadValidationStatus check()
 {
-   if (check_execution == null) return 0;
-   if (original_execution == null) return 0.5;
-   if (validate_context.getSymptom() == null) return 0;
-// if (check_execution.getDiadContext() == null) return 0;
+   if (check_execution == null) return DiadValidationStatus.COMPILER_ERROR;
+   if (original_execution == null) return DiadValidationStatus.NO_BASE_EXECUTION;
+   if (validate_context.getSymptom() == null) return DiadValidationStatus.CANT_VALIDATE;
    
    DiexecuteMatcher matcher = new DiexecuteMatcher(original_execution,check_execution,for_repair,false);
    matcher.computeMatch();
@@ -90,24 +89,15 @@ double check()
          vpc = new DiexecuteCheckerVariable(matcher,false);
          break;
       case NONE :
-         return 0;
+         return DiadValidationStatus.CANT_VALIDATE;
       default :
       case NO_EXCEPTION :
       case CAUGHT_EXCEPTION :
          break;
     }
-   
-   double v0 = DEFAULT_SCORE; 
+    
+   DiadValidationStatus v0 = DiadValidationStatus.VALID_UNKNOWN; 
    if (vpc != null) v0 = vpc.validate();
-   
-   if (v0 != 0) {
-      double v1 = matcher.getControlChangeTime();
-      double v2 = matcher.getDataChangeTime();
-      double v3 = matcher.getSymptomTime(); 
-      double v4 = (v1 == 0 ? v2 : (v2 == 0 ? v1 : Math.min(v1,v2)));
-      double v6 = v4/v3;
-      v0 = (v0 * 0.95) + (v6 * 0.05);
-    }
    
    return v0;
 }
@@ -189,7 +179,7 @@ private abstract class DiexecuteSymptomChecker {
       execution_matcher = m;
     }
    
-   abstract double validate();
+   abstract DiadValidationStatus validate();
    
    boolean validateTest() {
       long t0 = execution_matcher.getControlChangeTime();
@@ -237,30 +227,37 @@ private class DiexecuteCheckerException extends DiexecuteSymptomChecker {
       super(m,test);
     }
    
-   @Override double validate() {
-      if (!executionChanged()) return 0;
-      if (exceptionThrown()) return 0;
+   @Override DiadValidationStatus validate() {
+      if (!executionChanged()) return DiadValidationStatus.INVALID_NOCHANGE;
+      if (exceptionThrown()) return DiadValidationStatus.INVALID_EXCEPTION; 
       
       DiexecuteVarVal origexc = original_execution.getException();
       if (origexc != null && execution_matcher.getMatchSymptomContext() != null) {
          DiexecuteVarVal checkexc = check_execution.getException();
          if (checkexc == null) {
-            if (execution_matcher.getMatchSymptomAfterTime() > 0) return 1.0;
-            return 0.8;
+            return DiadValidationStatus.VALID; 
           }
          else if (execution_matcher.getMatchSymptomAfterTime() > 0) {
             if (check_execution.getExceptionTime() > execution_matcher.getMatchSymptomAfterTime()) {
-               return 0.5;
+               return DiadValidationStatus.VALID_PROGRESS;
              }
           }
-         else if (origexc.getDataType(-1).equals(checkexc.getDataType(-1))) return 0;
-         else return 0.1;   
+         else if (origexc.getDataType(-1).equals(checkexc.getDataType(-1))) {
+            return DiadValidationStatus.INVALID_EXCEPTION;
+          }
+         else {
+            return DiadValidationStatus.INVALID_NOCHANGE;   
+          }
        }
-      else if (execution_matcher.getMatchSymptomContext() != null) return 0.5;
+      else if (execution_matcher.getMatchSymptomContext() != null) {
+         return DiadValidationStatus.VALID_MAYBE;
+       }
       
-      if (check_execution.isReturn()) return 0.75;
+      if (check_execution.isReturn()) { 
+         return DiadValidationStatus.VALID;
+       }
       
-      return 0.2;
+      return DiadValidationStatus.INVALID_LIKELY; 
     }
    
    @Override boolean validateTestLocal() {
@@ -294,9 +291,9 @@ private class DiexecuteCheckerVariable extends DiexecuteSymptomChecker {
       super(m,test);
     }
    
-   @Override double validate() {
-      if (!executionChanged()) return 0;
-      if (exceptionThrown()) return 0;
+   @Override DiadValidationStatus validate() {
+      if (!executionChanged()) return DiadValidationStatus.INVALID_NOCHANGE;
+      if (exceptionThrown()) return DiadValidationStatus.INVALID_EXCEPTION;
       
       DiadSymptom prob = validate_context.getSymptom();
       String var = prob.getSymptomItem();
@@ -318,12 +315,12 @@ private class DiexecuteCheckerVariable extends DiexecuteSymptomChecker {
       DiexecuteCall vc = execution_matcher.getMatchSymptomContext();
       if (vc == null) {
          IvyLog.logD("DIEXECUTE","No change context for variable");
-         return 0.0;
+         return DiadValidationStatus.INVALID_NOMATCH;
        }   
       DiexecuteVarVal vv = vc.getVariables().get(var);
       if (vv == null) {
          IvyLog.logD("DIEXECUTE","Variable not found in change context");
-         return 0.5;
+         return DiadValidationStatus.VALID_MAYBE;
        }
       
       long t0 = execution_matcher.getMatchSymptomTime();
@@ -333,10 +330,10 @@ private class DiexecuteCheckerVariable extends DiexecuteSymptomChecker {
          IvyLog.logD("DIEXECUTE","Value at time : " + vval);
          if (vval != null) {
             String vvalstr = vval.getStringValue(t0);
-            if (oval == null && vvalstr == null) return 0;
-            if (oval != null && oval.equals(vvalstr)) return 0.0;
+            if (oval == null && vvalstr == null) return DiadValidationStatus.INVALID_NOCHANGE;
+            if (oval != null && oval.equals(vvalstr)) return DiadValidationStatus.INVALID_NOCHANGE;
             
-            return matchValue(vval,vvalstr,nval);
+            return matchValue(vval,vvalstr,nval); 
           }
        }
       boolean haveold = false;
@@ -349,16 +346,15 @@ private class DiexecuteCheckerVariable extends DiexecuteSymptomChecker {
           }     
          else if (oval != null && oval.equals(vvalstr)) haveold = true;
          else if (nval != null && !nval.equals(vvalstr)) {
-            if (haveold) return 0.60;
-            return 0.75;
+            return DiadValidationStatus.VALID_LIKELY;
           }
          else if (nval == null && t > 0) haveother = true;
        }
       
-      if (!haveold) return 0.6;
-      if (haveother) return 0.5;
+      if (!haveold) return DiadValidationStatus.VALID_LIKELY;
+      if (haveother) return DiadValidationStatus.VALID_MAYBE;
       
-      return 0.0;
+      return DiadValidationStatus.INVALID_NOCHANGE;
     }
    
    @Override boolean validateTestLocal() {
@@ -367,35 +363,35 @@ private class DiexecuteCheckerVariable extends DiexecuteSymptomChecker {
       return false;
     }
    
-   private double matchValue(DiexecuteVarVal vval,String vvalstr,String nval) {
-      if (nval == null) return 0.9;
+   private DiadValidationStatus matchValue(DiexecuteVarVal vval,String vvalstr,String nval) {
+      if (nval == null) return DiadValidationStatus.VALID_LIKELY;
       
       IvyLog.logD("DIEXECUTE","Match values " + vvalstr + " " + nval + " " + vval.getDataType(-1));
       
       DiadSymptom prob = validate_context.getSymptom();
       
-      if (nval.equals(vvalstr)) return 1.0;
+      if (nval.equals(vvalstr)) return DiadValidationStatus.VALID;
       if (vval.getDataType(-1).equals("float") || vval.getDataType(-1).equals("double")) {
          try {
             double v1 = Double.valueOf(vvalstr);
             double v2 = Double.valueOf(nval);
             double diff = Math.abs(v1-v2);
-            if (diff <= prob.getTargetPrecision()) return 1.0;
+            if (diff <= prob.getTargetPrecision()) return DiadValidationStatus.VALID;
           }
          catch (NumberFormatException e) {
             // should handle > x, < x, ...
-            return 0.6;
+            return DiadValidationStatus.VALID_MAYBE;
           }
        }
       else if (vval.getDataType(-1).equals("int") || vval.getDataType(-1).equals("long")) {
          try {
             long v1 = Long.valueOf(vvalstr);
             long v2 = Long.valueOf(nval);
-            if (v1 == v2) return 1.0;
+            if (v1 == v2) return DiadValidationStatus.VALID;
           }
          catch (NumberFormatException e) {
             // should handle > x, < x, ...
-            return 0.6;
+            return DiadValidationStatus.VALID_MAYBE;
           }
          // handle > x , < x , ...
        }
@@ -403,14 +399,14 @@ private class DiexecuteCheckerVariable extends DiexecuteSymptomChecker {
          Boolean v1 = getBoolean(vvalstr);
          Boolean v2 = getBoolean(nval);
          if (v1 != null && v2 != null) {
-            if (v1.equals(v2)) return 1.0;
+            if (v1.equals(v2)) return DiadValidationStatus.VALID;
           }
        }
       else {
          // handle non-null, etc. 
        }
       
-      return 0.0;
+      return DiadValidationStatus.INVALID_NOMATCH;
     }
    
    private Boolean getBoolean(String s) {
@@ -434,7 +430,9 @@ private class DiexecuteCheckerNone extends DiexecuteSymptomChecker {
       super(m,test);
     }
    
-   @Override double validate()                  { return 0.0; }
+   @Override DiadValidationStatus validate() {
+      return DiadValidationStatus.INVALID_NOCHANGE;
+    }                
    
    @Override boolean validateTestLocal() {
       long t1 = execution_matcher.getDataChangeTime();
@@ -460,12 +458,12 @@ private class DiexecuteCheckerExpression extends DiexecuteSymptomChecker {
       super(m,test);
     }
    
-   @Override double validate() {
-      if (!executionChanged()) return 0;
-      if (exceptionThrown()) return 0;
+   @Override DiadValidationStatus validate() {
+      if (!executionChanged()) return DiadValidationStatus.INVALID_NOCHANGE;
+      if (exceptionThrown()) return DiadValidationStatus.INVALID_EXCEPTION;
       long t0 = execution_matcher.getMatchSymptomTime();
-      if (t0 < 0) return 0.2;
-      return 0.5;
+      if (t0 < 0) return DiadValidationStatus.INVALID_LIKELY;
+      return DiadValidationStatus.VALID_MAYBE;
     }
    
    @Override boolean validateTestLocal() {
@@ -489,15 +487,15 @@ private class DiexecuteCheckerLocation extends DiexecuteSymptomChecker {
       super(m,test);
     }
    
-   @Override double validate() {
-      if (!executionChanged()) return 0;
+   @Override DiadValidationStatus validate() {
+      if (!executionChanged()) return DiadValidationStatus.INVALID_NOCHANGE;
       
       DiexecuteCall vc = execution_matcher.getMatchChangeContext();
       long t0 = execution_matcher.getMatchSymptomTime();
       if  (vc != null) {
          if (t0 <= 0) {
-            if (exceptionThrown()) return 0.2;
-            return 0.8;
+            if (exceptionThrown()) return DiadValidationStatus.INVALID_EXCEPTION;
+            return DiadValidationStatus.VALID_LIKELY;
           }  
        }
       
@@ -505,16 +503,16 @@ private class DiexecuteCheckerLocation extends DiexecuteSymptomChecker {
          vc = vc.getParentCall();
        }
       
-      if (vc == null) return 0.5;
+      if (vc == null) return DiadValidationStatus.VALID_MAYBE;
       
       DiexecuteVarVal vv = vc.getLineNumbers();
       int lmatch = vv.getLineValue(t0);
-      if (lmatch <= 0) return 0.8;
+      if (lmatch <= 0) return DiadValidationStatus.VALID_LIKELY;
       
       DiexecuteCall ovc = (DiexecuteCall) execution_matcher.getSymptomContext();
       DiexecuteCall mvc = execution_matcher.getMatchSymptomContext();
       if (ovc == null) ovc = vc;
-      if (mvc == null) return 0.5;
+      if (mvc == null) return DiadValidationStatus.VALID_MAYBE;
       
       long t1 = execution_matcher.getSymptomTime();
       DiexecuteVarVal ovv = ovc.getLineNumbers();
@@ -522,16 +520,16 @@ private class DiexecuteCheckerLocation extends DiexecuteSymptomChecker {
       int olno = ovv.getLineValue(t1);
       int mlno = mvv.getLineValue(t0);
       
-      if (mlno == olno) return 0;
+      if (mlno == olno) return DiadValidationStatus.INVALID_NOCHANGE;
       
       boolean fnd = false;
       for (Long t : mvv.getTimeChanges()) {
          int elno = mvv.getLineValue(t);
          if (elno == olno) fnd = true;
        }
-      if (fnd) return 0.6;
+      if (fnd) return DiadValidationStatus.VALID_MAYBE;
       
-      return 0.9;
+      return DiadValidationStatus.VALID_LIKELY;
     }
    
    @Override boolean validateTestLocal() {

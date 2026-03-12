@@ -1,8 +1,8 @@
 /********************************************************************************/
 /*                                                                              */
-/*              DiadRepair.java                                                 */
+/*              DiadEdits.java                                                  */
 /*                                                                              */
-/*      Representation of a possible bug fixing repair                          */
+/*      Hold a set of edits for a repair                                        */
 /*                                                                              */
 /********************************************************************************/
 /*      Copyright 2025 Brown University -- Steven P. Reiss                    */
@@ -24,21 +24,18 @@ package edu.brown.cs.diad.dicore;
 
 import java.io.File;
 
-
-public interface DiadRepair extends DiadConstants
+public interface DiadRepair
 {
 
+int getMappedLine(File f,int line);
 
-default int getMappedLine(File f,int line)
-{
-   return line;
-}
+String outputEditXml();
 
 
-}       // end of class DiadRepair
+}       // end of interface DiadEdits
 
 
 
 
-/* end of DiadRepair.java */
+/* end of DiadEdits.java */
 

@@ -1,8 +1,8 @@
 /********************************************************************************/
 /*                                                                              */
-/*              DiadExecution.java                                              */
+/*              DiadTextEdit.java                                               */
 /*                                                                              */
-/*      description of class                                                    */
+/*      Information about a text edit for patching                              */
 /*                                                                              */
 /********************************************************************************/
 /*      Copyright 2025 Brown University -- Steven P. Reiss                    */
@@ -35,39 +35,36 @@
 
 package edu.brown.cs.diad.dicore;
 
-import java.util.Collection;
 
-import org.json.JSONArray;
-import org.json.JSONObject;
 
-import edu.brown.cs.diad.dicore.DiadConstants.DiadValidationStatus;
-
-public interface DiadExecution
+public interface DiadTextEdit extends Comparable<DiadTextEdit>
 {
 
-DiadThread getThread();
-DiadSymptom getSymptom();
-DiadTrace getExecutionTrace();
-Collection<DiadLocation> getExecutedLocations(Collection<DiadLocation> base);
+String getFileName();
+int getStartOffset();
+int getLength();
+String getReplace();
+int getEditNumber();
 
-void clear();
+int getStartLine();
+int getAddCount();
+int getDeleteCount();
 
-
-JSONObject getJsonLocalTrace(String callid);
-JSONArray getJsonLineTrace(String callid);
-JSONObject getJsonVarTrace(String callid,String var);
-JSONObject getJsonVarHistory(String callid,String var,int line,long when);
-
-JSONObject getJsonVarValue(String callid,String var,int line,long when);
-
-JSONArray getJsonMethodCalls(String method);
-
-DiadValidationStatus validate(DiadRepair repair);
-
-}       // end of interface DiadExecution
-
+@Override default int compareTo(DiadTextEdit ed) 
+{
+   int v = getFileName().compareTo(ed.getFileName());
+   if (v != 0) return v;
+   v = ed.getStartOffset() - getStartOffset();
+   if (v != 0) return v;
+   v = ed.getEditNumber() - getEditNumber();
+   return v;
+}
 
 
+}       // end of interface DiadTextEdit
 
-/* end of DiadExecution.java */
+
+
+
+/* end of DiadTextEdit.java */
 

@@ -129,6 +129,25 @@ enum DiadAskType {
 }
 
 
+enum DiadValidationStatus {
+   NO_BASE_EXECUTION,
+   BAD_EDIT,
+   COMPILER_ERROR,
+   
+   INVALID_NOCHANGE,
+   INVALID_EXCEPTION,
+   INVALID_LIKELY,
+   INVALID_NOMATCH,
+   
+   VALID_UNKNOWN,
+   VALID_PROGRESS,
+   VALID_MAYBE,
+   VALID_LIKELY,
+   VALID,
+   CANT_VALIDATE,
+}
+
+
 /********************************************************************************/
 /*                                                                              */
 /*      Constants for analysis                                                        */

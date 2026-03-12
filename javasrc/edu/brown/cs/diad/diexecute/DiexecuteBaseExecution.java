@@ -35,10 +35,9 @@ import org.w3c.dom.Element;
 
 import edu.brown.cs.diad.dianalysis.DianalysisManager;
 import edu.brown.cs.diad.dicontrol.DicontrolMain;
-import edu.brown.cs.diad.dicore.DiadEdits;
+import edu.brown.cs.diad.dicore.DiadRepair;
 import edu.brown.cs.diad.dicore.DiadExecution;
 import edu.brown.cs.diad.dicore.DiadLocation;
-import edu.brown.cs.diad.dicore.DiadRepair;
 import edu.brown.cs.diad.dicore.DiadStackFrame;
 import edu.brown.cs.diad.dicore.DiadSymptom;
 import edu.brown.cs.diad.dicore.DiadThread;
@@ -347,8 +346,31 @@ String handleEdits(String ssid,String edits)
 /*                                                                              */
 /********************************************************************************/
 
-@Override public void validate(IvyXmlWriter xw,DiadEdits edits)
+@Override public DiadValidationStatus validate(DiadRepair repair) 
 {
+   DiexecuteExecution ve = getSubsession(repair);
+   if (ve == null) return DiadValidationStatus.CANT_VALIDATE;
+   
+   String ssid = ve.getSessionId();
+   String cnts = repair.outputEditXml();
+   String sts = handleEdits(ssid,cnts);
+   switch (sts) {
+      case "OK" :
+      case "WARNING" :
+         break;
+      case "FAIL" :
+      case "ERROR" :
+         return DiadValidationStatus.BAD_EDIT;   
+      default :
+         IvyLog.logE("DIEXECUTE","Unknown status from edit: " + sts);
+         break; 
+    }
+   
+   ve.start(exec_manager);
+   
+   DiadValidationStatus vsts = checkValidResult(ve);    
+   
+   return vsts;
 }
   
 
@@ -359,17 +381,21 @@ String handleEdits(String ssid,String edits)
 /*                                                                              */
 /********************************************************************************/
 
-double checkValidResult(DiexecuteExecution ve)
+DiadValidationStatus checkValidResult(DiexecuteExecution ve)
 {
    DiexecuteTrace e2 = base_execution.getSeedeResult();
    DiexecuteTrace e1 = ve.getSeedeResult();
-   if (e1 == null || e1.isCompilerError()) return 0;
-   if (ve.getRepair() == null) return 1; 
+   if (e1 == null || e1.isCompilerError()) {
+      return DiadValidationStatus.COMPILER_ERROR;
+    }
+   if (ve.getRepair() == null) {
+      return DiadValidationStatus.CANT_VALIDATE;
+    }
    
    DiexecuteChecker checker = new DiexecuteChecker(this,
          e2,e1,ve.getRepair()); 
    
-   return checker.check();
+   return checker.check(); 
 }
 
 
