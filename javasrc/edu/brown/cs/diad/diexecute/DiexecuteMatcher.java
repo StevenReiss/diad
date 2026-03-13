@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import edu.brown.cs.diad.dicore.DiadRepair;
 import edu.brown.cs.diad.dicore.DiadTrace.DiadTraceCall;
@@ -208,12 +209,10 @@ private void matchLines(DiexecuteCall origctx,DiexecuteCall matchctx)
    DiexecuteVarVal matchline = matchctx.getLineNumbers();
    File file = matchctx.getFile();
    
-   int checkrepair = -1;
-// if (for_repair != null && matchFiles(for_repair.getLocation().getFile(),file)) {
-//    checkrepair = for_repair.getLocation().getStatementLine();  
-//    IvyLog.logD("DIEXECUTE","CHECK REPAIR " + checkrepair + " " + 
-//          origctx.getContextId() + " " + matchctx.getContextId());
-//  }
+   Set<Integer> checkrepair = null;
+   if (for_repair != null) {
+      checkrepair = for_repair.getFileLines(file,checkrepair);  
+    }
    
    if (origline == null || matchline == null) return;
    
@@ -232,7 +231,9 @@ private void matchLines(DiexecuteCall origctx,DiexecuteCall matchctx)
          if (for_repair != null) {
             mappedline = for_repair.getMappedLine(file,   execline);  
           }
-         if (checkrepair > 0 && execline == checkrepair) repair_executed = true;
+         if (checkrepair != null && checkrepair.contains(execline)) {
+            repair_executed = true;
+          }
          
          if (match_problem_context == matchctx) {
             if (lasttime <= problem_time && thistime > problem_time) {

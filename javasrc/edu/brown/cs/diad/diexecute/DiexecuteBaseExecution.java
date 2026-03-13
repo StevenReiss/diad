@@ -339,7 +339,6 @@ String handleEdits(String ssid,String edits)
 }
 
 
-
 /********************************************************************************/
 /*                                                                              */
 /*      Validate methods                                                        */
@@ -352,25 +351,30 @@ String handleEdits(String ssid,String edits)
    if (ve == null) return DiadValidationStatus.CANT_VALIDATE;
    
    String ssid = ve.getSessionId();
-   String cnts = repair.outputEditXml();
-   String sts = handleEdits(ssid,cnts);
-   switch (sts) {
-      case "OK" :
-      case "WARNING" :
-         break;
-      case "FAIL" :
-      case "ERROR" :
-         return DiadValidationStatus.BAD_EDIT;   
-      default :
-         IvyLog.logE("DIEXECUTE","Unknown status from edit: " + sts);
-         break; 
+   try {
+      String cnts = repair.outputEditXml();
+      String sts = handleEdits(ssid,cnts);
+      switch (sts) {
+         case "OK" :
+         case "WARNING" :
+            break;
+         case "FAIL" :
+         case "ERROR" :
+            return DiadValidationStatus.BAD_EDIT;   
+         default :
+            IvyLog.logE("DIEXECUTE","Unknown status from edit: " + sts);
+            break; 
+       }
+      
+      ve.start(exec_manager);
+      
+      DiadValidationStatus vsts = checkValidResult(ve);    
+   
+      return vsts;
     }
-   
-   ve.start(exec_manager);
-   
-   DiadValidationStatus vsts = checkValidResult(ve);    
-   
-   return vsts;
+   finally {
+      removeSubsession(ssid);
+    }
 }
   
 

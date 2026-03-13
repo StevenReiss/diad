@@ -23,11 +23,13 @@
 package edu.brown.cs.diad.dicore;
 
 import java.io.File;
+import java.util.Set;
 
 public interface DiadRepair
 {
 
 int getMappedLine(File f,int line);
+Set<Integer> getFileLines(File f,Set<Integer> lines);
 
 String outputEditXml();
 

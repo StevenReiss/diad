@@ -26,8 +26,10 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.w3c.dom.Element;
 
@@ -69,6 +71,8 @@ DicontrolRepair(Element edits)
       DicontrolEdit edit = new DicontrolEdit(exml);
       base_edits.add(edit);
       String fnm = edit.getFileName();
+      File f = new File(fnm);
+      fnm = IvyFile.getCanonicalPath(f);
       List<DicontrolEdit> fed = file_edits.get(fnm);
       if (fed == null) {
          fed = new ArrayList<>();
@@ -99,10 +103,27 @@ DicontrolRepair(Element edits)
    LineMap lm = line_maps.get(f);
    if (lm == null) return line;
    
-   return lm.getMappedLine(line);
+   int nln = lm.getMappedLine(line);
+   
+   return Math.abs(nln);
 }
 
 
+@Override public Set<Integer> getFileLines(File f,Set<Integer> rslt)
+{ 
+   String fnm = IvyFile.getCanonicalPath(f);
+   List<DicontrolEdit> eds = file_edits.get(fnm);
+   if (eds == null) return rslt;
+   
+   for (DicontrolEdit de : eds) {
+      int ln = de.getStartLine();
+      if (rslt == null) rslt = new HashSet<>();
+      rslt.add(ln);
+      // might want to include other lines based on add/delete
+    }
+   
+   return rslt;
+}
 
 /********************************************************************************/
 /*                                                                              */
