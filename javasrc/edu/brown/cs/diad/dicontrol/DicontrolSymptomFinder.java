@@ -153,9 +153,10 @@ private DicontrolSymptom checkCaughtExcpetion(ASTNode stmt)
    if (par.getNodeType() == ASTNode.BLOCK) {
       ASTNode spar = par.getParent();
       if (spar.getNodeType() == ASTNode.CATCH_CLAUSE) {
+         IvyLog.logD("DICONTROL","INSIDE CATCH " + stmt + " @ " + spar);
          CatchClause cc = (CatchClause) spar;
          SingleVariableDeclaration svd = cc.getException();
-         String ename = svd.getName().getIdentifier();
+         String ename = svd.getType().toString();
          return new DicontrolSymptom(DiadSymptomType.CAUGHT_EXCEPTION,ename);
        }
     }

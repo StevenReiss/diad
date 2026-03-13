@@ -466,7 +466,7 @@ void validate(IvyXmlWriter xw,DiadRepair repair)
    
    xw.begin("VALIDATION");
    xw.field("STATUS",sts);
-   xw.end("VALIDATOIN");
+   xw.end("VALIDATION");
 }
 
 

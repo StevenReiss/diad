@@ -29,6 +29,18 @@
 	VARIABLE='xml?children?elementData?[0]?qualifiedName'
 	WHEN='0' />
 <DIAD DO='Q_METHODCALLS' DEBUGID='$ID' METHOD='net.n3.nanoxml.XMLElement.getChildAtIndex(int)' />
+	
+<DIAD DEBUGID='$ID' DO='VALIDATE' >
+<EDITS>
+  <TEXTEDIT ADDLINES='1' DELLINES='1' ENDOFFSET='11128' FILE='/home/pro/nanoxml/src/net/n3/nanoxml/StdXMLParser.java' LENGTH='47' NUMBER='1' OFFSET='11081' STARTLINE='367'>
+    <REPLACE><![CDATA[		  name = name.substring(colonIndex + 1);
+]]></REPLACE>
+  </TEXTEDIT>
+</EDITS>
+</DIAD>
+
+
+
 
 
 <DIAD DO='SETMODEL' MODEL='qwen3-coder:480b' />

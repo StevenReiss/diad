@@ -65,7 +65,7 @@ DicontrolRepair(Element edits)
    
    file_edits = new HashMap<>();
    
-   for (Element exml : IvyXml.children(edits,"EDIT")) {
+   for (Element exml : IvyXml.children(edits,"TEXTEDIT")) {
       DicontrolEdit edit = new DicontrolEdit(exml);
       base_edits.add(edit);
       String fnm = edit.getFileName();
@@ -113,11 +113,24 @@ DicontrolRepair(Element edits)
 @Override public String outputEditXml() 
 { 
    IvyXmlWriter xw = new IvyXmlWriter();
-   xw.begin("EDITS");
+   
+   String file = null;
    for (DicontrolEdit ed : base_edits) {
+      String fnm = ed.getFileName();
+      if (!fnm.equals(file)) {
+         if (file != null) {
+            xw.end("REPAIREDIT");
+          }
+         file = fnm;
+         xw.begin("REPAIREDIT");
+         xw.field("FILE",fnm);
+       }
       ed.outputEditXml(xw);
     }
-   xw.end("EDITS");
+   if (file != null) {
+      xw.end("REPAIREDIT");
+    }
+   
    String cnts = xw.toString();
    xw.close();
    return cnts;

@@ -79,6 +79,7 @@
    <QUERY COMMAND='REPAIRS'>
       That analysis seems correct.
       Please provide the necessary patches based on that as input to the Linux patch command.
+      Do not call a patch agent, just return the patches.
    </QUERY>
    <QUERY COMMAND='USER'>
    </QUERY>
