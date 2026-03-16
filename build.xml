@@ -65,7 +65,7 @@
 	 <manifest>
 	    <attribute name="Bubbles-start" value='edu.brown.cs.diadbb.bird.BirdFactory' />
 	    <attribute name="Bubbles-palette" value='diadbb.palette' />
-	    <attribute name="Bubbles-resource" value='Bird.props' />
+	    <attribute name="Bubbles-resource" value='Bird.props Diad.props' />
 	    <attribute name="Bubbles-depends" value='' />
 	 </manifest>
 	 <fileset dir='${DIAD}/java' includes='**/*.class' />

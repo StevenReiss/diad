@@ -4,6 +4,10 @@
 <entry key="Diad.fait.class.path">fait.jar:asm.jar:eclipsejar:junit.jar:ivy.jar:slf4j-api.jar</entry>
 <entry key="Diad.seede.class.path">seede.jar:asm.jar:eclipsejar:junit.jar:ivy.jar:slf4j-api.jar:poppy.jar</entry>
 <entry key="Diad.limba.class.path">limba.jar:eclipsejar:ivy.jar:junit.jar:asm.jar:json.jar</entry>
+<entry key="Diad.ollama.model">qwen3-coder:latest</entry>
+<entry key="Diad.auto.query">true</entry>
+<entry key="Diad.limba.style">Do not use on-demand imports.
+<entry key="Diad.trace.show.all">false</entry>
 </properties>
 
 
