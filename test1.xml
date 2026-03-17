@@ -3,6 +3,11 @@
    <SET KEY='FILEMODE' VALUE='FAIT_FILES' />
    <SET KEY='SEEDE_STEPS' VALUE='1000000' />
    <SET KEY='SEEDE_DEPTH'>100</SET>
+   <SET KEY='AUTO_QUERY'>false</SET>
+   <SET KEY='Diad.seede.debug'>true</SET>
+   <SET KEY='Diad.seede.trace'>true</SET>
+   <SET KEY='Diad.fait.debug'>true</SET>
+   <SET KEY='Diad.fait.trace'>true</SET>
 </DIAD>
 
 <DIAD DO='SETUPBUBBLES' MINT='BUBBLES_spr_tc1' WORKSPACE='tc1' />

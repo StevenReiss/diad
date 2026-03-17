@@ -53,12 +53,8 @@ public class DitestFactory implements DitestConstants
 private DicontrolMain   diad_control;
 private String          stopped_thread;
 
-private boolean         debug_fait;
-private boolean         trace_fait;
 private boolean         debug_limba;
 private boolean         trace_limba;
-private boolean         debug_seede;
-private boolean         trace_seede;
 private int             seede_timeout;
 private boolean         fait_starting;
 private boolean         seede_starting;
@@ -108,10 +104,6 @@ public DitestFactory(DicontrolMain ctrl)
 {
    diad_control = ctrl;
    stopped_thread = null;
-   debug_fait = true;
-   trace_fait = false;
-   debug_seede = true;
-   trace_seede = true;
    debug_limba = true;
    trace_limba = true;
    seede_timeout = 0;
@@ -256,10 +248,10 @@ public boolean startFait()
    args.add(diad_control.getMintId()); 
    args.add("-L");
    args.add(logf.getPath());
-   if (debug_fait) {
+   if (diad_control.getProperty("Diad.fait.debug",true)) {
       args.add("-D");
     }
-   if (trace_fait) {
+   if (diad_control.getProperty("Diad.fait.trace",false)) {
       args.add("-T");
     }
    
@@ -416,8 +408,8 @@ public boolean startSeede()
    args.add(diad_control.getMintId());
    args.add("-L");
    args.add(logf.getPath());
-   if (debug_seede) args.add("-D");
-   if (trace_seede) args.add("-T");
+   if (diad_control.getProperty("Diad.seede.debug",true)) args.add("-D");
+   if (diad_control.getProperty("Diad.seede.trace",false)) args.add("-T");
    if (seede_timeout > 0) {
       args.add("-timeout");
       args.add(Long.toString(seede_timeout));

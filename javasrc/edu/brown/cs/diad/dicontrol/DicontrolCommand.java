@@ -644,7 +644,12 @@ private static class CommandParameter extends DicontrolCommand {
                catch (NumberFormatException e) { }
                break;
             default :
-               IvyLog.logE("DICONTROL","Unknown parameter " + ent.getKey());
+               if (ent.getKey().startsWith("Diad.")) {
+                  diad_control.setProperty(ent.getKey(),ent.getValue());
+                }
+               else {
+                  IvyLog.logE("DICONTROL","Unknown parameter " + ent.getKey());
+                }
                break;
           }
        }
