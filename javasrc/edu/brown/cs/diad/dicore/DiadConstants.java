@@ -133,6 +133,7 @@ enum DiadValidationStatus {
    NO_BASE_EXECUTION,
    BAD_EDIT,
    COMPILER_ERROR,
+   UNKNOWN,
    
    INVALID_NOCHANGE,
    INVALID_EXCEPTION,
