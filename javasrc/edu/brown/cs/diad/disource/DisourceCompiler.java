@@ -43,6 +43,7 @@ import org.w3c.dom.Element;
 import edu.brown.cs.diad.dicontrol.DicontrolMain;
 import edu.brown.cs.diad.dicore.DiadLocation;
 import edu.brown.cs.ivy.file.IvyFile;
+import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.jcode.JcodeFactory;
 import edu.brown.cs.ivy.jcomp.JcompAst;
 import edu.brown.cs.ivy.jcomp.JcompControl;
@@ -136,7 +137,11 @@ ASTNode getSourceNode(String proj,File f,int offset,int line,boolean resolve)
 {
    SourceFile sf = getSourceFile(f);
    CompilationUnit cu = getAstForFile(proj,sf,resolve);
-   if (cu == null) return null;
+   if (cu == null) {
+      IvyLog.logD("DISOURCE","No ast found for file " + proj + " " + 
+            resolve + " " + f);
+      return null;
+    }
    
    if (offset <= 0 && line <= 0) return cu;
    if (offset < 0) {

@@ -111,6 +111,8 @@ DiadSymptom findSymptom()
       return null;
     }
    
+   IvyLog.logD("DICONTROL","Check symptom statement " + stmt);
+   
    DicontrolSymptom fnd = checkErrorStatement(stmt);
    if (fnd != null) return fnd;
    fnd = checkCaughtExcpetion(stmt);
@@ -190,9 +192,11 @@ private DicontrolSymptom checkDefensiveIf(ASTNode stmt)
          case ASTNode.BREAK_STATEMENT :
             break;
          case ASTNode.EXPRESSION_STATEMENT :
-            if (isErrorStatement(s1)) isok = true;
+            if (isErrorStatement(s1)) {
+               isok = true;
+               break;
+             }
             else return null;
-            break;
          default :
             return null;
        }
@@ -234,6 +238,7 @@ private DicontrolSymptom checkDefensiveCase(ASTNode stmt)
    
    boolean check = false;
    boolean isok = false;
+   boolean haveerr = false;
    for (Object o2 : ss.statements()) {
       Statement s2 = (Statement) o2;
       if (s2 == start) check = true;
@@ -252,13 +257,14 @@ private DicontrolSymptom checkDefensiveCase(ASTNode stmt)
             break;
          case ASTNode.EXPRESSION_STATEMENT :
             if (!isErrorStatement(s2)) return null;
+            haveerr = true;
             break;
          default :
             return null;
        } 
     }
    
-   if (isok) {
+   if (isok && haveerr) {
       return new DicontrolSymptom(DiadSymptomType.LOCATION);
     }
    
