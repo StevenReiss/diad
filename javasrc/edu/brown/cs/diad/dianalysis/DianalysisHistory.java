@@ -115,8 +115,13 @@ protected DicontrolMain getDiadControl()
 protected String getProject()
 {
    if (for_thread == null) return null;
+   DiadStack stk = for_thread.getStack();
+   if (stk == null) return null;
+   DiadStackFrame frm = stk.getUserFrame();
+   if (frm == null) return null;
+   File f1 = frm.getSourceFile();
+   if (f1 == null) return null;
    
-   File f1 = for_thread.getStack().getUserFrame().getSourceFile();
    return getSourceManager().getProjectForFile(f1);
 }
 

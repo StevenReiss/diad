@@ -52,6 +52,7 @@ import edu.brown.cs.diad.dicore.DiadSymptom;
 import edu.brown.cs.diad.dicore.DiadThread;
 import edu.brown.cs.diad.dicore.DiadValue;
 import edu.brown.cs.diad.dicore.DiadConstants.DiadValueOperator;
+import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.jcomp.JcompAst;
 import edu.brown.cs.ivy.jcomp.JcompSymbol;
 import edu.brown.cs.ivy.jcomp.JcompType;
@@ -195,6 +196,8 @@ private String getExceptionCause() throws DiadException
     }
    
    if (checker != null) {
+      IvyLog.logD("DIANALYSIS","Run checker " + checker +
+            " on " + stmt);
       checker.doCheck(stmt);
       String loc = checker.generateResult();
       if (loc != null) return loc;
