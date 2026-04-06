@@ -324,7 +324,7 @@ JSONArray getJsonStack()
 /*                                                                              */
 /********************************************************************************/
 
-JSONObject getEvaluate(String frameid,String expr)
+JSONObject getEvaluate(String frameid,String expr,int levels)
 {
     JSONObject rslt = new JSONObject();
     DiadStackFrame usefrm = null;
@@ -346,10 +346,10 @@ JSONObject getEvaluate(String frameid,String expr)
         rslt.put("Error","No value returned");
      }
     else {
-        rslt.put("value",dv.toJson()); 
+        rslt.put("value",dv.toJson(levels)); 
      }
     
-	return rslt;
+    return rslt;
 }
 
 
@@ -516,9 +516,23 @@ void validate(IvyXmlWriter xw,DiadRepair repair)
 
 Element askLimba(IvyXmlWriter xw,DiadAskType typ,String query,boolean nohistory)
 {
-   if (candidate_state != DiadCandidateState.READY &&
-         candidate_state != DiadCandidateState.DOING_QUERY) {
-      return null;
+   String tools = "PROJECT,DEBUG";
+   switch (candidate_state) {
+      case READY :
+      case DOING_QUERY :
+         tools = "PROJECT,DEBUG,DIAD";
+         break;
+      case NO_ANALYSIS :
+      case NO_LOCATIONS_FOUND :
+      case NO_BASE_EXECUTION :
+      case NO_FINAL_LOCATIONS :
+         tools = "PROJECT,DEBUG";
+         break;
+      default :
+         return null;
+    }
+   if (typ == DiadAskType.BASEEXPLAIN || typ == DiadAskType.BASEREPAIRS) { 
+      tools = "PROJECT,DEBUG"; 
     }
    
    Map<String,String> keymap = diad_control.getKeyMap();
@@ -547,7 +561,8 @@ Element askLimba(IvyXmlWriter xw,DiadAskType typ,String query,boolean nohistory)
    CommandArgs args = new CommandArgs("USECONTEXT",true,
          "ID",getId(),
          "NOHISTORY",nohistory,
-         "TOOLS","PROJECT,DEBUG");
+         "TOOLS",tools
+   );
    
    IvyXmlWriter xw1 = new IvyXmlWriter();
    xw1.begin("PROMPT");

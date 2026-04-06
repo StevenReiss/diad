@@ -52,7 +52,7 @@ String getString();
 DiadDataType getDataType();  
 String getJavaValue();
 
-Object toJson();
+Object toJson(int lvls);
 
 }       // end of interface DiadValue
 

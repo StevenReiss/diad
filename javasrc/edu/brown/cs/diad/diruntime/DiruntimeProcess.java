@@ -148,7 +148,7 @@ DiruntimeValueData getUniqueValue(DiruntimeValueData bvd)
             synchronized (unique_values) {
                DiruntimeValueData nsvd = unique_values.get(dnm);
                if (nsvd != null) {
-                  bvd.merge(nsvd);
+                  nsvd.merge(bvd);
                   bvd = nsvd;
                 }
                else unique_values.put(dnm,bvd);

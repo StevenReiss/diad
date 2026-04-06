@@ -115,8 +115,10 @@ enum DiadValueKind {
 enum DiadAskType {
    GENERAL,
    EXPLAIN,
+   BASEEXPLAIN,
    LOCATIONS,
    REPAIRS,
+   BASEREPAIRS,
    USER,
    RETRY,
    TEST1,

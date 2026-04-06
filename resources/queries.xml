@@ -7,6 +7,14 @@
       getCallTrace) and determine how this trace is relevant to the symptom
       $(SYMPTOM).
    </QUERY>
+   <QUERY COMMAND='BASEEXPLAIN'>
+      You should return an explanation of the root cause of the problem
+      that led to the symptom.	You should start with the stack trace (using
+      the tool getStackFrames) and can evaluate any expression that will help
+      (using getEvaluation).  You should provide an explanation that is relevant
+      the the symptom
+      $(SYMPTOM).
+   </QUERY>
    <QUERY COMMAND='RETRY'>
       That was either a bad explanation (i.e., you are telling what to do rather
       than doing it yourself), or it is incorrect or incomplete.  Please try

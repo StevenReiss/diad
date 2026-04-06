@@ -114,7 +114,7 @@ String getType()                { return val_type; }
 String getValue()               { return val_value; }
 
 String getActualType()          { return null; }
-boolean hasContents()           { return has_values; }
+boolean hasContents()           { return sub_values != null; }
 boolean isLocal()               { return is_local; }
 boolean isStatic()              { return is_static; }
 
@@ -351,7 +351,7 @@ private synchronized void computeValues()
 
 void merge(DiruntimeValueData bvd)
 {
-   if (!has_values && bvd.has_values) {
+   if (!hasContents() && bvd.hasContents()) {
       sub_values = bvd.sub_values;
       has_values = true;
       result_value = null;

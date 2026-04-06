@@ -181,8 +181,6 @@ protected DiruntimeValue(DiruntimeType typ)
 
 @Override public String getJavaValue()                    { return toString(); }
 
-@Override public Object toJson()                          { return toString(); } 
-
 
 
 /********************************************************************************/
@@ -218,14 +216,16 @@ private static class NullValue extends DiruntimeValue {
       super(typ);
     }
    
-   @Override public boolean isNull()           { return true; }
+   @Override public boolean isNull()            { return true; }
    
    @Override protected void localOutputXml(IvyXmlWriter xw) {
       xw.field("NULL",true);
       xw.field("VALUE","null");
     }
    
-   @Override public String toString()          { return "null"; }
+   @Override public String toString()           { return "null"; }
+   
+   @Override public Object toJson(int lvl)      { return JSONObject.NULL; }
    
 }       // end of inner class NullValue
 
@@ -255,6 +255,10 @@ private static class BooleanValue extends DiruntimeValue {
    
    @Override public String toString() {
       return Boolean.toString(cur_value);
+    }
+   
+   @Override public Object toJson(int lvl) {
+      return Boolean.valueOf(cur_value);
     }
 
 }       // end of inner class BooleanValue
@@ -309,6 +313,8 @@ private static class NumericValue extends DiruntimeValue {
    
    @Override public String toString()           { return cur_value.toString(); }
    
+   @Override public Object toJson(int lvl)      { return cur_value; }
+   
 }       // end of inner class IntegerValue
 
 
@@ -344,6 +350,8 @@ private static class StringValue extends DiruntimeValue {
    
    @Override public String toString()           { return "\"" + cur_value + "\""; }
    
+   @Override public Object toJson(int lvls)     { return cur_value; }
+   
 }       // end of inner class StringValue
 
 
@@ -370,11 +378,11 @@ private static class ClassValue extends DiruntimeValue {
    
    @Override public String toString()           { return base_type.getName(); }
    
-   @Override public Object toJson() {
-       JSONObject rslt = new JSONObject();
-       rslt.put("class",base_type.getName());
-       return rslt;
-	}           
+   @Override public Object toJson(int lvl) {
+      JSONObject rslt = new JSONObject();
+      rslt.put("class",base_type.getName());
+      return rslt;
+    }           
    
 }       // end of inner class ClassValue
 
@@ -447,6 +455,10 @@ private static class ObjectValue extends DiruntimeValue {
       int ct = 0;
       for (Map.Entry<String,DiruntimeGenericValue> ent : field_values.entrySet()) {
          DiruntimeGenericValue gv = ent.getValue();
+         if (gv instanceof DiruntimeDeferredValue) {
+            DiruntimeDeferredValue ddv = (DiruntimeDeferredValue) gv;
+            gv = (DiruntimeGenericValue) ddv.getValue();
+          }
          if (gv instanceof DiruntimeValue) {
             DiruntimeValue bv = (DiruntimeValue) gv;
             if (bv.getDataType().isArrayType() || bv.getDataType().isObjectType()) continue;
@@ -460,13 +472,13 @@ private static class ObjectValue extends DiruntimeValue {
       return buf.toString();
     }
    
-   @Override public Object toJson() {
+   @Override public Object toJson(int lvls) {
        JSONObject jo = new JSONObject();
        for (Map.Entry<String,DiruntimeGenericValue> ent : field_values.entrySet()) {
            DiruntimeGenericValue gv = ent.getValue();
-           if (gv instanceof DiruntimeValue) {
+           if (lvls >= 0 && gv instanceof DiruntimeValue) {
                DiruntimeValue bv = (DiruntimeValue) gv;
-               jo.put(ent.getKey(),bv.toString());
+               jo.put(ent.getKey(),bv.toJson(lvls-1));
             }
         }
        return jo;
@@ -551,17 +563,17 @@ private static class ArrayValue extends DiruntimeValue {
       return buf.toString();
     }
    
-   @Override public Object toJson() {
-       JSONArray rslt = new JSONArray();
-       for (Map.Entry<Integer,DiruntimeGenericValue> ent : array_values.entrySet()) {
-           DiruntimeGenericValue gv = ent.getValue();
-           if (gv instanceof DiruntimeValue) {
-               DiruntimeValue bv = (DiruntimeValue) gv;
-               rslt.put(ent.getKey(),bv.toString());
-            }
-        }
-       return rslt;
-	}
+   @Override public Object toJson(int lvls) {
+      JSONArray rslt = new JSONArray();
+      for (Map.Entry<Integer,DiruntimeGenericValue> ent : array_values.entrySet()) {
+         DiruntimeGenericValue gv = ent.getValue();
+         if (lvls >= 0 && gv instanceof DiruntimeValue) {
+            DiruntimeValue bv = (DiruntimeValue) gv;
+            rslt.put(ent.getKey(),bv.toJson(lvls-1));
+          }
+       }
+      return rslt;
+    }
    
 }       // end of iinner class ArrayValue
 

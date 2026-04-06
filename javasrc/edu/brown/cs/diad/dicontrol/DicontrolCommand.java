@@ -91,7 +91,7 @@ static DicontrolCommand createCommand(DicontrolMain ctrl,Element xml)
          return new QueryMethodCalls(ctrl,xml);
       case "EXPRESSIONS" :
          return new CommandExpressions(ctrl,xml);
-      case "ASKLIMBA" :
+      case "ASKLIMBA" :         
          return new CommandAskLimba(ctrl,xml);
       case "PARAMETER" :
          return new CommandParameter(ctrl,xml);
@@ -397,15 +397,18 @@ private static class QueryEval extends QueryCommand {
     
     private String frame_id;
     private String eval_expr;
+    private int output_level;
     
     QueryEval(DicontrolMain ctrl,Element xml) {
         super(ctrl,xml);
         frame_id = IvyXml.getAttrString(xml,"FRAMEID");
         eval_expr = IvyXml.getTextElement(xml,"EXPRESSION");
+        output_level = IvyXml.getAttrInt(xml,"LEVELS",3);
      }
     
     @Override protected JSONObject getJsonObject() {
-        return getCandidate().getEvaluate(frame_id,eval_expr);  
+        return getCandidate().getEvaluate(frame_id, 
+              eval_expr,output_level);  
      }
     
     
