@@ -52,6 +52,7 @@ String getExceptionType();
 String getProcessId();
 
 DiadValue evaluate(String expr);
+DiadValue evaluate(String expr,DiadStackFrame frm);
 void outputXml(IvyXmlWriter xw);
 
 Map<String,DiadValue> getParameterValues(DiadStackFrame frm);

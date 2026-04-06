@@ -35,8 +35,6 @@
 
 package edu.brown.cs.diad.dicore;
 
-
-
 public interface DiadValue
 {
 
@@ -53,6 +51,8 @@ String getString();
 
 DiadDataType getDataType();  
 String getJavaValue();
+
+Object toJson();
 
 }       // end of interface DiadValue
 

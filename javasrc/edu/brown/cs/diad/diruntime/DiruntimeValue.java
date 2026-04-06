@@ -25,6 +25,9 @@ package edu.brown.cs.diad.diruntime;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
 import edu.brown.cs.diad.dicore.DiadDataType;
 import edu.brown.cs.diad.dicore.DiadException;
 import edu.brown.cs.diad.dicore.DiadValue;
@@ -177,6 +180,8 @@ protected DiruntimeValue(DiruntimeType typ)
 
 
 @Override public String getJavaValue()                    { return toString(); }
+
+@Override public Object toJson()                          { return toString(); } 
 
 
 
@@ -365,7 +370,16 @@ private static class ClassValue extends DiruntimeValue {
    
    @Override public String toString()           { return base_type.getName(); }
    
+   @Override public Object toJson() {
+       JSONObject rslt = new JSONObject();
+       rslt.put("class",base_type.getName());
+       return rslt;
+	}           
+   
 }       // end of inner class ClassValue
+
+
+
 
 /********************************************************************************/
 /*                                                                              */
@@ -444,6 +458,18 @@ private static class ObjectValue extends DiruntimeValue {
        }
       buf.append("}");
       return buf.toString();
+    }
+   
+   @Override public Object toJson() {
+       JSONObject jo = new JSONObject();
+       for (Map.Entry<String,DiruntimeGenericValue> ent : field_values.entrySet()) {
+           DiruntimeGenericValue gv = ent.getValue();
+           if (gv instanceof DiruntimeValue) {
+               DiruntimeValue bv = (DiruntimeValue) gv;
+               jo.put(ent.getKey(),bv.toString());
+            }
+        }
+       return jo;
     }
 
 }       // end of inner class ObjectValue
@@ -524,6 +550,18 @@ private static class ArrayValue extends DiruntimeValue {
       buf.append("]");
       return buf.toString();
     }
+   
+   @Override public Object toJson() {
+       JSONArray rslt = new JSONArray();
+       for (Map.Entry<Integer,DiruntimeGenericValue> ent : array_values.entrySet()) {
+           DiruntimeGenericValue gv = ent.getValue();
+           if (gv instanceof DiruntimeValue) {
+               DiruntimeValue bv = (DiruntimeValue) gv;
+               rslt.put(ent.getKey(),bv.toString());
+            }
+        }
+       return rslt;
+	}
    
 }       // end of iinner class ArrayValue
 

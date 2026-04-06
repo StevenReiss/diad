@@ -46,6 +46,7 @@ import edu.brown.cs.diad.dicore.DiadStack;
 import edu.brown.cs.diad.dicore.DiadStackFrame;
 import edu.brown.cs.diad.dicore.DiadSymptom;
 import edu.brown.cs.diad.dicore.DiadThread;
+import edu.brown.cs.diad.dicore.DiadValue;
 import edu.brown.cs.diad.diexecute.DiexecuteManager;
 import edu.brown.cs.ivy.file.IvyFile;
 import edu.brown.cs.ivy.file.IvyLog;
@@ -314,6 +315,41 @@ JSONArray getJsonStack()
     }
    
    return rslt;
+}
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      EVALUATE command                                                        */
+/*                                                                              */
+/********************************************************************************/
+
+JSONObject getEvaluate(String frameid,String expr)
+{
+    JSONObject rslt = new JSONObject();
+    DiadStackFrame usefrm = null;
+    
+    if (frameid == null) usefrm = null;
+    else if (frameid.equals("0") || frameid.equals("*")) usefrm = for_frame;
+    else {
+        for (DiadStackFrame frm : for_thread.getStack().getFrames()) {
+            if (frm.getFrameId().equals(frameid)) {
+                usefrm = frm;
+                break;
+             }
+         }
+     }
+    
+    DiadValue dv = for_thread.evaluate(expr,usefrm);
+   
+    if (dv == null) {
+        rslt.put("Error","No value returned");
+     }
+    else {
+        rslt.put("value",dv.toJson()); 
+     }
+    
+	return rslt;
 }
 
 

@@ -393,7 +393,7 @@ DiruntimeType stringType()
 }
 
 
-DiruntimeValue evaluate(String expr,DiadStackFrame frm)
+@Override public DiruntimeValue evaluate(String expr,DiadStackFrame frm) 
 {       
    String eid = "DIAD_E_" + eval_counter.incrementAndGet();
    // expr = "edu.brown.cs.seede.poppy.PoppyValue.register(" + expr + ")";

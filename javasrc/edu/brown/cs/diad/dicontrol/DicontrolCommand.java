@@ -73,6 +73,8 @@ static DicontrolCommand createCommand(DicontrolMain ctrl,Element xml)
          return new WaitForState(ctrl,xml);
       case "Q_STACK" :
          return new QueryStack(ctrl,xml);
+      case "Q_EVAL" :
+          return new QueryEval(ctrl,xml);
       case "Q_LOCATIONS" :
          return new QueryLocations(ctrl,xml);
       case "Q_EXECTRACE" :
@@ -389,6 +391,26 @@ private static class QueryStack extends QueryCommand {
    
    
 }       // end of inner class QueryStack
+
+
+private static class QueryEval extends QueryCommand {
+    
+    private String frame_id;
+    private String eval_expr;
+    
+    QueryEval(DicontrolMain ctrl,Element xml) {
+        super(ctrl,xml);
+        frame_id = IvyXml.getAttrString(xml,"FRAMEID");
+        eval_expr = IvyXml.getTextElement(xml,"EXPRESSION");
+     }
+    
+    @Override protected JSONObject getJsonObject() {
+        return getCandidate().getEvaluate(frame_id,eval_expr);  
+     }
+    
+    
+}       // end of inner class QueryStack
+
 
 
 
