@@ -143,15 +143,18 @@ DiruntimeValueData getUniqueValue(DiruntimeValueData bvd)
    switch (bvd.getKind()) {
       case OBJECT :
       case ARRAY :
-         String dnm = bvd.getValue();
+         String dnm = bvd.getValueString();
          if (dnm != null && dnm.length() > 0) {
             synchronized (unique_values) {
                DiruntimeValueData nsvd = unique_values.get(dnm);
-               if (nsvd != null) {
+               if (nsvd == bvd) ;
+               else if (nsvd != null) {
                   nsvd.merge(bvd);
                   bvd = nsvd;
                 }
-               else unique_values.put(dnm,bvd);
+               else {
+                  unique_values.put(dnm,bvd);
+                }
              }
           }
          break; 

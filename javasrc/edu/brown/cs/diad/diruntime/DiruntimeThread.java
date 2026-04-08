@@ -485,7 +485,7 @@ DiruntimeValueData evaluateHashCode(String expr)
          "THREAD",thread_id,
          "PROJECT",proj,
          "DEPTH",1,"ARRAY",-1);
-   String var = "<VAR>" + IvyXml.xmlSanitize(expr) + "</VAR>";
+   String var = "<VAR>" + IvyXml.xmlSanitize(expr) + "?@hashCode" + "</VAR>";
    Element xml = getManager().sendBubblesMessage("VARVAL",args,var);
    if (IvyXml.isElement(xml,"RESULT")) {
       return new DiruntimeValueData(this,IvyXml.getChild(xml,"VALUE"),null);

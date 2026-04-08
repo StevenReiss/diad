@@ -35,8 +35,7 @@
 
 package edu.brown.cs.diad.dicore;
 
-public interface DiadValue
-{
+public interface DiadValue {
 
 DiadValue getFieldValue(String name) throws DiadException;
 void setFieldValue(String name,DiadValue value) throws DiadException;

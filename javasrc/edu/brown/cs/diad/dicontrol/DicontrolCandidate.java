@@ -343,10 +343,10 @@ JSONObject getEvaluate(String frameid,String expr,int levels)
     DiadValue dv = for_thread.evaluate(expr,usefrm);
    
     if (dv == null) {
-        rslt.put("Error","No value returned");
+        rslt.put("ERROR","No value returned");
      }
     else {
-        rslt.put("value",dv.toJson(levels)); 
+        rslt.put("VALUE",dv.toJson(levels)); 
      }
     
     return rslt;

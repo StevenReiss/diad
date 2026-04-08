@@ -99,12 +99,14 @@ enum RunThreadType {
    USER,
 }
 
-interface DiruntimeGenericValue { }
+interface DiruntimeGenericValue { 
+
+}
 
 
 interface DiruntimeDeferredValue extends DiruntimeGenericValue {
    
-   DiadValue getValue();
+   DiadValue getDiadValue();
    
 }
 

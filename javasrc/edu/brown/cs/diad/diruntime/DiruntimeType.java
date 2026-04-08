@@ -263,6 +263,9 @@ private static class ParameterizedType extends DiruntimeType {
    
    @Override public boolean isParameterizedType()       { return true; }
    @Override public DiruntimeType getBaseType()          { return base_type; }
+   @Override public Map<String,DiadDataType> getFields() {
+      return base_type.getFields();
+    }
    
 }       // end of inner class ParameterizedType
 
@@ -331,7 +334,6 @@ private static class ObjectType extends DiruntimeType {
             field_map.put(fnm,for_launch.findType(vtyp));
           }
        }
-      
       
       return field_map;
     }

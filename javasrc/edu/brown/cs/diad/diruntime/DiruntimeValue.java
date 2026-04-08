@@ -176,10 +176,10 @@ protected DiruntimeValue(DiruntimeType typ)
 
 
 
-@Override public DiadDataType getDataType()               { return value_type; }  
+@Override public DiadDataType getDataType()             { return value_type; }  
 
 
-@Override public String getJavaValue()                    { return toString(); }
+@Override public String getJavaValue()                  { return toString(); }
 
 
 
@@ -421,7 +421,7 @@ private static class ObjectValue extends DiruntimeValue {
       if (gv == null) return null;
       if (gv instanceof DiruntimeDeferredValue) {
          DiruntimeDeferredValue dv = (DiruntimeDeferredValue) gv;
-         gv = (DiruntimeGenericValue) dv.getValue();
+         gv = (DiruntimeGenericValue) dv.getDiadValue();
          field_values.put(nm,gv);
        }
       return (DiruntimeValue) gv;
@@ -457,7 +457,7 @@ private static class ObjectValue extends DiruntimeValue {
          DiruntimeGenericValue gv = ent.getValue();
          if (gv instanceof DiruntimeDeferredValue) {
             DiruntimeDeferredValue ddv = (DiruntimeDeferredValue) gv;
-            gv = (DiruntimeGenericValue) ddv.getValue();
+            gv = (DiruntimeGenericValue) ddv.getDiadValue();
           }
          if (gv instanceof DiruntimeValue) {
             DiruntimeValue bv = (DiruntimeValue) gv;
@@ -474,12 +474,20 @@ private static class ObjectValue extends DiruntimeValue {
    
    @Override public Object toJson(int lvls) {
        JSONObject jo = new JSONObject();
-       for (Map.Entry<String,DiruntimeGenericValue> ent : field_values.entrySet()) {
-           DiruntimeGenericValue gv = ent.getValue();
-           if (lvls >= 0 && gv instanceof DiruntimeValue) {
-               DiruntimeValue bv = (DiruntimeValue) gv;
-               jo.put(ent.getKey(),bv.toJson(lvls-1));
-            }
+       if (lvls >= 0) {
+          for (Map.Entry<String,DiruntimeGenericValue> ent : field_values.entrySet()) {
+             if (ent.getKey().startsWith("@")) {
+                continue;
+              }
+             Object gv = ent.getValue();
+             if (gv instanceof DiruntimeDeferredValue) {
+                gv = ((DiruntimeDeferredValue) gv).getDiadValue(); 
+              }
+             if (gv instanceof DiruntimeValue) {
+                DiruntimeValue bv = (DiruntimeValue) gv;
+                jo.put(ent.getKey(),bv.toJson(lvls-1));
+              }
+           }
         }
        return jo;
     }
@@ -516,7 +524,7 @@ private static class ArrayValue extends DiruntimeValue {
       if (gv == null) return null;
       if (gv instanceof DiruntimeDeferredValue) {
          DiruntimeDeferredValue dv = (DiruntimeDeferredValue) gv; 
-         gv = (DiruntimeGenericValue) dv.getValue();
+         gv = (DiruntimeGenericValue) dv.getDiadValue();
          array_values.put(idx,gv);
        }
       return (DiruntimeValue) gv;

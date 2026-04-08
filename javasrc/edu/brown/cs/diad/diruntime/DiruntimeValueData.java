@@ -33,7 +33,7 @@ import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.xml.IvyXml;
 
 class DiruntimeValueData implements DiruntimeConstants,
-      DiruntimeConstants.DiruntimeGenericValue
+      DiruntimeConstants.DiruntimeGenericValue 
 {
 
 
@@ -74,6 +74,7 @@ DiruntimeValueData(DiruntimeThread sm,Element xml,String name)
    initialize(xml,null);
 }
 
+
 DiruntimeValueData(DiruntimeValueData par,Element xml)
 {
    for_thread = par.for_thread;
@@ -108,10 +109,10 @@ DiruntimeValueData(DiruntimeValue cv)
 /*                                                                              */
 /********************************************************************************/
 
-DiadValueKind getKind() { return value_kind; }
+DiadValueKind getKind()         { return value_kind; }
 
 String getType()                { return val_type; }
-String getValue()               { return val_value; }
+String getValueString()         { return val_value; } 
 
 String getActualType()          { return null; }
 boolean hasContents()           { return sub_values != null; }
@@ -160,7 +161,21 @@ DiruntimeValue getDiadValue()
       case OBJECT :
          Map<String,DiruntimeGenericValue> inits = new HashMap<>();
          Map<String,DiruntimeValueData> sets = new HashMap<>();
-         if (typ.getFields() != null) {
+         Map<String,DiadDataType> flds = typ.getFields();
+         if (flds != null) {
+            if (sub_values != null) {
+               for (Map.Entry<String,DiruntimeValueData> ent : sub_values.entrySet()) {
+                  String k = ent.getKey();
+                  int idx = k.lastIndexOf(".");
+                  if (idx > 0) k = k.substring(idx+1);
+                  if (flds.containsKey(k)) continue;
+                  DiruntimeValueData v = ent.getValue();
+                  if (v.isStatic()) continue;
+                  String xtyp = v.getType();
+                  DiruntimeType dtyp = for_thread.getProcess().findType(xtyp);
+                  typ.getFields().put(k,dtyp);
+                }
+             }
             for (Map.Entry<String,DiadDataType> ent : typ.getFields().entrySet()) {
                String fnm = ent.getKey();
                String cnm = null;
@@ -250,7 +265,9 @@ private String getKey(String fnm,String cnm)
    
    String knm = getFieldKey(fnm,cnm);
    
-   return val_name + "?" + knm;
+// return val_name + "?" + knm;
+   
+   return knm;
 }
 
 
@@ -268,24 +285,7 @@ private String getFieldKey(String fnm,String cnm)
 
 
 
-String findValue(DiruntimeValue cv,int lvl)
-{
-   if (result_value == null) return null;
-   if (result_value == cv) return "";
-   if (lvl == 0 || sub_values == null) return null;
-   
-   for (Map.Entry<String,DiruntimeValueData> ent : sub_values.entrySet()) {
-      String r = ent.getValue().findValue(cv,lvl-1);
-      if (r != null) {
-         if (array_length > 0) {
-            return "[" + ent.getKey() + "]";
-          }
-         else return "." + ent.getKey();
-       }
-    }
-   
-   return null;
-}
+
 
 
 /********************************************************************************/
@@ -323,12 +323,14 @@ private void addValues(Element xml)
 {
    if (xml == null) return;
    for (Element e : IvyXml.children(xml,"VALUE")) {
-      if (sub_values == null) sub_values = new HashMap<String,DiruntimeValueData>();
+      if (sub_values == null) sub_values = new HashMap<>();
       DiruntimeValueData vd = new DiruntimeValueData(this,e);
       String nm = vd.val_name;
       vd = for_thread.getUniqueValue(vd);
+      int idx = nm.lastIndexOf("?");
+      if (idx > 0) nm = nm.substring(idx+1);
       sub_values.put(nm,vd);
-      // AcornLog.logD("ADD VALUE " + nm + " = " + vd);
+      IvyLog.logD("DIRUNTIME","ADD VALUE " + nm + " = " + vd);
     }
 }
 
@@ -351,10 +353,19 @@ private synchronized void computeValues()
 
 void merge(DiruntimeValueData bvd)
 {
+   if (bvd == this) return;
    if (!hasContents() && bvd.hasContents()) {
-      sub_values = bvd.sub_values;
+      sub_values = new HashMap<>(bvd.sub_values);
       has_values = true;
       result_value = null;
+    }
+   else if (bvd.hasContents()) {
+      for (Map.Entry<String,DiruntimeValueData> ent : bvd.sub_values.entrySet()) {
+         String k = ent.getKey();
+         if (sub_values.get(k) == null) {
+            sub_values.put(k,ent.getValue());
+          }
+       }
     }
 }
 
@@ -372,7 +383,7 @@ private class DeferredLookup implements DiruntimeDeferredValue {
       field_name = name;
     }
    
-   @Override public DiruntimeValue getValue() {
+   @Override public DiruntimeValue getDiadValue() {
       computeValues();
       if (field_name.equals(HASH_CODE_FIELD)) {
          if (sub_values == null) sub_values = new HashMap<String,DiruntimeValueData>();
@@ -401,6 +412,18 @@ private class DeferredLookup implements DiruntimeDeferredValue {
        }
       String lookup = getKey(fnm,cnm);
       DiruntimeValueData svd = sub_values.get(lookup);
+      if (svd == null) {
+         int idx1 = lookup.lastIndexOf(".");
+         if (idx1 > 0) {
+            String sfx = lookup.substring(idx1);
+            for (Map.Entry<String,DiruntimeValueData> ent : sub_values.entrySet()) {
+               if (ent.getKey().endsWith(sfx)) {
+                  svd = ent.getValue();
+                  break;
+                }
+             }
+          }
+       }
       svd = for_thread.getUniqueValue(svd);
       if (svd == null) {
          IvyLog.logE("DIRUNTIME","Deferred Lookup of " + lookup + " not found");
