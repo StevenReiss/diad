@@ -538,14 +538,18 @@ private void processXmlFile(FileReader fr)
           }
          Element xml = IvyXml.convertStringToXml(xmlstr);
          try {
+            long start = System.currentTimeMillis();
             DiadCommand cmd = setupDiadCommand(xml);
             if (cmd == null) continue;
             try (IvyXmlWriter xw = new IvyXmlWriter()) {
                xw.begin("RESULT");
                cmd.process(xw);
                xw.end("RESULT");
+               long end = System.currentTimeMillis();
                IvyLog.logD("DICONTROL","Command " + cmd.getCommandName() + ":\n");
-               IvyLog.logD("DICONTROL","RESULT: " + xw.toString());
+               IvyLog.logD("DICONTROL","DIAD RESULT: " + xw.toString());
+               long time = end - start;
+               IvyLog.logD("DICONTROL","TIME: " + time + " ms.");
              }
             catch (Throwable t) {
                IvyLog.logE("DICONTROL",

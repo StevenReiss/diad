@@ -61,6 +61,8 @@ static DicontrolCommand createCommand(DicontrolMain ctrl,Element xml)
          return new CommandSetupBubbles(ctrl,xml);
       case "TRANSCRIPT" :
          return new CommandTranscript(ctrl,xml);
+      case "CLEARHISTORY" :
+         return new CommandClearHistory(ctrl,xml);
       case "TEST" :
          return new CommandTest(ctrl,xml);
       case "DELAY" :
@@ -595,6 +597,10 @@ private static class CommandAskLimba extends QueryCommand {
        }
     }
    
+   @Override public String getCommandName() {
+      return "ASKLIMBA-" + ask_type;
+    }
+   
 }       // end of inner class AskLimba
 
 
@@ -818,6 +824,27 @@ private static class CommandTranscript extends QueryCommand {
     }
 
 }       // end of inner class CommandTranscript
+
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      CLEARHISTORY command                                                    */
+/*                                                                              */
+/********************************************************************************/
+
+private static class CommandClearHistory extends QueryCommand {
+   
+   CommandClearHistory(DicontrolMain ctrl,Element xml) {
+      super(ctrl,xml);
+    }
+   
+   @Override public void process(IvyXmlWriter xw) {
+      CommandArgs args = new CommandArgs("ID",getCandidate().getId());
+      diad_control.sendLimbaMessage("CLEAR",args,null);
+    }
+   
+}       // end of inner class CommandClearHistory
 
 
 
