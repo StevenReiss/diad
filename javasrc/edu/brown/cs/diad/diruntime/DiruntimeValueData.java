@@ -330,7 +330,7 @@ private void addValues(Element xml)
       int idx = nm.lastIndexOf("?");
       if (idx > 0) nm = nm.substring(idx+1);
       sub_values.put(nm,vd);
-      IvyLog.logD("DIRUNTIME","ADD VALUE " + nm + " = " + vd);
+//    IvyLog.logD("DIRUNTIME","ADD VALUE " + nm + " = " + vd);
     }
 }
 

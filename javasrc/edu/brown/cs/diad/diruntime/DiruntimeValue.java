@@ -455,10 +455,6 @@ private static class ObjectValue extends DiruntimeValue {
       int ct = 0;
       for (Map.Entry<String,DiruntimeGenericValue> ent : field_values.entrySet()) {
          DiruntimeGenericValue gv = ent.getValue();
-         if (gv instanceof DiruntimeDeferredValue) {
-            DiruntimeDeferredValue ddv = (DiruntimeDeferredValue) gv;
-            gv = (DiruntimeGenericValue) ddv.getDiadValue();
-          }
          if (gv instanceof DiruntimeValue) {
             DiruntimeValue bv = (DiruntimeValue) gv;
             if (bv.getDataType().isArrayType() || bv.getDataType().isObjectType()) continue;

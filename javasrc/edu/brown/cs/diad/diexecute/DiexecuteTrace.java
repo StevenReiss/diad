@@ -789,12 +789,10 @@ private Boolean checkValueAtTime(DiadValue actval,Element valctx,
       prevval = valelt;
     }
    if (prev > 0 && prev <= to) {
-      if (prev <= to) {
-         Boolean fg = compareValueAtTime(actval,prevval,thread,from,to);
-         if (fg != null) {
-            ++foundct;
-            found |= fg;
-          }
+      Boolean fg = compareValueAtTime(actval,prevval,thread,from,to);
+      if (fg != null) {
+         ++foundct;
+         found |= fg;
        }
     }
    else if (prev == -1) {
@@ -851,12 +849,9 @@ private Boolean compareValueAtTime(DiadValue actval,Element valctx,DiadThread th
     }
    
    String s1 = typ.getName(); 
-   int idx1 = s1.indexOf("<");
-   if (idx1 > 0) s1 = s1.substring(0,idx1);
+   s1 = normalizeType(s1);
    String s2 = ctxtyp;
-   int idx2 = s2.indexOf("<");
-   if (idx2 > 0) s2 = s2.substring(0,idx2);
-   s1 = s1.replace("$",".");
+   s2 = normalizeType(s2);
    
    if (!s1.equals(s2)) {
       if ((s1.endsWith("Set") || s1.endsWith("SetN")) &&
@@ -870,6 +865,22 @@ private Boolean compareValueAtTime(DiadValue actval,Element valctx,DiadThread th
    
    return null;
 } 
+
+
+private String normalizeType(String typ)
+{
+   String rslt = typ;
+   
+   int idx1 = typ.indexOf("<");
+   if (idx1 > 0) {
+      int idx2 = typ.lastIndexOf(">");
+      rslt = typ.substring(0,idx1) + typ.substring(idx2+1);
+    }
+   
+   rslt = rslt.replace("$",".");
+   
+   return rslt;
+}
 
 
 
