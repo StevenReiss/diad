@@ -30,6 +30,9 @@ import org.json.JSONObject;
 import org.w3c.dom.Element;
 
 import edu.brown.cs.diad.dicore.DiadRepair;
+import edu.brown.cs.diad.dicore.DiadStack;
+import edu.brown.cs.diad.dicore.DiadStackFrame;
+import edu.brown.cs.diad.dicore.DiadThread;
 import edu.brown.cs.diad.dicore.DiadConstants.DiadCommand;
 import edu.brown.cs.diad.disource.DisourceManager;
 import edu.brown.cs.ivy.file.IvyLog;
@@ -755,7 +758,24 @@ private static class CommandStartFrame extends QueryCommand {
     }
    
    @Override public void process(IvyXmlWriter xw) {
-      getCandidate().setStartFrame(frame_id); 
+      if (frame_id != null) {
+         getCandidate().setStartFrame(frame_id); 
+       }
+      DiadThread thrd = getCandidate().getThread();
+      if (thrd != null) {
+         DiadStack stk = thrd.getStack();
+         if (stk != null) {
+            boolean use = false;
+            xw.begin("FRAMES");
+            for (DiadStackFrame frm : stk.getFrames()) {
+               if (!use && frm.isUserFrame()) use = true;
+               if (use) {
+                  frm.outputXml(xw);
+                }
+             }
+            xw.end("FRAMES");
+          }
+       }   
     }
    
 }       // end of inner class CommandStartFrame

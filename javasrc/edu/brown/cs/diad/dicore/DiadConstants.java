@@ -82,6 +82,7 @@ enum DiadSymptomType {
    LOCATION,
    NO_EXCEPTION,
    CAUGHT_EXCEPTION,
+   LIBRARY_EXCEPTION,
 }
 
 enum DiadValueOperator {

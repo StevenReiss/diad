@@ -156,7 +156,9 @@ DiruntimeFrame(Element xml)
    xw.field("CLASS",class_name);
    xw.field("METHOD",method_name);
    xw.field("LINE",line_number);
-   xw.field("FILE",source_file.getPath());
+   if (source_file != null) {
+      xw.field("FILE",source_file.getPath());
+    }
    xw.field("USER",is_userframe);
    xw.textElement("SIGNATURE",method_signature);
    xw.textElement("FORMATTED",format_signature);
