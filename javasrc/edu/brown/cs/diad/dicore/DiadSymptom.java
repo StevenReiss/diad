@@ -55,6 +55,7 @@ String getTargetValue();
 DiadValueOperator getSymptomOperator(); 
 double getTargetPrecision();
 
+void setSymptomType(DiadSymptomType typ);
 void setSymptomItem(String val);
 void setOriginalValue(String val);
 void setOriginalExpression(String val);

@@ -169,9 +169,8 @@ private DianalysisHistory setupHistory()
          hq = new DianalysisAssertionHistory(for_analysis,
                for_symptom,for_thread);
          break;
-      case CAUGHT_EXCEPTION :
-         break;
       case EXCEPTION :
+      case LIBRARY_EXCEPTION :
          hq = new DianalysisExceptionHistory(for_analysis,
                for_symptom,for_thread);
          break;
@@ -183,13 +182,19 @@ private DianalysisHistory setupHistory()
          hq = new DianalysisLocationHistory(for_analysis,
                for_symptom,for_thread);
          break;
-      case NONE :
+      case CAUGHT_EXCEPTION :
+         // need to get exception information, backtrace, and then
+         //   set up locations based on that
          break;
       case NO_EXCEPTION :
+         // need to create locations for exception not thrown
          break;
       case VARIABLE :
          hq = new DianalysisVariableHistory(for_analysis,
                for_symptom,for_thread);
+         break;
+         
+      case NONE :
          break;
     }
   

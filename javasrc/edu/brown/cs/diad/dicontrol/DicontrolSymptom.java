@@ -111,6 +111,12 @@ DicontrolSymptom(Element xml)
 
 @Override public double getTargetPrecision()            { return target_precision; } 
 
+
+@Override public void setSymptomType(DiadSymptomType typ)
+{
+   symptom_type = typ; 
+}
+
 @Override public void setSymptomItem(String v) 
 {
    if (v != null) v = v.trim();
@@ -165,14 +171,16 @@ DicontrolSymptom(Element xml)
       case EXCEPTION :
       case CAUGHT_EXCEPTION :
          return getExceptionText();
+      case LIBRARY_EXCEPTION :
+         return getLibraryExceptionText();
+      case VARIABLE :
+         return "variable '" + symptom_item + "' has the wrong value";
       case EXPRESSION :
-        return "expression has the wrong value";
+        return "expression '" + symptom_item + "' has the wrong value";
       case LOCATION :
          return "execution should not have gotten here";
       case NO_EXCEPTION :
          return "the program should have thrown theexception " + getSymptomItem();
-      case VARIABLE :
-         return "variable has the wrong value";
     }
    return "symptom"; 
 }
@@ -264,6 +272,20 @@ private String getExceptionText()
     }
    return buf.toString();
 }
+
+
+private String getLibraryExceptionText()
+{
+   StringBuffer buf = new StringBuffer();
+   
+   buf.append("the library call ");
+   buf.append(original_expr);
+   buf.append(" throws the exception");
+   buf.append(symptom_item);
+   
+   return buf.toString();
+}
+
 
 
 private void addOperatorInfo(StringBuffer buf)

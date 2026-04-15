@@ -220,6 +220,8 @@ DiexecuteChangeMap findProblemVariables(ASTNode base,DiadSymptom symp,DiadThread
          n = analmgr.getAssertionExpression(symp,thrd);
          break;
       case EXCEPTION :
+
+      case LIBRARY_EXCEPTION :
          n = analmgr.getExceptionNode(symp,thrd);
          break;
       case VARIABLE :
@@ -235,7 +237,10 @@ DiexecuteChangeMap findProblemVariables(ASTNode base,DiadSymptom symp,DiadThread
       case EXPRESSION :
          n = analmgr.getExpressionContext(symp); 
          break;
+      case NO_EXCEPTION :
+         break;
       case LOCATION :
+         break;
       default :
          return null;
       case NONE :

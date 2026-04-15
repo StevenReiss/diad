@@ -51,6 +51,7 @@ import edu.brown.cs.diad.dicore.DiadStackFrame;
 import edu.brown.cs.diad.dicore.DiadSymptom;
 import edu.brown.cs.diad.dicore.DiadThread;
 import edu.brown.cs.diad.dicore.DiadValue;
+import edu.brown.cs.diad.dicore.DiadConstants.DiadSymptomType;
 import edu.brown.cs.diad.dicore.DiadConstants.DiadValueOperator;
 import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.jcomp.JcompAst;
@@ -99,8 +100,15 @@ DianalysisExceptionHistory(DianalysisManager fac,DiadSymptom symp,DiadThread thr
    getAnalysis().waitForAnalysis();
    
    String expr = getExceptionCause();
-   if (expr == null)
+   if (expr == null) {
+      DiadStackFrame stk = getThread().getStack().getFrames().get(0);
+      if (!stk.isUserFrame()) {
+         getSymptom().setSymptomType(DiadSymptomType.LIBRARY_EXCEPTION);
+       }
+    }
+   if (expr == null) {
       throw new DiadException("Can't find exception cause for " + exception_type);
+    }
    
    CommandArgs args = new CommandArgs("QTYPE","EXPRESSION");
    args = addCommandArgs(args);
@@ -127,26 +135,31 @@ ASTNode getExceptionNode()
       ASTNode stmt = getSourceStatement();
       
       ExceptionChecker checker = null;
-      switch (exception_type) {
-         case "java.lang.NullPointerException" :
-            checker = new NullPointerChecker(stmt);
-            break;
-         case "java.lang.ArrayIndexOutOfBoundsException" :
-            checker = new ArrayIndexOutOfBoundsChecker();
-            break;
-         case "java.lang.IndexOutOfBoundsException" :
-         case "java.util.NoSuchElementException" :
-            checker = new IndexOutOfBoundsChecker();
-            break;
-         case "java.lang.StringIndexOutOfBoundsException" :
-            checker = new StringIndexOutOfBoundsChecker();
-            break;
-         case "java.lang.StackOverflowError" :
-            checker = new StackOverflowChecker();
-            break;
-         case "java.lang.ClassCastException" :
-            checker = new ClassCastChecker();
-            break;
+      if (getSymptom().getSymptomType() == DiadSymptomType.LIBRARY_EXCEPTION) {
+         checker = new LibraryChecker(stmt);
+       }
+      else {
+         switch (exception_type) {
+            case "java.lang.NullPointerException" :
+               checker = new NullPointerChecker(stmt);
+               break;
+            case "java.lang.ArrayIndexOutOfBoundsException" :
+               checker = new ArrayIndexOutOfBoundsChecker();
+               break;
+            case "java.lang.IndexOutOfBoundsException" :
+            case "java.util.NoSuchElementException" :
+               checker = new IndexOutOfBoundsChecker();
+               break;
+            case "java.lang.StringIndexOutOfBoundsException" :
+               checker = new StringIndexOutOfBoundsChecker();
+               break;
+            case "java.lang.StackOverflowError" :
+               checker = new StackOverflowChecker();
+               break;
+            case "java.lang.ClassCastException" :
+               checker = new ClassCastChecker();
+               break;
+          }
        }
       
       if (checker != null && stmt != null) {
@@ -170,6 +183,9 @@ private String getExceptionCause() throws DiadException
    ExceptionChecker checker = null;
    if (stmt instanceof ThrowStatement) {
       checker = new ThrowChecker();
+    }
+   else if (getSymptom().getSymptomType() == DiadSymptomType.LIBRARY_EXCEPTION) {
+      checker = new LibraryChecker(stmt);
     }
    else {
       switch (exception_type) {
@@ -689,6 +705,33 @@ private class ThrowChecker extends ExceptionChecker {
 
 
 
+/********************************************************************************/
+/*                                                                              */
+/*      Library exception checker                                               */
+/*                                                                              */
+/********************************************************************************/
+
+private class LibraryChecker extends ExceptionChecker {
+
+   private ASTNode base_statement;
+   private String library_method;
+   
+   LibraryChecker(ASTNode stmt) {
+      base_statement = stmt;
+      library_method = null;
+      for (DiadStackFrame frm : getThread().getStack().getFrames()) {
+         if (frm.isUserFrame()) break;
+         library_method = frm.getMethodName();
+       }
+    }
+   
+   @Override public void endVisit(MethodInvocation mi) {
+      if (mi.getName().getIdentifier().equals(library_method)) {
+         useNode(base_statement,mi,null,null);
+       }
+    }
+   
+}       // end of inner class LibraryChecker
 
 /********************************************************************************/
 /*                                                                              */
