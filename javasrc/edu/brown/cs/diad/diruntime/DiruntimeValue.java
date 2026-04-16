@@ -155,6 +155,10 @@ protected DiruntimeValue(DiruntimeType typ)
    throw new DiadException("Value is not an array");
 }
 
+@Override public int getArrayLength() throws DiadException
+{
+   throw new DiadException("Value is not an array");
+}
 
 @Override public boolean isNull()                        { return false; }
 
@@ -507,9 +511,20 @@ private static class ArrayValue extends DiruntimeValue {
       super(typ);
       if (elts == null) array_values = new HashMap<>();
       else array_values = new HashMap<>(elts);
+      dim_size = 0;
+      for (Integer idx : array_values.keySet()) {
+         dim_size = Math.max(dim_size,idx+1);
+       }
+    }
+   
+   @Override public int getArrayLength() {
+      return dim_size;
     }
    
    @Override public void setArrayElement(int idx,DiadValue val) throws DiadException {
+      if (idx == dim_size) {
+         ++dim_size;
+       }
       if (idx < 0 || idx >= dim_size) throw new DiadException("Index out of bounds");
       array_values.put(idx,(DiruntimeGenericValue) val);
     }

@@ -528,7 +528,7 @@ private void processXmlFile(FileReader fr)
       for ( ; ; ) {
          String xmlstr = xr.readXml();
          if (xmlstr == null) break;
-         IvyLog.logD("DICONTROL","Process XML command: " + xmlstr);
+         IvyLog.logD("DICONTROL","Process XML command: " + xmlstr.trim());
          if (xmlstr.contains("$")) {
             for (DicontrolCandidate cand : debug_candidates.values()) {
                xmlstr = xmlstr.replace("$ID",cand.getId());
@@ -553,7 +553,7 @@ private void processXmlFile(FileReader fr)
              }
             catch (Throwable t) {
                IvyLog.logE("DICONTROL",
-                     "Problem prcessing command " + cmd.getCommandName(),t);
+                     "Problem prcessing XML command " + cmd.getCommandName(),t);
              }
           }
          catch (DiadException e) {

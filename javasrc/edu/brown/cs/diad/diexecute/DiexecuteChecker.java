@@ -92,7 +92,6 @@ DiadValidationStatus check()
          return DiadValidationStatus.CANT_VALIDATE;
       default :
       case NO_EXCEPTION :
-      case CAUGHT_EXCEPTION :
          break;
     }
     
@@ -133,7 +132,6 @@ boolean checkTest()
          break;
       default :
       case NO_EXCEPTION :
-      case CAUGHT_EXCEPTION :     
          return false;
     }
    

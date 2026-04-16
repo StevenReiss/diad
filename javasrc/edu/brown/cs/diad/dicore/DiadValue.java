@@ -40,6 +40,7 @@ public interface DiadValue {
 DiadValue getFieldValue(String name) throws DiadException;
 void setFieldValue(String name,DiadValue value) throws DiadException;
 
+int getArrayLength() throws DiadException;
 DiadValue getArrayElement(int idx) throws DiadException;
 void setArrayElement(int idx,DiadValue value) throws DiadException;
 

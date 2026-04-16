@@ -169,7 +169,6 @@ DicontrolSymptom(Element xml)
       case ASSERTION :
          return getAssertionText();
       case EXCEPTION :
-      case CAUGHT_EXCEPTION :
          return getExceptionText();
       case LIBRARY_EXCEPTION :
          return getLibraryExceptionText();

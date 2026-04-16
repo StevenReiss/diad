@@ -22,6 +22,7 @@
 
 package edu.brown.cs.diad.dicontrol;
 
+import java.io.File;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -32,10 +33,13 @@ import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.SwitchStatement;
 
+import edu.brown.cs.diad.dicore.DiadException;
+import edu.brown.cs.diad.dicore.DiadLocalVariable;
 import edu.brown.cs.diad.dicore.DiadStack;
 import edu.brown.cs.diad.dicore.DiadStackFrame;
 import edu.brown.cs.diad.dicore.DiadSymptom;
 import edu.brown.cs.diad.dicore.DiadThread;
+import edu.brown.cs.diad.dicore.DiadValue;
 import edu.brown.cs.diad.disource.DisourceManager;
 import edu.brown.cs.ivy.file.IvyLog;
 
@@ -91,7 +95,19 @@ DicontrolSymptomFinder(DicontrolMain ctrl,DiadThread th,DiadStack stack,DiadStac
 DiadSymptom findSymptom()
 {
    DiadStackFrame frm = for_stack.getUserFrame();
+   DisourceManager srcfac = diad_control.getSourceManager();
+   ASTNode stmt = srcfac.getSourceNode(null,frm.getSourceFile(),
+         -1,frm.getLineNumber(),false,true);
+   
    String exc = for_thread.getExceptionType(); 
+   
+   return findStatementSymptom(frm,stmt,exc,null);
+}
+
+
+private DicontrolSymptom findStatementSymptom(DiadStackFrame frm,ASTNode stmt,
+      String exc,String msg)
+{
    if (exc != null && frm != null && for_frame != null &&
          frm.getFrameId().equals(for_frame.getFrameId())) {
       if (ASSERTION_EXCEPTIONS.contains(exc)) { 
@@ -101,10 +117,10 @@ DiadSymptom findSymptom()
          return new DicontrolSymptom(DiadSymptomType.EXCEPTION,exc);
        }
     }
+   else if (frm == null && exc != null) {
+      return new DicontrolSymptom(DiadSymptomType.EXCEPTION,exc);
+    }
    
-   DisourceManager srcfac = diad_control.getSourceManager();
-   ASTNode stmt = srcfac.getSourceNode(null,frm.getSourceFile(),
-         -1,frm.getLineNumber(),false,true);
    if (stmt == null) {
       IvyLog.logE("DICONTROL","No statement found for " + frm.getSourceFile() + 
             " " + frm.getLineNumber());
@@ -113,9 +129,9 @@ DiadSymptom findSymptom()
    
    IvyLog.logD("DICONTROL","Check symptom statement " + stmt);
    
-   DicontrolSymptom fnd = checkErrorStatement(stmt);
+   DicontrolSymptom fnd = checkCaughtExcpetion(stmt);
    if (fnd != null) return fnd;
-   fnd = checkCaughtExcpetion(stmt);
+   fnd = checkErrorStatement(stmt);
    if (fnd != null) return fnd;
    fnd = checkDefensiveIf(stmt);
    if (fnd != null) return fnd;
@@ -156,11 +172,69 @@ private DicontrolSymptom checkCaughtExcpetion(ASTNode stmt)
       ASTNode spar = par.getParent();
       if (spar.getNodeType() == ASTNode.CATCH_CLAUSE) {
          IvyLog.logD("DICONTROL","INSIDE CATCH " + stmt + " @ " + spar);
-         CatchClause cc = (CatchClause) spar;
-         SingleVariableDeclaration svd = cc.getException();
-         String ename = svd.getType().toString();
-         return new DicontrolSymptom(DiadSymptomType.CAUGHT_EXCEPTION,ename);
+//       CatchClause cc = (CatchClause) spar;
+//       SingleVariableDeclaration svd = cc.getException();
+//       String ename = svd.getType().toString();
+         String excvar = null;
+         DiadStackFrame frm = for_stack.getUserFrame();
+         for (String vnm : frm.getLocals()) {
+            DiadLocalVariable var = frm.getLocal(vnm);
+            String typ = var.getType();
+            if (typ.contains("Exception") || 
+                  typ.contains("Error") ||
+                  typ.contains("Throwable")) {
+               excvar = vnm;
+//             ename = typ;
+               // want to use the last one in the list that is an exception 
+             }
+          } 
+         return getExceptionSymptom(excvar);
        }
+    }
+   
+   return null;
+}
+
+
+private DicontrolSymptom getExceptionSymptom(String excvar)
+{
+   if (excvar == null) return null;
+   
+   String expr = excvar;
+   for ( ; ; ) {
+      DiadValue v0 = for_thread.evaluate(expr + ".getCause()");
+      if (v0.isNull()) break;
+      expr = expr + ".getCause()";
+    }
+   
+   DiadValue v0 = for_thread.evaluate(expr);
+   String exc = v0.getDataType().getName();
+   String msg = for_thread.evaluate(expr + ".getMessage()").getString();
+   DiadValue v1 = for_thread.evaluate(expr + ".getStackTrace()");
+   try {
+      DisourceManager src = diad_control.getSourceManager();
+      int len = v1.getArrayLength(); 
+      for (int i = 0; i < len; ++i) {
+         DiadValue vf = v1.getArrayElement(i);
+//       String cls = vf.getFieldValue("declaringClass").getString();
+//       String mthd = vf.getFieldValue("methodName").getString();
+         String filename = vf.getFieldValue("fileName").getString();
+         File file = src.findProjectFile(filename); 
+         if (file == null) continue;
+         String proj = src.getProjectForFile(file);
+         if (proj == null) continue;
+         // need to get actual file
+         int lno = (int) vf.getFieldValue("lineNumber").getInt();
+         ASTNode stmt = src.getSourceNode(proj,file,
+               -1,lno,true,true);
+         if (stmt !=  null) {
+            DicontrolSymptom symp = findStatementSymptom(null,stmt,
+                  exc,msg);
+            if (symp != null) return symp;
+          }
+       }
+    }
+   catch (DiadException t) { 
     }
    
    return null;

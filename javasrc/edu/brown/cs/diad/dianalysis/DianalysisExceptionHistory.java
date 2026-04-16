@@ -181,11 +181,11 @@ private String getExceptionCause() throws DiadException
    if (exception_type == null || stmt == null) return null;
    
    ExceptionChecker checker = null;
-   if (stmt instanceof ThrowStatement) {
-      checker = new ThrowChecker();
-    }
-   else if (getSymptom().getSymptomType() == DiadSymptomType.LIBRARY_EXCEPTION) {
+   if (getSymptom().getSymptomType() == DiadSymptomType.LIBRARY_EXCEPTION) {
       checker = new LibraryChecker(stmt);
+    }
+   else if (stmt instanceof ThrowStatement) {
+      checker = new ThrowChecker();
     }
    else {
       switch (exception_type) {
@@ -732,6 +732,11 @@ private class LibraryChecker extends ExceptionChecker {
     }
    
 }       // end of inner class LibraryChecker
+
+
+
+
+
 
 /********************************************************************************/
 /*                                                                              */

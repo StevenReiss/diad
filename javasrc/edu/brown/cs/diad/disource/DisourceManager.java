@@ -128,6 +128,24 @@ public String getProjectForFile(File f)
 }
 
 
+public File findProjectFile(String fnm)
+{
+   File f1 = new File(fnm);
+   if (f1.isAbsolute()) return f1;
+   
+   f1 = null;
+   for (File pf : project_map.keySet()) {
+      String pnm = pf.getName();
+      if (pnm.equals(fnm)) {
+         f1 = pf;
+         break;
+       }
+    }
+   
+   return f1;
+}
+
+
 private void buildProjectMap()
 {
    project_map = new HashMap<>();

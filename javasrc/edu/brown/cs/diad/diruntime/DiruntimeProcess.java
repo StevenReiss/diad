@@ -42,6 +42,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.w3c.dom.Element;
 
+import edu.brown.cs.diad.dicore.DiadLocalVariable;
+import edu.brown.cs.diad.dicore.DiadStackFrame;
 import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.xml.IvyXml;
 
@@ -265,8 +267,20 @@ private boolean checkException(DiruntimeThread td,Element thrd)
    for (Element bpt : IvyXml.children(thrd,"BREAKPOINT")) {
       String btyp = IvyXml.getAttrString(bpt,"TYPE");
       if (btyp != null && btyp.equals("EXCEPTION")) {
-         td.setException(IvyXml.getAttrString(bpt,"EXCEPTION"));
-         fnd = true; 
+         exc = IvyXml.getAttrString(bpt,"EXCEPTION");
+         DiadStackFrame frm = td.getStack().getTopFrame();
+         for (String vnm : frm.getLocals()) {
+            DiadLocalVariable var = frm.getLocal(vnm);
+            String typ = var.getType();
+            if (typ.contains("Exception") || 
+                  typ.contains("Error") ||
+                  typ.contains("Throwable")) {
+               exc = typ;
+              // want to use the last one in the list that is an exception 
+             }
+            td.setException(exc);
+            fnd = true; 
+          }
        }
     }
    
