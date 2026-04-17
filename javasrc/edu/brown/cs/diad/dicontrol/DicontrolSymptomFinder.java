@@ -28,8 +28,6 @@ import java.util.Set;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Block;
-import org.eclipse.jdt.core.dom.CatchClause;
-import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.SwitchStatement;
 
@@ -118,7 +116,11 @@ private DicontrolSymptom findStatementSymptom(DiadStackFrame frm,ASTNode stmt,
        }
     }
    else if (frm == null && exc != null) {
-      return new DicontrolSymptom(DiadSymptomType.EXCEPTION,exc);
+      DicontrolSymptom symp = new DicontrolSymptom(DiadSymptomType.EXCEPTION,exc);
+      if (stmt != null) {
+         symp.setLocation(stmt);
+       }
+      return symp;
     }
    
    if (stmt == null) {
@@ -130,15 +132,21 @@ private DicontrolSymptom findStatementSymptom(DiadStackFrame frm,ASTNode stmt,
    IvyLog.logD("DICONTROL","Check symptom statement " + stmt);
    
    DicontrolSymptom fnd = checkCaughtExcpetion(stmt);
-   if (fnd != null) return fnd;
-   fnd = checkErrorStatement(stmt);
-   if (fnd != null) return fnd;
-   fnd = checkDefensiveIf(stmt);
-   if (fnd != null) return fnd;
-   fnd = checkDefensiveCase(stmt);
-   if (fnd != null) return fnd;
+   if (fnd == null) {
+      fnd = checkErrorStatement(stmt);
+    }
+   if (fnd == null) {
+      fnd = checkDefensiveIf(stmt);
+    }
+   if (fnd == null) {
+      fnd = checkDefensiveCase(stmt);
+    }
    
-   return null;
+   if (fnd != null && frm == null) {
+      fnd.setLocation(stmt);
+    }
+   
+   return fnd;
 }
 
 

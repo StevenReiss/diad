@@ -22,12 +22,16 @@
 
 package edu.brown.cs.diad.dicontrol;
 
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.w3c.dom.Element;
 
 import edu.brown.cs.diad.dicore.DiadSymptom;
 import edu.brown.cs.diad.dicore.DiadConstants.DiadSymptomType;
 import edu.brown.cs.diad.dicore.DiadConstants.DiadValueOperator;
 import edu.brown.cs.ivy.file.IvyLog;
+import edu.brown.cs.ivy.jcomp.JcompAst;
+import edu.brown.cs.ivy.jcomp.JcompSource;
 import edu.brown.cs.ivy.xml.IvyXml;
 import edu.brown.cs.ivy.xml.IvyXmlWriter;
 
@@ -49,6 +53,9 @@ private String original_value;
 private String target_value;
 private DiadValueOperator value_operator;
 private double target_precision;
+private String in_file;
+private int in_line;
+private int in_offset;
 
 
 
@@ -74,6 +81,9 @@ DicontrolSymptom(DiadSymptomType type,String item)
    target_value = null;
    value_operator = DiadValueOperator.NONE; 
    target_precision = 0;
+   in_file = null;
+   in_line = -1;
+   in_offset = -1;
 }
 
 DicontrolSymptom(Element xml)
@@ -86,6 +96,9 @@ DicontrolSymptom(Element xml)
    target_value = IvyXml.getTextElement(xml,"TARGET");
    value_operator = IvyXml.getAttrEnum(xml,"OPERATOR",DiadValueOperator.NONE);
    target_precision = IvyXml.getAttrDouble(xml,"PRECISION",0);
+   in_file = IvyXml.getAttrString(xml,"INFILE");
+   in_line = IvyXml.getAttrInt(xml,"INLINE",-1);
+   in_offset = IvyXml.getAttrInt(xml,"INOFFSET",-1);
 }
 
 
@@ -110,6 +123,10 @@ DicontrolSymptom(Element xml)
 @Override public DiadValueOperator getSymptomOperator() { return value_operator; }
 
 @Override public double getTargetPrecision()            { return target_precision; } 
+
+public String getInFile()                               { return in_file; }
+public int getInLine()                                  { return in_line; }
+public int getInOffset()                                { return in_offset; }
 
 
 @Override public void setSymptomType(DiadSymptomType typ)
@@ -154,6 +171,17 @@ DicontrolSymptom(Element xml)
 @Override public void setPrecision(double p) 
 {
    target_precision = p; 
+}
+
+void setLocation(ASTNode node)
+{
+   if (node == null) return;
+   
+   CompilationUnit cu = (CompilationUnit) node.getRoot();
+   JcompSource js = JcompAst.getSource(node);
+   in_file = js.getFileName();
+   in_line = cu.getLineNumber(node.getStartPosition());
+   in_offset = node.getStartPosition();
 }
 
 
@@ -328,11 +356,19 @@ private void addOperatorInfo(StringBuffer buf)
    if (value_operator != null && value_operator != DiadValueOperator.NONE) {
       if (target_precision != 0) xw.field("PRECISION",target_precision);
     }
+   
+   if (in_file != null) {
+      xw.field("INFILE",in_file);
+      if (in_line > 0) xw.field("INLINE",in_line);
+      if (in_offset >= 0) xw.field("INOFFSET",in_offset);
+    }
+   
    if (symptom_item != null) xw.textElement("ITEM",symptom_item);
    if (original_value != null) xw.cdataElement("VALUE",original_value);
    if (original_expr != null) xw.cdataElement("ORIGINAL",original_expr);
    if (aux_expr != null) xw.cdataElement("AUX",aux_expr);
    if (target_value != null) xw.cdataElement("TARGET",target_value);
+   
    xw.end("SYMPTOM");
 }
 

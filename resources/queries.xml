@@ -86,12 +86,12 @@
    </QUERY>
    <QUERY COMMAND='REPAIRS'>
       That analysis seems correct.
-      Please provide the necessary patches based on that as input to the Linux patch command.
+      Please provide the necessary patches given in or based on your analysis as input to the Linux patch command.
       Do not call a patch agent, just return the patches.
    </QUERY>
    <QUERY COMMAND='BASEREPAIRS'>
       That analysis seems correct.
-      Please provide the necessary patches based on that as input to the Linux patch command.
+      Please provide the necessary patches given in or based on your analysis as input to the Linux patch command.
       Do not call a patch agent, just return the patches.
    </QUERY>
    <QUERY COMMAND='USER'>

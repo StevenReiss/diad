@@ -402,14 +402,24 @@ protected static void addXmlForLocation(String elt,ASTNode node,boolean next,Ivy
 
 protected String getExecLocation() throws DiadException
 {
-   String rslt = null;
    ASTNode node = getSourceStatement();
+   if (node == null) return null;
+   
+   return getExecLocation(for_frame.getSourceFile(),
+         for_frame.getLineNumber(),
+         node);
+}
+
+
+protected String getExecLocation(File src,int lno,ASTNode node)
+{
+   String rslt = null;
    if (node == null) return null;
    
    IvyXmlWriter xw = new IvyXmlWriter();
    xw.begin("LOCATION");
-   xw.field("FILE",for_frame.getSourceFile());
-   xw.field("LINE",for_frame.getLineNumber());
+   xw.field("FILE",src);
+   xw.field("LINE",lno);
    xw.field("START",node.getStartPosition());
    xw.field("END",node.getStartPosition() + node.getLength());
    xw.field("NODETYPE",getNodeTypeName(node));
