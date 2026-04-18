@@ -54,6 +54,9 @@ String getAuxExpression();
 String getTargetValue();
 DiadValueOperator getSymptomOperator(); 
 double getTargetPrecision();
+String getInFile();
+int getInLine();
+int getInOffset();
 
 void setSymptomType(DiadSymptomType typ);
 void setSymptomItem(String val);

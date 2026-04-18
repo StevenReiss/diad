@@ -124,9 +124,9 @@ DicontrolSymptom(Element xml)
 
 @Override public double getTargetPrecision()            { return target_precision; } 
 
-public String getInFile()                               { return in_file; }
-public int getInLine()                                  { return in_line; }
-public int getInOffset()                                { return in_offset; }
+@Override public String getInFile()                      { return in_file; }
+@Override public int getInLine()                         { return in_line; }
+@Override public int getInOffset()                       { return in_offset; }
 
 
 @Override public void setSymptomType(DiadSymptomType typ)
@@ -185,6 +185,7 @@ void setLocation(ASTNode node)
 }
 
 
+
 /********************************************************************************/
 /*                                                                              */
 /*      Output methods                                                          */
@@ -205,9 +206,9 @@ void setLocation(ASTNode node)
       case EXPRESSION :
         return "expression '" + symptom_item + "' has the wrong value";
       case LOCATION :
-         return "execution should not have gotten here";
+         return getLocationText();
       case NO_EXCEPTION :
-         return "the program should have thrown theexception " + getSymptomItem();
+         return "the program should have thrown the exception " + getSymptomItem();
     }
    return "symptom"; 
 }
@@ -340,6 +341,22 @@ private void addOperatorInfo(StringBuffer buf)
     }
 }
 
+
+
+private String getLocationText()
+{
+   StringBuffer buf = new StringBuffer();
+   
+   buf.append("execution should not reach ");
+   if (symptom_item == null) {
+      buf.append("this breakpoint");
+    }
+   else {
+      buf.append(symptom_item);
+    }
+   
+   return buf.toString();
+}
 
 
 /********************************************************************************/

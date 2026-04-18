@@ -366,6 +366,8 @@ JSONArray getJsonLocations(boolean all)
    
    Collection<DiadLocation> base = (all ? location_set : exec_locations);
    
+   if (base == null) return rslt;
+   
    Map<String,List<DiadLocation>> bymethod = new LinkedHashMap<>();
    for (DiadLocation dloc : base) {
       String m = dloc.getFullMethod();
@@ -451,13 +453,15 @@ private static class LocationSummary {
 
 JSONObject getJsonLocalTrace(String callid)
 {
+   if (base_execution == null) return new JSONObject();
+   
    return base_execution.getJsonLocalTrace(callid); 
 }
 
 
 JSONArray getJsonLineTrace(String callid)
 {
-   if (base_execution == null) return null;
+   if (base_execution == null) return new JSONArray();
    
    return base_execution.getJsonLineTrace(callid); 
 }
@@ -465,18 +469,27 @@ JSONArray getJsonLineTrace(String callid)
 
 JSONObject getJsonVarTrace(String callid,String var)
 {
+   if (base_execution == null) return new JSONObject();
+   
    return base_execution.getJsonVarTrace(callid,var); 
 }
 
 
 JSONObject getJsonVarHistory(String callid,String var,int line,long when)
 {
+   if (base_execution == null) {
+      // try doing a flow query here
+      return new JSONObject();
+    }
+   
    return base_execution.getJsonVarHistory(callid,var,line,when); 
 }
 
 
 JSONObject getJsonVarValue(String callid,String var,int line,long when)
 {
+   if (base_execution == null) return new JSONObject();
+   
    return base_execution.getJsonVarValue(callid,var,line,when);
 }
 
@@ -531,6 +544,10 @@ Element askLimba(IvyXmlWriter xw,DiadAskType typ,String query,boolean nohistory)
       default :
          return null;
     }
+   if (base_execution == null && location_set == null) {
+      if (typ == DiadAskType.EXPLAIN) typ = DiadAskType.BASEEXPLAIN;
+      if (typ == DiadAskType.REPAIRS) typ = DiadAskType.BASEREPAIRS;
+    }
    if (typ == DiadAskType.BASEEXPLAIN || typ == DiadAskType.BASEREPAIRS) { 
       tools = "PROJECT,DEBUG"; 
     }
@@ -544,10 +561,12 @@ Element askLimba(IvyXmlWriter xw,DiadAskType typ,String query,boolean nohistory)
    keymap.put("METHOD",for_frame.getFullMethodName());
    keymap.put("LINE",String.valueOf(for_frame.getLineNumber()));
    keymap.put("PROCESS",for_thread.getProcessId());
-   int cid = base_execution.getExecutionTrace().getRootContext().getContextId();
-   keymap.put("CALLID",String.valueOf(cid));
-   int cid1 = base_execution.getExecutionTrace().getSymptomContext().getContextId();
-   keymap.put("STOPID",String.valueOf(cid1));
+   if (base_execution != null) {
+      int cid = base_execution.getExecutionTrace().getRootContext().getContextId();
+      keymap.put("CALLID",String.valueOf(cid));
+      int cid1 = base_execution.getExecutionTrace().getSymptomContext().getContextId();
+      keymap.put("STOPID",String.valueOf(cid1));
+    }
    
    String prompt = diad_control.getPrompt(typ.toString());
    prompt = IvyFile.expandName(prompt,keymap);
@@ -695,15 +714,7 @@ private final class CandidateThread extends Thread {
                    }
                   break; 
                case FINDING_STARTING_FRAME :
-                  start_frame = null;
-                  if (checkInterrupted()) break;
-                  if (user_frame == null) {
-                     start_frame = exec.getStartingFrame(candidate_symptom,
-                           for_thread,location_set);
-                   }
-                  else {
-                     start_frame = user_frame;
-                   }
+                  findStartingFrame();
                   if (checkInterrupted()) break;
                   if (start_frame == null) {
                      setState(DiadCandidateState.NO_START_FRAME);
@@ -712,6 +723,7 @@ private final class CandidateThread extends Thread {
                      setState(DiadCandidateState.DOING_BASE_EXECUTION);
                    }
                   break;
+               case NO_START_FRAME :
                case DOING_BASE_EXECUTION :
                   base_execution = exec.createBaseExecution(candidate_symptom,  
                         for_thread,start_frame);
@@ -724,7 +736,12 @@ private final class CandidateThread extends Thread {
                    }
                   break;
                case FINDING_EXECUTED_LOCATIONS : 
-                  exec_locations = base_execution.getExecutedLocations(location_set); 
+                  if (base_execution == null) {
+                     exec_locations = location_set;
+                   }
+                  else {
+                     exec_locations = base_execution.getExecutedLocations(location_set); 
+                   }
                   if (exec_locations == null) {
                      setState(DiadCandidateState.NO_FINAL_LOCATIONS);   
                    }
@@ -733,6 +750,7 @@ private final class CandidateThread extends Thread {
                    } 
                   // restrict location set by base execution
                   break;
+               case NO_FINAL_LOCATIONS :
                case PREPARING_DATA :
                   if (diad_control.getProperty("Diad.auto.query",false)) {
                      setState(DiadCandidateState.DOING_QUERY);
@@ -767,9 +785,10 @@ private final class CandidateThread extends Thread {
                   return;
                case NO_USER_STACK :
                case NO_ANALYSIS :
-               case NO_START_FRAME :
                case NO_BASE_EXECUTION :
                case NO_LOCATIONS_FOUND :
+//             case NO_START_FRAME :
+//             case NO_FINAL_LOCATIONS :
                default :
                   cleanup(false);
                   // need to remove base execution from seede
@@ -819,6 +838,18 @@ private final class CandidateThread extends Thread {
        }
       else {
          candidate_symptom = user_symptom;
+       }
+    }
+   
+   private void findStartingFrame() {
+      start_frame = null;
+      DiexecuteManager exec = diad_control.getExecuteManager();
+      if (user_frame == null) {
+         start_frame = exec.getStartingFrame(candidate_symptom,
+               for_thread,location_set);
+       }
+      else {
+         start_frame = user_frame;
        }
     }
    

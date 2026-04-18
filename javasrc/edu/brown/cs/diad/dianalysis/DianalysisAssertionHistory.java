@@ -77,11 +77,11 @@ DianalysisAssertionHistory(DianalysisManager fac,DiadSymptom symp,DiadThread thr
 /*                                                                              */
 /********************************************************************************/
 
-@Override protected void process(IvyXmlWriter xw) throws DiadException 
+@Override protected void process(IvyXmlWriter xw) throws DiadException
 {
    getAnalysis().waitForAnalysis();
    
-   ASTNode stmt = getSourceStatement();
+   ASTNode stmt = getSourceStatement(); 
    IvyLog.logD("DIANALYSIS","Start assertion history " + stmt);
    AssertionChecker checker = new AssertionChecker();
    if (stmt != null) stmt.accept(checker);
@@ -115,17 +115,13 @@ DiadAssertionData getAssertionData()
 {
    getAnalysis().waitForAnalysis(); 
    
-   try {
-      ASTNode stmt = getSourceStatement();
-      if (stmt == null) return null;
-      AssertionChecker checker = new AssertionChecker();
-      stmt.accept(checker);
-      if (checker.getExpression() == null) return null;
-      return checker;
-    }
-   catch (DiadException e) { }
+   ASTNode stmt = getSourceStatement();
+   if (stmt == null) return null;
    
-   return null;
+   AssertionChecker checker = new AssertionChecker();
+   stmt.accept(checker);
+   if (checker.getExpression() == null) return null;
+   return checker;
 }
 
 

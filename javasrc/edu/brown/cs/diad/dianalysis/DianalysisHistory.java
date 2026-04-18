@@ -48,6 +48,7 @@ import edu.brown.cs.diad.dicore.DiadThread;
 import edu.brown.cs.diad.disource.DisourceManager;
 import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.jcomp.JcompAst;
+import edu.brown.cs.ivy.jcomp.JcompSource;
 import edu.brown.cs.ivy.mint.MintConstants.CommandArgs;
 import edu.brown.cs.ivy.xml.IvyXml;
 import edu.brown.cs.ivy.xml.IvyXmlWriter;
@@ -135,6 +136,11 @@ protected DiadThread getThread()
    return for_thread;
 }
 
+protected DiadStackFrame getFrame()
+{
+   return for_frame;
+}
+
 protected DiadNodeContext getNodeContext()
 {
    return node_context;
@@ -172,12 +178,21 @@ protected static String getNodeTypeName(ASTNode n)
 /*                                                                              */
 /********************************************************************************/
 
-protected ASTNode getSourceStatement() throws DiadException
+protected ASTNode getSourceStatement() 
 {
     ASTNode stmt = getSourceManager().getSourceNode(getProject(),for_frame.getSourceFile(),
          -1,for_frame.getLineNumber(),true,true);
     
     return stmt;
+}
+
+
+protected ASTNode getSymptomStatement()
+{
+   DicontrolMain diad = for_analysis.getDiadControl();
+   ASTNode stmt = diad.getSymptomLocation(for_symptom);
+   if (stmt == null) stmt = getSourceStatement();
+   return stmt;
 }
 
 
@@ -400,6 +415,16 @@ protected static void addXmlForLocation(String elt,ASTNode node,boolean next,Ivy
 
 
 
+protected String getSymptomLocation() throws DiadException
+{
+   DicontrolMain diad = for_analysis.getDiadControl();
+   ASTNode stmt = diad.getSymptomLocation(for_symptom);
+   if (stmt != null) return getExecLocation(stmt);
+   
+   return getExecLocation();
+}
+
+
 protected String getExecLocation() throws DiadException
 {
    ASTNode node = getSourceStatement();
@@ -408,6 +433,18 @@ protected String getExecLocation() throws DiadException
    return getExecLocation(for_frame.getSourceFile(),
          for_frame.getLineNumber(),
          node);
+}
+
+
+
+protected String getExecLocation(ASTNode node)
+{
+   CompilationUnit cu = (CompilationUnit) node.getRoot();
+   JcompSource js = JcompAst.getSource(node);
+   File src = new File(js.getFileName());
+   int lno = cu.getLineNumber(node.getStartPosition());
+   
+   return getExecLocation(src,lno,node);
 }
 
 

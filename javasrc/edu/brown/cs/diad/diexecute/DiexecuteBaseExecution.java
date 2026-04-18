@@ -144,6 +144,8 @@ DiexecuteBaseExecution(DiexecuteManager mgr,DiadSymptom symp,DiadThread thrd,
 
 @Override public Collection<DiadLocation> getExecutedLocations(Collection<DiadLocation> base)
 {
+   if (base == null) return null;
+   
    DiexecuteCall call = getExecutionTrace().getRootContext();
    Set<String> used = new HashSet<>();
    call.getExecutedLocations(used);

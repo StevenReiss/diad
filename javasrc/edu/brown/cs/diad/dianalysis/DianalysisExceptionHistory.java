@@ -131,52 +131,49 @@ DianalysisExceptionHistory(DianalysisManager fac,DiadSymptom symp,DiadThread thr
 
 ASTNode getExceptionNode() 
 {
-   try {
-      ASTNode stmt = getSourceStatement();
-      
-      ExceptionChecker checker = null;
-      if (getSymptom().getSymptomType() == DiadSymptomType.LIBRARY_EXCEPTION) {
-         checker = new LibraryChecker(stmt);
-       }
-      else {
-         switch (exception_type) {
-            case "java.lang.NullPointerException" :
-               checker = new NullPointerChecker(stmt);
-               break;
-            case "java.lang.ArrayIndexOutOfBoundsException" :
-               checker = new ArrayIndexOutOfBoundsChecker();
-               break;
-            case "java.lang.IndexOutOfBoundsException" :
-            case "java.util.NoSuchElementException" :
-               checker = new IndexOutOfBoundsChecker();
-               break;
-            case "java.lang.StringIndexOutOfBoundsException" :
-               checker = new StringIndexOutOfBoundsChecker();
-               break;
-            case "java.lang.StackOverflowError" :
-               checker = new StackOverflowChecker();
-               break;
-            case "java.lang.ClassCastException" :
-               checker = new ClassCastChecker();
-               break;
-          }
-       }
-      
-      if (checker != null && stmt != null) {
-         checker.doCheck(stmt);
-         return checker.getResult();
+   ASTNode stmt = getSourceStatement();
+   
+   ExceptionChecker checker = null;
+   if (getSymptom().getSymptomType() == DiadSymptomType.LIBRARY_EXCEPTION) {
+      checker = new LibraryChecker(stmt);
+    }
+   else {
+      switch (exception_type) {
+         case "java.lang.NullPointerException" :
+            checker = new NullPointerChecker(stmt);
+            break;
+         case "java.lang.ArrayIndexOutOfBoundsException" :
+            checker = new ArrayIndexOutOfBoundsChecker();
+            break;
+         case "java.lang.IndexOutOfBoundsException" :
+         case "java.util.NoSuchElementException" :
+            checker = new IndexOutOfBoundsChecker();
+            break;
+         case "java.lang.StringIndexOutOfBoundsException" :
+            checker = new StringIndexOutOfBoundsChecker();
+            break;
+         case "java.lang.StackOverflowError" :
+            checker = new StackOverflowChecker();
+            break;
+         case "java.lang.ClassCastException" :
+            checker = new ClassCastChecker();
+            break;
        }
     }
-   catch (DiadException e) { }
+   
+   if (checker != null && stmt != null) {
+      checker.doCheck(stmt);
+      return checker.getResult();
+    }
    
    return null;
 }
 
 
 
-private String getExceptionCause() throws DiadException
+private String getExceptionCause() 
 {
-   ASTNode stmt = getSourceStatement();
+   ASTNode stmt = getSymptomStatement();
    
    if (exception_type == null || stmt == null) return null;
    

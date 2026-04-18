@@ -119,6 +119,9 @@ private DicontrolSymptom findStatementSymptom(DiadStackFrame frm,ASTNode stmt,
       DicontrolSymptom symp = new DicontrolSymptom(DiadSymptomType.EXCEPTION,exc);
       if (stmt != null) {
          symp.setLocation(stmt);
+         if (stmt.getNodeType() == ASTNode.THROW_STATEMENT) {
+            symp.setSymptomType(DiadSymptomType.LOCATION);
+          }
        }
       return symp;
     }

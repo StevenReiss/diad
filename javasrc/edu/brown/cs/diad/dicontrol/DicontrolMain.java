@@ -2,7 +2,7 @@
 /*                                                                              */
 /*              DicontrolMain.java                                              */
 /*                                                                              */
-/*      General Rewriting AI-base Nucleus core main program                     */
+/*      Dynamic Intelligent Assistive Debugger main program                     */
 /*                                                                              */
 /********************************************************************************/
 /*      Copyright 2025 Brown University -- Steven P. Reiss                    */
@@ -46,11 +46,13 @@ import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.eclipse.jdt.core.dom.ASTNode;
 import org.w3c.dom.Element;
 
 import edu.brown.cs.diad.dianalysis.DianalysisManager;
 import edu.brown.cs.diad.dicore.DiadException;
 import edu.brown.cs.diad.dicore.DiadRuntimeCallback;
+import edu.brown.cs.diad.dicore.DiadSymptom;
 import edu.brown.cs.diad.dicore.DiadThread;
 import edu.brown.cs.diad.diexecute.DiexecuteManager;
 import edu.brown.cs.diad.diruntime.DiruntimeManager;
@@ -301,6 +303,24 @@ public void setWorkspace(File ws)
 {
    test_factory.setWorkspace(ws);
 }
+
+
+public ASTNode getSymptomLocation(DiadSymptom symp0)
+{
+   DicontrolSymptom symp = (DicontrolSymptom) symp0;
+   
+   if (symp.getInFile() == null) return null;
+   
+   File f = new File(symp.getInFile());
+   int off = symp.getInOffset();
+   int lno = symp.getInLine();
+   
+   ASTNode stmt = getSourceManager().getSourceNode(null,f,off,lno,
+         true,true);
+   
+   return stmt;
+}
+
 
 
 /********************************************************************************/

@@ -26,6 +26,8 @@ import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.IfStatement;
 import org.eclipse.jdt.core.dom.InfixExpression;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.w3c.dom.Element;
 
 import edu.brown.cs.diad.dicore.DiadAssertionData;
@@ -77,11 +79,43 @@ DianalysisLocationHistory(DianalysisManager fac,DiadSymptom symp,DiadThread thrd
 
 @Override protected void process(IvyXmlWriter xw) throws DiadException
 {
-   String locxml = getExecLocation();
+   String locxml = getSymptomLocation();
    if (locxml == null) {
       IvyLog.logE("STEM","No location for location query");
       throw new DiadException("Location undefined");
     }
+   
+   ASTNode stmt = getDiadControl().getSymptomLocation(getSymptom());
+   String mthd = null;
+   if (stmt == null) {
+      mthd = getFrame().getMethodName();
+      if (mthd != null) {
+         mthd = "Line " + getFrame().getLineNumber() + " of " + mthd;
+       }
+      else {
+         stmt = getSourceStatement();
+       }
+    }
+   if (stmt != null && mthd == null) {
+      String cls = null;
+      for (ASTNode n1 = stmt; n1 != null; n1 = n1.getParent()) {
+         if (n1 instanceof MethodDeclaration) {
+            MethodDeclaration md = (MethodDeclaration) n1;
+            mthd = md.getName().getIdentifier();
+            break;
+          }
+         else if (n1 instanceof TypeDeclaration) {
+            TypeDeclaration td = (TypeDeclaration) n1;
+            cls = td.getName().getIdentifier();
+          }
+       }
+      if (mthd == null && cls != null) mthd = "Class " + cls;
+      if (getSymptom().getInLine() > 0) {
+         mthd = "Line " + getSymptom().getInLine() + " of " + mthd;
+       }
+      
+    }
+   getSymptom().setSymptomItem(mthd);
    
    Element hrslt = getLocationData(locxml);
    outputGraph(hrslt,xw); 
@@ -125,45 +159,42 @@ DiadAssertionData getAssertionData()
 {
    getAnalysis().waitForAnalysis();
    
-   try {
-      ASTNode stmt = getSourceStatement();
-      ASTNode from = stmt;
-      ASTNode par = stmt.getParent();
-      while (par.getNodeType() == ASTNode.BLOCK) {
-         from = par;
-         par = par.getParent();
-       }
-      if (par.getNodeType() == ASTNode.IF_STATEMENT) {
-         IfStatement ifstmt = (IfStatement) par;
-         Expression cond = ifstmt.getExpression();
-         PatternMap pmap = new PatternMap();
-         if (expr_pattern.match(cond,pmap)) return null;
-         Expression ex1 = (Expression) pmap.get("x");
-         Expression ex2 = (Expression) pmap.get("y");
-         boolean comp = false;
-         if (cond.getNodeType() == ASTNode.INFIX_EXPRESSION) {
-            InfixExpression ifx = (InfixExpression) cond;
-            if (ifx.getOperator() == InfixExpression.Operator.NOT_EQUALS) comp = true;
-          }
-         else if (cond.getNodeType() == ASTNode.PREFIX_EXPRESSION) comp = true;
-         if (ifstmt.getElseStatement() == from) comp = !comp;
-         if (comp) return null;
-         switch (ex1.getNodeType()) {
-            case ASTNode.NUMBER_LITERAL :
-            case ASTNode.STRING_LITERAL :
-            case ASTNode.NULL_LITERAL :
-            case ASTNode.TEXT_BLOCK :
-               Expression exx = ex1;
-               ex1 = ex2;
-               ex2 = exx;
-               break;
-          }
-         DiadValue v1 = getThread().evaluate(ex1.toString());
-         DiadValue v2 = getThread().evaluate(ex2.toString());
-         return new LocationData(ex1,v1.toString(),v2.toString());
-       }
+   ASTNode stmt = getSourceStatement();
+   ASTNode from = stmt;
+   ASTNode par = stmt.getParent();
+   while (par.getNodeType() == ASTNode.BLOCK) {
+      from = par;
+      par = par.getParent();
     }
-   catch (DiadException e) { }
+   if (par.getNodeType() == ASTNode.IF_STATEMENT) {
+      IfStatement ifstmt = (IfStatement) par;
+      Expression cond = ifstmt.getExpression();
+      PatternMap pmap = new PatternMap();
+      if (expr_pattern.match(cond,pmap)) return null;
+      Expression ex1 = (Expression) pmap.get("x");
+      Expression ex2 = (Expression) pmap.get("y");
+      boolean comp = false;
+      if (cond.getNodeType() == ASTNode.INFIX_EXPRESSION) {
+         InfixExpression ifx = (InfixExpression) cond;
+         if (ifx.getOperator() == InfixExpression.Operator.NOT_EQUALS) comp = true;
+       }
+      else if (cond.getNodeType() == ASTNode.PREFIX_EXPRESSION) comp = true;
+      if (ifstmt.getElseStatement() == from) comp = !comp;
+      if (comp) return null;
+      switch (ex1.getNodeType()) {
+         case ASTNode.NUMBER_LITERAL :
+         case ASTNode.STRING_LITERAL :
+         case ASTNode.NULL_LITERAL :
+         case ASTNode.TEXT_BLOCK :
+            Expression exx = ex1;
+            ex1 = ex2;
+            ex2 = exx;
+            break;
+       }
+      DiadValue v1 = getThread().evaluate(ex1.toString());
+      DiadValue v2 = getThread().evaluate(ex2.toString());
+      return new LocationData(ex1,v1.toString(),v2.toString());
+    }
    
    return null;
 }
