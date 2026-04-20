@@ -561,6 +561,13 @@ Element askLimba(IvyXmlWriter xw,DiadAskType typ,String query,boolean nohistory)
    keymap.put("METHOD",for_frame.getFullMethodName());
    keymap.put("LINE",String.valueOf(for_frame.getLineNumber()));
    keymap.put("PROCESS",for_thread.getProcessId());
+   boolean havelocs = location_set != null && !location_set.isEmpty();
+   boolean execloca = exec_locations != null && !exec_locations.isEmpty();
+   boolean haveexec = base_execution != null;
+   if (havelocs) keymap.put("HAVELOCS","TRUE");
+   if (execloca) keymap.put("EXECLOCS","TRUE");
+   if (haveexec) keymap.put("HAVEEXEC","TRUE");
+   
    if (base_execution != null) {
       int cid = base_execution.getExecutionTrace().getRootContext().getContextId();
       keymap.put("CALLID",String.valueOf(cid));
@@ -569,7 +576,8 @@ Element askLimba(IvyXmlWriter xw,DiadAskType typ,String query,boolean nohistory)
     }
    
    String prompt = diad_control.getPrompt(typ.toString());
-   prompt = IvyFile.expandName(prompt,keymap);
+// prompt = IvyFile.expandName(prompt,keymap);
+   prompt = DicontrolExpander.expand(prompt,keymap);
    
    String ask = diad_control.getQuery(typ.toString()); 
    ask = IvyFile.expandName(ask,keymap);
