@@ -5,7 +5,7 @@
       returned by getFaultLocations, examine the trace for those methods (you
       can get the callids using getCallIdsForMethod and the actual trace using
       getCallTrace) and determine how this trace is relevant to the symptom
-      $(SYMPTOM).
+      ${SYMPTOM}.
    </QUERY>
    <QUERY COMMAND='BASEEXPLAIN'>
       You should return an explanation of the root cause of the problem
@@ -13,7 +13,7 @@
       the tool getStackFrames) and can evaluate any expression that will help
       (using getEvaluation).  You should provide an explanation that is relevant
       the the symptom
-      $(SYMPTOM).
+      ${SYMPTOM}.
    </QUERY>
    <QUERY COMMAND='RETRY'>
       That was either a bad explanation (i.e., you are telling what to do rather
@@ -32,7 +32,7 @@
       returned by getFaultLocations, examine the trace for those methods (you
       can get the callids using getCallIdsForMethod and the actual trace using
       getCallTrace) and determine how this trace is relevant to the symptom
-      $(SYMPTOM).
+      ${SYMPTOM}.
    </QUERY>
    <QUERY COMMAND='TEST3'>
       You should invoke the agents directly to get the information needed.  You should
@@ -88,11 +88,13 @@
       That analysis seems correct.
       Please provide the necessary patches given in or based on your analysis as input to the Linux patch command.
       Do not call a patch agent, just return the patches.
+      $(EXTRA)
    </QUERY>
    <QUERY COMMAND='BASEREPAIRS'>
       That analysis seems correct.
       Please provide the necessary patches given in or based on your analysis as input to the Linux patch command.
       Do not call a patch agent, just return the patches.
+      $(EXTRA)
    </QUERY>
    <QUERY COMMAND='USER'>
    </QUERY>

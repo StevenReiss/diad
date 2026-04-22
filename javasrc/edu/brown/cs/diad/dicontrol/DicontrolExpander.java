@@ -25,7 +25,7 @@ package edu.brown.cs.diad.dicontrol;
 import java.util.Map;
 
 
-class DicontrolExpander implements DicontrolConstants {
+final class DicontrolExpander implements DicontrolConstants {
 
 
 /********************************************************************************/
@@ -60,9 +60,9 @@ private DicontrolExpander()
  *		the empty string if there is no associated value.
  *	 *) $?NAME ..<text>.. $/ is either replaced with the empty string if
  *		NAME is not in the map or with text.
- *	 *) $|NAME..<text>..$/ is replaced with the empty string if NAME is
+ *	 *) $!NAME..<text>..$/ is replaced with the empty string if NAME is
  *		defined in the map and with text if not.
- *	 *) $?NAME ..<text1> .. $| ..<text2>.. $/ is replaced with text1 if the
+ *	 *) $?NAME ..<text1> .. $! ..<text2>.. $/ is replaced with text1 if the
  *		NAME is defined and test2 if not.  Again variations on the sequences
  *		are allowed.
  *	 *) $$ is replaced with $
@@ -117,7 +117,7 @@ private static int processTag(String template,int start,Map<String, String> valu
       isconditional = true;
       i++;
     }
-   else if (i < template.length() && template.charAt(i) == '|') {
+   else if (i < template.length() && template.charAt(i) == '!') {
       isconditional = true;
       istruebranch = false;
       i++;
@@ -132,8 +132,7 @@ private static int processTag(String template,int start,Map<String, String> valu
     }
    else {
       int namestart = i;
-      while (i < template.length() &&
-		(Character.isLetterOrDigit(template.charAt(i)) || template.charAt(i) == '_')) {
+      while (i < template.length() && isTagChar(template.charAt(i))) {
 	 i++;
        }
       name = template.substring(namestart, i);
@@ -148,23 +147,23 @@ private static int processTag(String template,int start,Map<String, String> valu
       return i;
     }
 
-   // Logic for Conditionals: $?NAME or $|NAME
+   // Logic for Conditionals: $?NAME or $!NAME
    // We need to find the matching $/ or $/NAME
    int contentstart = i;
    int endoftag = findClosingTag(template, i, name);
    String blockcontent = template.substring(contentstart, endoftag);
 
-   // Check for the "else" separator $| inside this block
+   // Check for the "else" separator $! inside this block
    int elseindex = findElseSeparator(blockcontent);
 
    if (elseindex != -1) {
-      // Case: $?NAME ..text1.. $| ..text2.. $/
+      // Case: $?NAME ..text1.. $! ..text2.. $/
       String text1 = blockcontent.substring(0, elseindex);
       String text2 = blockcontent.substring(elseindex + 2);
       output.append(expand(nameexists ? text1 : text2, values));
     }
    else {
-      // Case: $?NAME ..text.. $/  OR  $|NAME ..text.. $/
+      // Case: $?NAME ..text.. $/  OR  $!NAME ..text.. $/
       boolean shouldshow = (template.charAt(start + 1) == '?') ? nameexists : !nameexists;
       if (shouldshow) {
 	 output.append(expand(blockcontent, values));
@@ -204,9 +203,10 @@ private static int skipClosingTag(String template,int closingStart,String name)
    if (i < template.length() && template.charAt(i) == '{') {
       return template.indexOf('}', i) + 1;
     }
-   else if (i < template.length() && Character.isLetterOrDigit(template.charAt(i))) {
-      while (i < template.length() && Character.isLetterOrDigit(template.charAt(i)))
-	 i++;
+   else if (i < template.length() && isTagChar(template.charAt(i))) {
+      while (i < template.length() && isTagChar(template.charAt(i))) {
+         i++;
+       }
       return i;
     }
 
@@ -215,12 +215,12 @@ private static int skipClosingTag(String template,int closingStart,String name)
 
 private static int findElseSeparator(String block)
 {
-   // Finds $| that isn't nested inside another conditional
+   // Finds $! that isn't nested inside another conditional
    int depth = 0;
    for (int i = 0; i < block.length() - 1; i++) {
       if (isStartBlock(block,i)) {
-	 // If we find $| at depth 0, it's our separator
-	 if (block.charAt(i + 1) == '|' && depth == 0) return i;
+	 // If we find $! at depth 0, it's our separator
+	 if (block.charAt(i + 1) == '!' && depth == 0) return i;
 	 depth++;
        }
       else if (block.startsWith("$/", i)) {
@@ -237,9 +237,9 @@ private static boolean isStartBlock(String template,int i)
    if (template.startsWith("$?", i)) {
       return true;
     }
-   else if (template.startsWith("$|",i) && i+2 < template.length()) {
+   else if (template.startsWith("$!",i) && i+2 < template.length()) {
       char ch = template.charAt(i+2);
-      if (Character.isLetterOrDigit(ch) || ch == '_' || ch == '{') {
+      if (isTagChar(ch) || ch == '{') {
 	 return true;
        }
     }
@@ -247,6 +247,14 @@ private static boolean isStartBlock(String template,int i)
    return false;
 }
 
+
+private static boolean isTagChar(char c)
+{
+   if (Character.isLetterOrDigit(c)) return true;
+   if (c == '_') return true;
+   
+   return false;
+}
 
 
 

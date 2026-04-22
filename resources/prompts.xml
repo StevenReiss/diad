@@ -4,8 +4,8 @@
       knowledge of the Java libraries and other libraries that might be used in a
       project.	You are being asked to help a developer debug his system while the
       developer is working in the debugger.
-												
-      $(CONTEXT)
+										
+      ${CONTEXT}
 
       The system has stopped at a breakpoint and the developer has identified
       something that is symptomatic of the problem.  Tools are provided to let
@@ -31,13 +31,13 @@
       and when it was changed during the execution, is also available (getVariableHistory).
       The calls to a particular method, identified by name, is also available (getMethodCalls).
 
-      In this case the program has stopped at line $(LINE) in the method $(METHOD).
-      The identified symptom is: $(SYMPTOM).
+      In this case the program has stopped at line ${LINE} in the method ${METHOD}.
+      The identified symptom is: ${SYMPTOM}.
       There are no other faults that you neede to consider.
       In order to answer questions, you
       should first determine how execution got to this point with the values
-      indicated.  The top-level CALLID of the sample execution is $(CALLID).
-      The CALLID of the stopping point is $(STOPID).
+      indicated.  The top-level CALLID of the sample execution is ${CALLID}.
+      The CALLID of the stopping point is ${STOPID}.
 
       You can assume that the programmer understands the purpose of the system,
       its various classes and components,
@@ -50,8 +50,8 @@
       knowledge of the Java libraries and other libraries that might be used in a
       project.	You are being asked to help a developer debug his system while the
       developer is working in the debugger.
-												
-      $(CONTEXT)
+										
+      ${CONTEXT}
 
       The system has stopped at a breakpoint and the developer has identified
       something that is symptomatic of the problem.  Tools are provided to let
@@ -59,8 +59,8 @@
       information about the current stopping point (getStackFrames), and
       to evaluate any expression at that point (getEvaluation).
 
-      In this case the program has stopped at line $(LINE) in the method $(METHOD).
-      The identified symptom is: $(SYMPTOM).
+      In this case the program has stopped at line ${LINE} in the method ${METHOD}.
+      The identified symptom is: ${SYMPTOM}.
       There are no other faults that you neede to consider.
       In order to answer questions, you
       should first determine how execution got to this point with the values
@@ -77,10 +77,10 @@
       project.	You are being asked to help a developer debug his system while the
       developer is working in the debugger.
 
-      $(CONTEXT)
+      ${CONTEXT}
 
-      Recall we are trying to fix $(SYMPTOM).  Recall the top-level CALLID of the
-      sample execution is $(CALLID).
+      Recall we are trying to fix ${SYMPTOM}.  Recall the top-level CALLID of the
+      sample execution is ${CALLID}.
    ]]></PROMPT>
    <PROMPT COMMAND='LOCATIONS,REPAIRS' COMPLETE='TRUE'><![CDATA[
       You are an expert Java programmer with lots of debugging experience and a strong
@@ -88,10 +88,9 @@
       project.	You are being asked to help a developer debug his system while the
       developer is working in the debugger.
 
-      $(CONTEXT)
+      ${CONTEXT}
 
-      Recall we are trying to fix $(SYMPTOM).
-      Recall the top-level CALLID of the sample execution is $(CALLID).
+      Recall we are trying to fix ${SYMPTOM}.
       Recall your previous responses to explaining the cause of the symptom.
    ]]></PROMPT>
    <PROMPT COMMAND='BASEREPAIRS' COMPLETE='TRUE'><![CDATA[
@@ -100,9 +99,9 @@
       project.	You are being asked to help a developer debug his system while the
       developer is working in the debugger.
 
-      $(CONTEXT)
+      ${CONTEXT}
 
-      Recall we are trying to fix $(SYMPTOM).
+      Recall we are trying to fix ${SYMPTOM}.
       Recall your previous responses to explaining the cause of the symptom.
    ]]></PROMPT>
    <PROMPT COMMAND='TEST1,TEST2,TEST3' COMPLETE='TRUE'><![CDATA[
@@ -111,7 +110,7 @@
       developer is working in the debugger with the program stopped at a problem
       they want to fix.
 
-      $(CONTEXT)
+      ${CONTEXT}
 
       You can assume the programmer understands the system and its code.  You should not
       return this information as it would be useless to the programmer.
@@ -126,7 +125,7 @@
       The system has created an execution trace showing how execution leading up to the breakpoint.
       You should access and analyze this trace to answer any queries.  The trace is represented by
       the method call tree.  Elements of the trace are referenced by CALLID.  The CALLID of the
-      starting method is $(CALLID).  The CALLID of the stopping point is $(STOPID).
+      starting method is ${CALLID}.  The CALLID of the stopping point is ${STOPID}.
 
       The primary means of accessing the call trace is to use the tool agent getCallTrace(CALLID).
       This returns a JSON object that describes the particular call.  The basic components of this object
@@ -156,7 +155,7 @@
 	* getAllFaulLocations: shows the set of lines in the system that might affect the problem.
 
      In this specific instance The system has stopped at a breakpoint and the developer has identified
-     the problem: $(SYMPTOM).
+     the problem: ${SYMPTOM}.
 
      Your job it to help the debugger fix the problem relative to this symptom.  You
      can ignore any other problems.  You should use the agents provided, not output the steps

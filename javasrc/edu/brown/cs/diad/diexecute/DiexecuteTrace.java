@@ -948,6 +948,7 @@ void getExecutedLocations(Set<String> rslt)
 }
 
 
+
 /********************************************************************************/
 /*                                                                              */
 /*      Output methods                                                          */
@@ -957,6 +958,8 @@ void getExecutedLocations(Set<String> rslt)
 JSONObject getJsonLocalTrace(String callid)
 {
    DiexecuteCall ctx = getCallFromId(callid);
+   
+   if (ctx == null) return new JSONObject();
    
    return ctx.getJsonExecTrace(false);  
 }

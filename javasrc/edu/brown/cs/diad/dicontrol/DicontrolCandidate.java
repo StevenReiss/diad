@@ -561,6 +561,7 @@ Element askLimba(IvyXmlWriter xw,DiadAskType typ,String query,boolean nohistory)
    keymap.put("METHOD",for_frame.getFullMethodName());
    keymap.put("LINE",String.valueOf(for_frame.getLineNumber()));
    keymap.put("PROCESS",for_thread.getProcessId());
+   keymap.put("EXTRA",query);
    boolean havelocs = location_set != null && !location_set.isEmpty();
    boolean execloca = exec_locations != null && !exec_locations.isEmpty();
    boolean haveexec = base_execution != null;
