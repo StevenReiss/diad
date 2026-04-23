@@ -301,6 +301,7 @@ public boolean getProperty(String id,boolean dflt)
 
 public void setWorkspace(File ws)
 {
+   if (test_factory == null) return;
    test_factory.setWorkspace(ws);
 }
 

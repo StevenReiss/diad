@@ -588,7 +588,12 @@ private static class CommandAskLimba extends QueryCommand {
     }
    
    @Override public void process(IvyXmlWriter xw) {
-      Element rslt = getCandidate().askLimba(xw,ask_type,ask_text,
+      DicontrolCandidate cand = getCandidate();
+      if (cand == null) {
+         return;
+       }
+      
+      Element rslt = cand.askLimba(xw,ask_type,ask_text,
             no_history); 
       String resp = IvyXml.getTextElement(rslt,"RESPONSE");
       if (resp != null) xw.cdataElement("RESPONSE",resp);

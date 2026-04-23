@@ -17,8 +17,9 @@
    </QUERY>
    <QUERY COMMAND='RETRY'>
       That was either a bad explanation (i.e., you are telling what to do rather
-      than doing it yourself), or it is incorrect or incomplete.  Please try
-      again and do a better job.
+      than doing it yourself), or it is incorrect or incomplete.
+      $?{EXTRA}In particular: $EXTRA. $/
+      Please try again and do a better job.
    </QUERY>
    <QUERY COMMAND='TEST1'>
       You should return a detailed explanation of the root cause of the problem
