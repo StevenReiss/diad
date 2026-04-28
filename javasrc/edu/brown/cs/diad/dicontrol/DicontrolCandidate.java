@@ -869,10 +869,12 @@ private final class CandidateThread extends Thread {
       Element xml = IvyXml.convertStringToXml(cmd);
       DicontrolCommand qcmd = DicontrolCommand.createCommand(diad_control,xml);
       IvyXmlWriter xw = new IvyXmlWriter();
+      xw.begin("RESULT");
       qcmd.process(xw);
+      xw.end("RESULT");
       try {
+         IvyLog.logD("DICONTROL","Query returned " + xw.toString());
          Element resp = IvyXml.convertStringToXml(xw.toString());
-         IvyLog.logD("DICONTROL","Query returned " + IvyXml.convertXmlToString(resp));
          query_response = IvyXml.getTextElement(resp,"RESPONSE");
          IvyLog.logD("DICONTROL","Query text " + query_response);
        }
