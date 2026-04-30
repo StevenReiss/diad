@@ -27,6 +27,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.w3c.dom.Element;
 
 import edu.brown.cs.diad.dicontrol.DicontrolMain;
@@ -172,6 +175,140 @@ private void buildProjectMap()
           }
        }
     }
+}
+
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Handle queries                                                          */
+/*                                                                              */
+/********************************************************************************/
+
+public JSONArray findReferences(String name)
+{
+   JSONArray rslt = new JSONArray();
+   
+   Element xml = findClass(name);
+   if (!isMatch(xml)) xml = findMethod(name);
+   if (!isMatch(xml)) xml = findField(name);
+   
+   Element sfor = IvyXml.getChild(xml,"SEARCHFOR");
+   String strtyp = IvyXml.getAttrString(sfor,"TYPE");
+   strtyp = getReturnType(strtyp);
+   
+   for (Element me : IvyXml.children(xml,"MATCH")) {
+      Element mi = IvyXml.getChild(me,"ITEM");
+      String typ = IvyXml.getAttrString(mi,"TYPE");
+      typ = getReturnType(typ);
+      if (typ == null) continue;
+      String fnm = IvyXml.getTextElement(me,"FILE");
+      if (fnm == null) continue;
+      File fil = new File(fnm);
+      int offset = IvyXml.getAttrInt(me,"STARTOFFSET");
+//    int length = IvyXml.getAttrInt(me,"LENGTH");
+      String pnm = IvyXml.getAttrString(me,"PROJECT");
+      if (pnm == null) pnm = IvyXml.getAttrString(mi,"PROJECT");
+      ASTNode ast = getSourceNode(pnm,fil,offset,-1,false,false);
+      CompilationUnit cu = (CompilationUnit) ast.getRoot();
+      int line = cu.getLineNumber(offset);
+      
+      // determine if ast is a declaration or reference
+      // get containing method or class
+      
+      JSONObject jo = new JSONObject();
+      jo.put("FILE",fnm);
+      jo.put("LINE",line);
+      jo.put("TYPE",typ);
+      
+      rslt.put(jo);
+    }
+   
+   
+   return rslt;
+}
+
+
+private boolean isMatch(Element xml)
+{
+   if (xml == null) return false;
+   if (IvyXml.getChild(xml,"MATCH") == null) return false;
+   return true;
+}
+
+
+
+private Element findClass(String name)
+{
+   CommandArgs args = new CommandArgs("PATTERN",name,
+         "DEFS",true,"REFS",true,"FOR","TYPE");
+   Element pr = diad_control.sendBubblesMessage("PATTERNSEARCH",args,null);
+   
+   return pr;
+}
+
+
+private Element findMethod(final String name0)
+{
+   String name = name0;
+   if (name == null) return null;
+   
+   // fix constructors
+   String what = "METHOD";
+   if (name.contains(".<init>")) {
+      name = name.replace(".<init>","");
+      what = "CONSTRUCTOR";
+    }
+   // check for X.X as constructor ???
+   
+   CommandArgs args = new CommandArgs("PATTERN",name,
+         "DEFS",true,"REFS",true,"FOR",what,"SYSTEM",false,"IMPLS",false);
+   Element xml = diad_control.sendBubblesMessage("PATTERNSEARCH",args,null);
+   
+   return xml;
+}
+
+
+private Element findField(String name)
+{
+   CommandArgs args = new CommandArgs("PATTERN",name,
+         "DEFS",true,"REFS",true,"FOR","FIELD","SYSTEM",false);
+   Element xml = diad_control.sendBubblesMessage("PATTERNSEARCH",args,null);
+   
+   return xml;
+}
+
+
+
+
+private String getReturnType(String typ)
+{
+   if (typ == null) return null;
+   
+   String rslt = null;
+   
+   switch (typ) {
+      case "Class" :
+      case "Throwable" :
+      case "Exception" :
+      case "Interface" :
+      case "Enum" :
+         rslt = "TYPE";
+         break;
+      case "Function" :
+      case "Method" :
+      case "Constructor" :
+      case "StaticInitializer" :
+         rslt = "METHOD";
+         break;
+      case "Field" :
+      case "EnumConstant" :
+      case "Variable" :
+         rslt = "FIELD";
+         break;
+    }
+   
+   return rslt;
 }
 
 

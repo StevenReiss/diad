@@ -94,6 +94,8 @@ static DicontrolCommand createCommand(DicontrolMain ctrl,Element xml)
          return new QueryVarValue(ctrl,xml);
       case "Q_METHODCALLS" :
          return new QueryMethodCalls(ctrl,xml);
+      case "Q_REFERENCES" :
+         return new QueryReferences(ctrl,xml);
       case "EXPRESSIONS" :
          return new CommandExpressions(ctrl,xml);
       case "ASKLIMBA" :         
@@ -335,10 +337,12 @@ private abstract static class QueryCommand extends DicontrolCommand {
       
       debug_candidate = null;
       String id = IvyXml.getAttrString(xml,"DEBUGID");
-      for (DicontrolCandidate cand : diad_control.getActiveCandidates()) {
-         if (cand.getId().equals(id)) {
-            debug_candidate = cand;
-            break;
+      if (id != null) {
+         for (DicontrolCandidate cand : diad_control.getActiveCandidates()) {
+            if (cand.getId().equals(id)) {
+               debug_candidate = cand;
+               break;
+             }
           }
        }
     }
@@ -567,6 +571,39 @@ private static class QueryMethodCalls extends QueryCommand {
     }
    
 }       // end of inner class QueryMethodCalls
+
+
+
+private static class QueryReferences extends QueryCommand {
+
+   private String search_name;
+   
+   QueryReferences(DicontrolMain ctrl,Element xml) {
+      super(ctrl,xml);
+      search_name = IvyXml.getAttrString(xml,"NAME");
+    }
+   
+   @Override public void process(IvyXmlWriter xw) {
+      long start = System.currentTimeMillis();
+      
+      JSONArray ja = getJsonArray();
+      xw.begin("JSON");
+      xw.field("TYPE","ARRAY");
+      xw.cdata(ja.toString(2));
+      xw.end("JSON");
+      
+      long time = System.currentTimeMillis() - start;
+      IvyLog.logI("DICONTROL","Command " + getCommandName() + " TIME = " + time);
+    }
+   
+   @Override protected JSONArray getJsonArray() {
+      DisourceManager src = diad_control.getSourceManager();
+      return src.findReferences(search_name);
+    }
+   
+}       // end of inner class QueryReferences
+
+
 
 /********************************************************************************/
 /*                                                                              */

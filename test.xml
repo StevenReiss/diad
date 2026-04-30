@@ -15,6 +15,10 @@
 
 <DIAD DO='TEST' PROJECT='nanoxml' LAUNCH='testParsing16' CONTINUE='1' />
 <DIAD DO='WAITFORSTATE' STATE='READY' />
+<DIAD DO='Q_REFERENCES' NAME='net.n3.nanoxml.StdXMLParser' />
+<DIAD DO='Q_REFERENCES' NAME='net.n3.nanoxml.StdXMLParser.processElement' />
+<DIAD DO='Q_REFERENCES' NAME='net.n3.nanoxml.StdXMLParser.entityResolver' />
+
 <DIAD DO='Q_STACK' DEBUGID='$ID' />
 <DIAD DO='Q_EVAL' DEBUGID='$ID'>
    <EXPRESSION>xml.getChildAtIndex(0)</EXPRESSION>
