@@ -254,6 +254,7 @@ public boolean startFait()
    if (diad_control.getProperty("Diad.fait.trace",false)) {
       args.add("-T");
     }
+   args.add("-ignore");
    
    boolean isnew = false;
    for (int i = 0; i < 100; ++i) {

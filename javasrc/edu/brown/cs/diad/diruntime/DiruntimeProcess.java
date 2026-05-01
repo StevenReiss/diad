@@ -269,6 +269,7 @@ private boolean checkException(DiruntimeThread td,Element thrd)
       if (btyp != null && btyp.equals("EXCEPTION")) {
          exc = IvyXml.getAttrString(bpt,"EXCEPTION");
          DiadStackFrame frm = td.getStack().getTopFrame();
+         if (frm == null) continue;
          for (String vnm : frm.getLocals()) {
             DiadLocalVariable var = frm.getLocal(vnm);
             String typ = var.getType();

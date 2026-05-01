@@ -400,7 +400,12 @@ DiruntimeType stringType()
    
    if (frm == null) {
       frm = getStack().getUserFrame();
+      if (frm == null) {
+         IvyLog.logE("DIRUNTIME","No frame found for evaluating " + expr);
+         return null;
+       }
     }
+   
    String proj = for_process.getManager().findProjectForFile(frm.getSourceFile());
    CommandArgs args = new CommandArgs("THREAD",thread_id,
          "FRAME",frm.getFrameId(),"BREAK",false,"EXPR",expr,

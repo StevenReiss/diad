@@ -189,44 +189,73 @@ public JSONArray findReferences(String name)
 {
    JSONArray rslt = new JSONArray();
    
-   Element xml = findClass(name);
-   if (!isMatch(xml)) xml = findMethod(name);
-   if (!isMatch(xml)) xml = findField(name);
-   
-   Element sfor = IvyXml.getChild(xml,"SEARCHFOR");
-   String strtyp = IvyXml.getAttrString(sfor,"TYPE");
-   strtyp = getReturnType(strtyp);
-   
-   for (Element me : IvyXml.children(xml,"MATCH")) {
-      Element mi = IvyXml.getChild(me,"ITEM");
-      String typ = IvyXml.getAttrString(mi,"TYPE");
-      typ = getReturnType(typ);
-      if (typ == null) continue;
-      String fnm = IvyXml.getTextElement(me,"FILE");
-      if (fnm == null) continue;
-      File fil = new File(fnm);
-      int offset = IvyXml.getAttrInt(me,"STARTOFFSET");
-//    int length = IvyXml.getAttrInt(me,"LENGTH");
-      String pnm = IvyXml.getAttrString(me,"PROJECT");
-      if (pnm == null) pnm = IvyXml.getAttrString(mi,"PROJECT");
-      ASTNode ast = getSourceNode(pnm,fil,offset,-1,false,false);
-      CompilationUnit cu = (CompilationUnit) ast.getRoot();
-      int line = cu.getLineNumber(offset);
-      
-      // determine if ast is a declaration or reference
-      // get containing method or class
-      
-      JSONObject jo = new JSONObject();
-      jo.put("FILE",fnm);
-      jo.put("LINE",line);
-      jo.put("TYPE",typ);
-      
-      rslt.put(jo);
+   Element xml1 = findClass(name,true);
+   Element xml2 = null;
+   String typ = null;
+   if (isMatch(xml1)) {
+      typ = "TYPE";
+      xml2 = findClass(name,false);
+    }
+   else {
+      xml1 = findMethod(name,true);
+      if (isMatch(xml1)) {
+         typ = "METHOD";
+         xml2 = findMethod(name,false);
+       }
+      else {
+         xml1 = findField(name,true);
+         if (isMatch(xml1)) {
+            typ = "FIELD";
+            xml2 = findField(name,false);
+          }
+       }
     }
    
+   for (Element me: IvyXml.children(xml1,"MATCH")) {
+     JSONObject jo = outputMatch(me,typ,true);
+     if (jo != null) rslt.put(jo);
+    }
+   for (Element me: IvyXml.children(xml2,"MATCH")) {
+      JSONObject jo = outputMatch(me,typ,false);
+      if (jo != null) rslt.put(jo);
+    }
    
    return rslt;
 }
+   
+   
+private JSONObject outputMatch(Element me,String typ,boolean def)
+{
+   Element mi = IvyXml.getChild(me,"ITEM");
+   String intyp = IvyXml.getAttrString(mi,"TYPE");
+   intyp = getReturnType(intyp);
+   if (intyp == null) return null;
+   String usrc = IvyXml.getAttrString(mi,"SOURCE");
+   if (usrc == null || !usrc.equals("USERSOURCE")) return null;
+   
+   String fnm = IvyXml.getTextElement(me,"FILE");
+   if (fnm == null) return null;;
+   File fil = new File(fnm);
+   int offset = IvyXml.getAttrInt(me,"STARTOFFSET");
+   String pnm = IvyXml.getAttrString(me,"PROJECT");
+   if (pnm == null) pnm = IvyXml.getAttrString(mi,"PROJECT");
+   ASTNode ast = getSourceNode(pnm,fil,offset,-1,false,false);
+   CompilationUnit cu = (CompilationUnit) ast.getRoot();
+   int line = cu.getLineNumber(offset);
+   String inside = IvyXml.getAttrString(mi,"QNAME");
+   if (inside == null) inside = IvyXml.getAttrString(mi,"NAME");
+   
+   JSONObject jo = new JSONObject();
+   jo.put("FILE",fnm);
+   jo.put("LINE",line);
+   jo.put("TYPE",typ);
+   jo.put("INSIDE",inside);
+   jo.put("INSIDETYPE",intyp);
+   jo.put("DEFINITION",def);
+   
+   return jo;
+}
+
 
 
 private boolean isMatch(Element xml)
@@ -238,17 +267,17 @@ private boolean isMatch(Element xml)
 
 
 
-private Element findClass(String name)
+private Element findClass(String name,boolean def)
 {
    CommandArgs args = new CommandArgs("PATTERN",name,
-         "DEFS",true,"REFS",true,"FOR","TYPE");
+         "DEFS",def,"REFS",!def,"FOR","TYPE");
    Element pr = diad_control.sendBubblesMessage("PATTERNSEARCH",args,null);
    
    return pr;
 }
 
 
-private Element findMethod(final String name0)
+private Element findMethod(String name0,boolean def)
 {
    String name = name0;
    if (name == null) return null;
@@ -262,17 +291,17 @@ private Element findMethod(final String name0)
    // check for X.X as constructor ???
    
    CommandArgs args = new CommandArgs("PATTERN",name,
-         "DEFS",true,"REFS",true,"FOR",what,"SYSTEM",false,"IMPLS",false);
+         "DEFS",def,"REFS",!def,"FOR",what,"SYSTEM",false,"IMPLS",false);
    Element xml = diad_control.sendBubblesMessage("PATTERNSEARCH",args,null);
    
    return xml;
 }
 
 
-private Element findField(String name)
+private Element findField(String name,boolean def)
 {
    CommandArgs args = new CommandArgs("PATTERN",name,
-         "DEFS",true,"REFS",true,"FOR","FIELD","SYSTEM",false);
+         "DEFS",def,"REFS",!def,"FOR","FIELD","SYSTEM",false);
    Element xml = diad_control.sendBubblesMessage("PATTERNSEARCH",args,null);
    
    return xml;
