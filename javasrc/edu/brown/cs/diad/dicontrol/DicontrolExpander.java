@@ -68,7 +68,7 @@ private DicontrolExpander()
  *	 *) $$ is replaced with $
  *
  *	Note that the text regions above can have escape and insertion sequences
- *	as well.
+ *	as well.  Note that .. indicates arbitrary text in the above.
  *
  *	In all the above, NAME can be replaced with {NAME}.  Also $/ can be
  *	replace diwth $/NAME or $/{NAME}
