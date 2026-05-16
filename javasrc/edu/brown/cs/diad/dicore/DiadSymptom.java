@@ -57,6 +57,7 @@ double getTargetPrecision();
 String getInFile();
 int getInLine();
 int getInOffset();
+String getUserDescription();
 
 void setSymptomType(DiadSymptomType typ);
 void setSymptomItem(String val);

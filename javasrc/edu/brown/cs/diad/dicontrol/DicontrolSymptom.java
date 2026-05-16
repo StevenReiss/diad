@@ -51,6 +51,7 @@ private String original_expr;
 private String aux_expr;
 private String original_value;
 private String target_value;
+private String user_description;
 private DiadValueOperator value_operator;
 private double target_precision;
 private String in_file;
@@ -80,6 +81,7 @@ DicontrolSymptom(DiadSymptomType type,String item)
    original_value = null;
    target_value = null;
    value_operator = DiadValueOperator.NONE; 
+   user_description = null;
    target_precision = 0;
    in_file = null;
    in_line = -1;
@@ -99,6 +101,7 @@ DicontrolSymptom(Element xml)
    in_file = IvyXml.getAttrString(xml,"INFILE");
    in_line = IvyXml.getAttrInt(xml,"INLINE",-1);
    in_offset = IvyXml.getAttrInt(xml,"INOFFSET",-1);
+   user_description = IvyXml.getAttrString(xml,"USER");
 }
 
 
@@ -127,7 +130,8 @@ DicontrolSymptom(Element xml)
 @Override public String getInFile()                      { return in_file; }
 @Override public int getInLine()                         { return in_line; }
 @Override public int getInOffset()                       { return in_offset; }
-
+@Override public String getUserDescription()            { return user_description; }
+   
 
 @Override public void setSymptomType(DiadSymptomType typ)
 {
@@ -173,6 +177,7 @@ DicontrolSymptom(Element xml)
    target_precision = p; 
 }
 
+
 void setLocation(ASTNode node)
 {
    if (node == null) return;
@@ -209,6 +214,8 @@ void setLocation(ASTNode node)
          return getLocationText();
       case NO_EXCEPTION :
          return "the program should have thrown the exception " + getSymptomItem();
+      case OTHER :
+         return user_description;
     }
    return "symptom"; 
 }
@@ -385,6 +392,7 @@ private String getLocationText()
    if (original_expr != null) xw.cdataElement("ORIGINAL",original_expr);
    if (aux_expr != null) xw.cdataElement("AUX",aux_expr);
    if (target_value != null) xw.cdataElement("TARGET",target_value);
+   if (user_description != null) xw.cdataElement("USER",user_description);
    
    xw.end("SYMPTOM");
 }
