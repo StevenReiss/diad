@@ -99,12 +99,12 @@ DiadSymptom findSymptom()
    
    String exc = for_thread.getExceptionType(); 
    
-   return findStatementSymptom(frm,stmt,exc,null);
+   return findStatementSymptom(frm,stmt,exc,null,null);
 }
 
 
 private DicontrolSymptom findStatementSymptom(DiadStackFrame frm,ASTNode stmt,
-      String exc,String msg)
+      String exc,String msg,String libcall)
 {
    if (exc != null && frm != null && for_frame != null &&
          frm.getFrameId().equals(for_frame.getFrameId())) {
@@ -112,12 +112,21 @@ private DicontrolSymptom findStatementSymptom(DiadStackFrame frm,ASTNode stmt,
          return new DicontrolSymptom(DiadSymptomType.ASSERTION);
        }
       else {
-         return new DicontrolSymptom(DiadSymptomType.EXCEPTION,exc);
+         DicontrolSymptom symp = new DicontrolSymptom(DiadSymptomType.EXCEPTION,exc);
+         if (libcall != null) {
+            symp.setSymptomType(DiadSymptomType.LIBRARY_EXCEPTION);
+            symp.setOriginalExpression(libcall);
+          }
+         return symp;
        }
     }
    else if (frm == null && exc != null) {
       DicontrolSymptom symp = new DicontrolSymptom(DiadSymptomType.EXCEPTION,exc);
       if (stmt != null) {
+         if (libcall != null) {
+            symp.setSymptomType(DiadSymptomType.LIBRARY_EXCEPTION);
+            symp.setOriginalExpression(libcall);
+          }
          symp.setLocation(stmt);
          if (stmt.getNodeType() == ASTNode.THROW_STATEMENT) {
             symp.setSymptomType(DiadSymptomType.LOCATION);
@@ -225,7 +234,7 @@ private DicontrolSymptom getExceptionSymptom(String excvar)
    try {
       DisourceManager src = diad_control.getSourceManager();
       int len = v1.getArrayLength(); 
-      String call = null;
+      String libcall = null;
       for (int i = 0; i < len; ++i) {
          DiadValue vf = v1.getArrayElement(i);
 //       String cls = vf.getFieldValue("declaringClass").getString();
@@ -233,7 +242,7 @@ private DicontrolSymptom getExceptionSymptom(String excvar)
          String filename = vf.getFieldValue("fileName").getString();
          File file = src.findProjectFile(filename); 
          if (file == null) {
-            call = vf.getFieldValue("methodName").getString();
+            libcall = vf.getFieldValue("methodName").getString();
             continue;
           }
          String proj = src.getProjectForFile(file);
@@ -243,10 +252,10 @@ private DicontrolSymptom getExceptionSymptom(String excvar)
          ASTNode stmt = src.getSourceNode(proj,file,
                -1,lno,true,true);
          IvyLog.logD("DICONTROL","Work on caught exception " + stmt + " " +
-               call);
+               libcall);
          if (stmt !=  null) {
             DicontrolSymptom symp = findStatementSymptom(null,stmt,
-                  exc,msg);
+                  exc,msg,libcall);
             if (symp != null) return symp;
           }
        }

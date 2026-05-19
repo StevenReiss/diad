@@ -722,6 +722,7 @@ private final class CandidateThread extends Thread {
                      setState(DiadCandidateState.FINDING_STARTING_FRAME);
                    }
                   break; 
+               case NO_LOCATIONS_FOUND :
                case FINDING_STARTING_FRAME :
                   findStartingFrame();
                   if (checkInterrupted()) break;
@@ -795,7 +796,6 @@ private final class CandidateThread extends Thread {
                case NO_USER_STACK :
                case NO_ANALYSIS :
                case NO_BASE_EXECUTION :
-               case NO_LOCATIONS_FOUND :
 //             case NO_START_FRAME :
 //             case NO_FINAL_LOCATIONS :
                default :
