@@ -225,19 +225,25 @@ private DicontrolSymptom getExceptionSymptom(String excvar)
    try {
       DisourceManager src = diad_control.getSourceManager();
       int len = v1.getArrayLength(); 
+      String call = null;
       for (int i = 0; i < len; ++i) {
          DiadValue vf = v1.getArrayElement(i);
 //       String cls = vf.getFieldValue("declaringClass").getString();
 //       String mthd = vf.getFieldValue("methodName").getString();
          String filename = vf.getFieldValue("fileName").getString();
          File file = src.findProjectFile(filename); 
-         if (file == null) continue;
+         if (file == null) {
+            call = vf.getFieldValue("methodName").getString();
+            continue;
+          }
          String proj = src.getProjectForFile(file);
          if (proj == null) continue;
          // need to get actual file
          int lno = (int) vf.getFieldValue("lineNumber").getInt();
          ASTNode stmt = src.getSourceNode(proj,file,
                -1,lno,true,true);
+         IvyLog.logD("DICONTROL","Work on caught exception " + stmt + " " +
+               call);
          if (stmt !=  null) {
             DicontrolSymptom symp = findStatementSymptom(null,stmt,
                   exc,msg);
