@@ -31,6 +31,7 @@ import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.ArrayAccess;
 import org.eclipse.jdt.core.dom.CastExpression;
+import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.ConditionalExpression;
 import org.eclipse.jdt.core.dom.DoStatement;
 import org.eclipse.jdt.core.dom.EnhancedForStatement;
@@ -715,15 +716,26 @@ private class LibraryChecker extends ExceptionChecker {
    
    LibraryChecker(ASTNode stmt) {
       base_statement = stmt;
-      library_method = null;
-      for (DiadStackFrame frm : getThread().getStack().getFrames()) {
-         if (frm.isUserFrame()) break;
-         library_method = frm.getMethodName();
+      library_method = getSymptom().getOriginalExpression();
+      if (library_method == null) {
+         for (DiadStackFrame frm : getThread().getStack().getFrames()) {
+            if (frm.isUserFrame()) break;
+            library_method = frm.getMethodName();
+          }
+       }
+    }
+   
+   @Override public void endVisit(ClassInstanceCreation ci) {
+      if (library_method != null && library_method.contains("<init>")) {
+         useNode(base_statement,ci,null,null);
        }
     }
    
    @Override public void endVisit(MethodInvocation mi) {
-      if (mi.getName().getIdentifier().equals(library_method)) {
+      String id = mi.getName().getIdentifier();
+      if (library_method == null ||
+            id.contains(library_method) ||
+            library_method.contains(id)) {   
          useNode(base_statement,mi,null,null);
        }
     }

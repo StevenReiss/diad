@@ -143,7 +143,7 @@ private DicontrolSymptom findStatementSymptom(DiadStackFrame frm,ASTNode stmt,
    
    IvyLog.logD("DICONTROL","Check symptom statement " + stmt);
    
-   DicontrolSymptom fnd = checkCaughtExcpetion(stmt);
+   DicontrolSymptom fnd = checkCaughtException(stmt);
    if (fnd == null) {
       fnd = checkErrorStatement(stmt);
     }
@@ -185,7 +185,7 @@ private DicontrolSymptom checkErrorStatement(ASTNode stmt)
 /*                                                                              */
 /********************************************************************************/
 
-private DicontrolSymptom checkCaughtExcpetion(ASTNode stmt)
+private DicontrolSymptom checkCaughtException(ASTNode stmt)
 {
    ASTNode par = stmt.getParent();
    if (par.getNodeType() == ASTNode.BLOCK) {
