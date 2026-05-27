@@ -189,7 +189,10 @@ private DianalysisHistory setupHistory()
          hq = new DianalysisVariableHistory(for_analysis,
                for_symptom,for_thread);
          break;
-         
+      case OTHER :
+         hq = new DianalysisOtherHistory(for_analysis,
+               for_symptom,for_thread); 
+         break;
       case NONE :
          break;
     }

@@ -58,6 +58,8 @@ String getInFile();
 int getInLine();
 int getInOffset();
 String getUserDescription();
+String getUserVariables();
+String getUserAssertion();
 
 void setSymptomType(DiadSymptomType typ);
 void setSymptomItem(String val);

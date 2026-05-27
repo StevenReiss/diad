@@ -92,9 +92,16 @@ DicontrolSymptom(Element xml)
 {
    symptom_type = IvyXml.getAttrEnum(xml,"TYPE",DiadSymptomType.NONE);
    symptom_item = IvyXml.getTextElement(xml,"ITEM");
+   user_description = IvyXml.getTextElement(xml,"USER");
    original_value = IvyXml.getTextElement(xml,"VALUE");
    original_expr = IvyXml.getTextElement(xml,"ORIGINAL");
+   if (original_expr == null) {
+      original_expr = IvyXml.getTextElement(xml,"VARIABLES");
+    }
    aux_expr = IvyXml.getTextElement(xml,"AUX");
+   if (aux_expr == null) {
+      aux_expr = IvyXml.getTextElement(xml,"ASSERTION");
+    }
    target_value = IvyXml.getTextElement(xml,"TARGET");
    value_operator = IvyXml.getAttrEnum(xml,"OPERATOR",DiadValueOperator.NONE);
    target_precision = IvyXml.getAttrDouble(xml,"PRECISION",0);
@@ -175,6 +182,26 @@ DicontrolSymptom(Element xml)
 @Override public void setPrecision(double p) 
 {
    target_precision = p; 
+}
+
+
+@Override public String getUserVariables()              
+{  
+   if (symptom_type == DiadSymptomType.OTHER) {
+      return original_expr;
+    }
+   
+   return null; 
+}
+
+
+@Override public String getUserAssertion()             
+{  
+   if (symptom_type == DiadSymptomType.OTHER) {
+      return aux_expr;
+    }
+   
+   return null; 
 }
 
 
