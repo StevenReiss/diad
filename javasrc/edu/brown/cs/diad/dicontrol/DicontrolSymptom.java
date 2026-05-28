@@ -88,6 +88,7 @@ DicontrolSymptom(DiadSymptomType type,String item)
    in_offset = -1;
 }
 
+
 DicontrolSymptom(Element xml)
 {
    symptom_type = IvyXml.getAttrEnum(xml,"TYPE",DiadSymptomType.NONE);
@@ -108,7 +109,6 @@ DicontrolSymptom(Element xml)
    in_file = IvyXml.getAttrString(xml,"INFILE");
    in_line = IvyXml.getAttrInt(xml,"INLINE",-1);
    in_offset = IvyXml.getAttrInt(xml,"INOFFSET",-1);
-   user_description = IvyXml.getAttrString(xml,"USER");
 }
 
 
@@ -416,8 +416,14 @@ private String getLocationText()
    
    if (symptom_item != null) xw.textElement("ITEM",symptom_item);
    if (original_value != null) xw.cdataElement("VALUE",original_value);
-   if (original_expr != null) xw.cdataElement("ORIGINAL",original_expr);
-   if (aux_expr != null) xw.cdataElement("AUX",aux_expr);
+   if (symptom_type == DiadSymptomType.OTHER) {
+      if (original_expr != null) xw.cdataElement("VARIABLES",original_expr);
+      if (aux_expr != null) xw.cdataElement("ASSERTION",aux_expr);
+    }
+   else {
+      if (original_expr != null) xw.cdataElement("ORIGINAL",original_expr);
+      if (aux_expr != null) xw.cdataElement("AUX",aux_expr);
+    }
    if (target_value != null) xw.cdataElement("TARGET",target_value);
    if (user_description != null) xw.cdataElement("USER",user_description);
    

@@ -201,6 +201,16 @@ void start(DiadCandidateState start)
    
    if (start != null) {
       candidate_state = start; 
+      if (start == DiadCandidateState.INITIAL) {
+         candidate_symptom = null;
+         location_set = null;
+         exec_locations = null;
+         start_frame = null;
+         if (base_execution != null) {
+            base_execution.clear();  
+            base_execution = null;
+          }
+       }
     }
    
    IvyLog.logD("DICONTROL","Start candidate " + candidate_id +

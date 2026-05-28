@@ -93,7 +93,7 @@ private Element getVarData()
          " " + current_value + " " +
          shouldbe_value);
    DiadStackFrame frm = getThread().getStack().getUserFrame();
-   String method = frm.getMethodName();
+   String method = frm.getClassName() + "." + frm.getMethodName();
    CommandArgs args = new CommandArgs("FILE",
          frm.getSourceFile().getAbsolutePath(),
          "START",-1,
