@@ -27,7 +27,6 @@ import java.util.StringTokenizer;
 import org.w3c.dom.Element;
 
 import edu.brown.cs.diad.dicore.DiadException;
-import edu.brown.cs.diad.dicore.DiadStackFrame;
 import edu.brown.cs.diad.dicore.DiadSymptom;
 import edu.brown.cs.diad.dicore.DiadThread;
 import edu.brown.cs.ivy.file.IvyLog;
@@ -75,21 +74,44 @@ DianalysisOtherHistory(DianalysisManager fac,DiadSymptom symp,DiadThread thrd)
       // extract vars from assertion
     }
    else {
+      StringBuffer buf = new StringBuffer();
       StringTokenizer tok = new StringTokenizer(vars,";");
       while (tok.hasMoreTokens()) {
          String var = tok.nextToken().trim();
-         DiadStackFrame frm = getThread().getStack().getUserFrame();
-         String method = frm.getClassName() + "." + frm.getMethodName();
-         CommandArgs args = new CommandArgs("FILE",
-               frm.getSourceFile().getAbsolutePath(),
-               "START",-1,
-               "LINE",frm.getLineNumber(),
-               "TOKEN",var,
-               "METHOD",method);
+         CommandArgs args = new CommandArgs("START",-1,
+               "TOKEN",var);
+         args = addCommandArgs(args);
          Element rslt = getAnalysis().sendFaitMessage("VARQUERY",args,null);
          IvyLog.logD("DIANALYSIS","VAR Data: " + IvyXml.convertXmlToString(rslt));
-         // still need to do flow query
+         for (Element vdata : IvyXml.children(rslt,"VALUESET")) {
+            args = new CommandArgs("QTYPE","VARIABLE",
+                  "TOKEN",var);
+            args = addCommandArgs(args);
+            Element reference = null;
+            for (Element refval : IvyXml.children(vdata,"REFVALUE")) {
+               Element loc = IvyXml.getChild(refval,"LOCATION");
+               Element ref = IvyXml.getChild(refval,"REFERENCE");
+               if (loc == null && ref == null) continue;
+               if (reference == null) reference = IvyXml.getChild(ref,"VALUE");
+               if (loc != null) {
+                  buf.append(IvyXml.convertXmlToString(loc));
+                  buf.append("\n");
+                }
+               if (reference != null) {
+                  buf.append(IvyXml.convertXmlToString(reference));
+                  buf.append("\n");
+                }
+             }   
+          }
        }
+      String qxml = buf.toString();
+      String sxml = getXmlForStack();
+      if (sxml != null) qxml += "\n" + sxml;
+      CommandArgs args1 = new CommandArgs("QTYPE","VARIABLE",
+            "CLEAN",false);
+      args1 = addCommandArgs(args1);
+      Element rslt = getAnalysis().sendFaitMessage("FLOWQUERY",args1,qxml); 
+      outputGraph(rslt,xw);
     }
    
    // if variables are set in symptom, add those to the output
