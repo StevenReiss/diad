@@ -372,6 +372,12 @@ private void addOperatorInfo(StringBuffer buf)
       case LEQ :
          buf.append(" should be less than or equal to ");
          break;
+      case CONTAINS :
+         buf.append(" should contain the string ");
+         break;
+      case NOTCONTAINS:  
+         buf.append(" should not contain the string ");
+         break;
     }
 }
 

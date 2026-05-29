@@ -94,10 +94,19 @@ DiadSymptom findSymptom()
 {
    DiadStackFrame frm = for_stack.getUserFrame();
    DisourceManager srcfac = diad_control.getSourceManager();
+   String exc = for_thread.getExceptionType(); 
+   
    ASTNode stmt = srcfac.getSourceNode(null,frm.getSourceFile(),
          -1,frm.getLineNumber(),false,true);
    
-   String exc = for_thread.getExceptionType(); 
+   if (stmt == null) {
+      IvyLog.logE("DICONTROL","No statement found for " + 
+            frm.getSourceFile() + " " + frm.getLineNumber());
+      
+      ASTNode n = srcfac.getSourceNode(null,frm.getSourceFile(),
+            -1,frm.getLineNumber(),false,false);
+      IvyLog.logI("DICONTROL","AST Node found: " + n);
+    }
    
    return findStatementSymptom(frm,stmt,exc,null,null);
 }

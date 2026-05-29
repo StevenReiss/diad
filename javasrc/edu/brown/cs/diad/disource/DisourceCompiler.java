@@ -169,8 +169,10 @@ ASTNode getNewSourceNode(String proj,File f,int line,int col)
 
 
 
-static ASTNode getStatementOfNode(ASTNode node)
+static ASTNode getStatementOfNode(ASTNode node0)
 {
+   ASTNode node = node0;
+   
    while (node != null) {
       if (node instanceof Statement) break;
       if (node instanceof FieldDeclaration) break;
