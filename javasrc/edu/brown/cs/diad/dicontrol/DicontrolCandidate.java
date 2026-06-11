@@ -38,6 +38,7 @@ import org.json.JSONObject;
 import org.w3c.dom.Element;
 
 import edu.brown.cs.diad.dianalysis.DianalysisManager;
+import edu.brown.cs.diad.dicore.DiadCandidate;
 import edu.brown.cs.diad.dicore.DiadCandidateCallback;
 import edu.brown.cs.diad.dicore.DiadRepair;
 import edu.brown.cs.diad.dicore.DiadExecution;
@@ -55,7 +56,7 @@ import edu.brown.cs.ivy.swing.SwingEventListenerList;
 import edu.brown.cs.ivy.xml.IvyXml;
 import edu.brown.cs.ivy.xml.IvyXmlWriter;
 
-class DicontrolCandidate implements DicontrolConstants
+class DicontrolCandidate implements DicontrolConstants, DiadCandidate 
 {
 
 
@@ -117,8 +118,6 @@ DicontrolCandidate(DicontrolMain ctrl,DiadThread thrd)
    file_mode = diad_control.getProperty("Diad.file.mode",
          DiadAnalysisFileMode.FAIT_FILES);
    
-  
-   
    IvyLog.logD("DICONTROL","Setup candidate " + candidate_id + " for " + thrd);
 }
 
@@ -130,10 +129,10 @@ DicontrolCandidate(DicontrolMain ctrl,DiadThread thrd)
 /*                                                                              */
 /********************************************************************************/
 
-DiadThread getThread()                          { return for_thread; }
-DiadCandidateState getState()                   { return candidate_state; }
-DiadSymptom getSymptom()                        { return candidate_symptom; }
-String getId()                                  { return candidate_id; }
+@Override public DiadThread getThread()                { return for_thread; }
+@Override public DiadCandidateState getState()         { return candidate_state; }
+@Override public DiadSymptom getSymptom()              { return candidate_symptom; } 
+@Override public String getId()                         { return candidate_id; } 
 
 void addCandidateListener(DiadCandidateCallback cb)
 {

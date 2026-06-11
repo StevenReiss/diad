@@ -34,6 +34,7 @@ import edu.brown.cs.diad.dicore.DiadStack;
 import edu.brown.cs.diad.dicore.DiadStackFrame;
 import edu.brown.cs.diad.dicore.DiadThread;
 import edu.brown.cs.diad.dicore.DiadConstants.DiadCommand;
+import edu.brown.cs.diad.digen.DigenManager;
 import edu.brown.cs.diad.disource.DisourceManager;
 import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.mint.MintConstants.CommandArgs;
@@ -108,6 +109,8 @@ static DicontrolCommand createCommand(DicontrolMain ctrl,Element xml)
          return new CommandStartFrame(ctrl,xml);
       case "VALIDATE" :
          return new CommandValidate(ctrl,xml);
+      case "CREATETEST" :
+         return new CommandCreateTest(ctrl,xml);
       default :
          IvyLog.logE("DICONTROL","Unknown command " + cmd + " " +
                IvyXml.convertXmlToString(xml));
@@ -959,6 +962,29 @@ private static class CommandValidate extends QueryCommand {
       getCandidate().validate(xw,for_repair);  
     }
 }
+
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Create Test Command                                                     */
+/*                                                                              */
+/********************************************************************************/
+
+private static class CommandCreateTest extends QueryCommand {
+   
+   CommandCreateTest(DicontrolMain ctrl,Element xml) {
+      super(ctrl,xml);
+    }
+   
+   @Override public void process(IvyXmlWriter xw) {
+      DigenManager dm = diad_control.getGenerateManager(); 
+      dm.createTestCase(getCandidate(),xw); 
+    }
+   
+}       // end of inner class CommandCreateTest
+
+
 
 /********************************************************************************/
 /*                                                                              */

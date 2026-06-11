@@ -55,6 +55,7 @@ import edu.brown.cs.diad.dicore.DiadRuntimeCallback;
 import edu.brown.cs.diad.dicore.DiadSymptom;
 import edu.brown.cs.diad.dicore.DiadThread;
 import edu.brown.cs.diad.diexecute.DiexecuteManager;
+import edu.brown.cs.diad.digen.DigenManager;
 import edu.brown.cs.diad.diruntime.DiruntimeManager;
 import edu.brown.cs.diad.disource.DisourceManager;
 import edu.brown.cs.diad.ditest.DitestFactory;
@@ -101,6 +102,7 @@ private DisourceManager source_factory;
 private DitestFactory test_factory;
 private DianalysisManager analysis_manager;
 private DiexecuteManager execute_manager;
+private DigenManager generate_manager;
 private Properties  diad_properties;
 private Map<String,String> key_map;
  
@@ -151,6 +153,7 @@ private DicontrolMain(String [] args)
    source_factory = null;
    analysis_manager = null;
    execute_manager = null;
+   generate_manager = null;
    
    key_map = new HashMap<>();
    key_map.put("LANGUAGE","java");
@@ -185,6 +188,8 @@ DitestFactory getTestManager()
    return test_factory;
 }
 
+DigenManager getGenerateManager()               { return generate_manager; }
+
 DitestFactory checkTestManager()
 {
    return test_factory;
@@ -205,6 +210,7 @@ public void bubblesReady()
    source_factory = new DisourceManager(this);
    analysis_manager = new DianalysisManager(this);  
    execute_manager = new DiexecuteManager(this);
+   generate_manager = new DigenManager(this);
 }
 
 
