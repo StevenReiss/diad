@@ -417,6 +417,12 @@ DiexecuteVarVal getValueAtTime(long when)
 }
  
 
+public DiadTraceVarVal getValueAt(DiadTrace trace,long when)
+{
+   return getValueAtTime(trace,when);
+}
+
+
 DiexecuteVarVal getValueAtTime(DiadTrace trace0,long when)
 {
    DiexecuteTrace trace = (DiexecuteTrace) trace0;

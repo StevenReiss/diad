@@ -41,6 +41,23 @@ public interface DigenConstants extends DiadConstants
 {
 
 
+/********************************************************************************/
+/*                                                                              */
+/*      Test case representation                                                */
+/*                                                                              */
+/********************************************************************************/
+
+enum DigenTestStatus {
+   FAIL,
+   NO_DUP,
+   SUCCESS
+}
+
+
+interface DigenTestCase {
+   DigenTestStatus getStatus();
+}
+
 
 
 }       // end of interface DigenConstants

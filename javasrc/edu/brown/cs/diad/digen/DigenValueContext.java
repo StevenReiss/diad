@@ -1,8 +1,8 @@
 /********************************************************************************/
 /*                                                                              */
-/*              Digenmanager.java                                               */
+/*              DigenValueContext.java                                          */
 /*                                                                              */
-/*      Factory/manager for generating test case for a stopping point           */
+/*      Context holding initializations for a test                              */
 /*                                                                              */
 /********************************************************************************/
 /*      Copyright 2025 Brown University -- Steven P. Reiss                    */
@@ -22,11 +22,12 @@
 
 package edu.brown.cs.diad.digen;
 
-import edu.brown.cs.diad.dicontrol.DicontrolMain;
-import edu.brown.cs.diad.dicore.DiadCandidate;
-import edu.brown.cs.ivy.xml.IvyXmlWriter;
+import java.util.HashMap;
+import java.util.Map;
 
-public class DigenManager implements DigenConstants
+import edu.brown.cs.diad.dicore.DiadTrace.DiadTraceVarVal;
+
+class DigenValueContext implements DigenConstants
 {
 
 
@@ -36,7 +37,8 @@ public class DigenManager implements DigenConstants
 /*                                                                              */
 /********************************************************************************/
 
-private DicontrolMain diad_main;
+private Map<String,String>      base_value_map;
+private Map<DiadTraceVarVal,DigenCodeFragment> computed_code;
 
 
 /********************************************************************************/
@@ -45,39 +47,42 @@ private DicontrolMain diad_main;
 /*                                                                              */
 /********************************************************************************/
 
-public DigenManager(DicontrolMain diad)
+DigenValueContext(DigenTestCreator tc)
 {
-   diad_main = diad;
+   base_value_map = new HashMap<>();
+   computed_code = new HashMap<>();
+}
+
+
+DigenValueContext(DigenValueContext base,DigenCodeFragment code)
+{
+   
 }
 
 
 /********************************************************************************/
 /*                                                                              */
-/*      Create a test case                                                      */
+/*      Keep track of what is computed                                          */
 /*                                                                              */
 /********************************************************************************/
 
-public void createTestCase(DiadCandidate cand,IvyXmlWriter xw)
+DigenCodeFragment getComputedValue(DiadTraceVarVal var)
 {
-   DigenTestCreator tc = new DigenTestCreator(this,cand,xw); 
-   tc.process();
-} 
+   return computed_code.get(var);
+}
 
 
-/********************************************************************************/
-/*                                                                              */
-/*      Access methods                                                          */
-/*                                                                              */
-/********************************************************************************/
-
-DicontrolMain getDiad()                 { return diad_main; }
+void noteComputed(DiadTraceVarVal var,DigenCodeFragment code)
+{
+   if (code == null) computed_code.remove(var);
+   else computed_code.put(var,code);
+}
 
 
-
-}       // end of class DigenManager
+}       // end of class DigenValueContext
 
 
 
 
-/* end of DigenFactory.java */
+/* end of DigenValueContext.java */
 

@@ -39,7 +39,7 @@ import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.mint.MintConstants.CommandArgs;
 import edu.brown.cs.ivy.xml.IvyXml;
 
-        public class DiexecuteManager implements DiexecuteConstants
+public class DiexecuteManager implements DiexecuteConstants
 {
 
 

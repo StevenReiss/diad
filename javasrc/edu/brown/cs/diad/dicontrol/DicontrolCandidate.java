@@ -133,6 +133,10 @@ DicontrolCandidate(DicontrolMain ctrl,DiadThread thrd)
 @Override public DiadCandidateState getState()         { return candidate_state; }
 @Override public DiadSymptom getSymptom()              { return candidate_symptom; } 
 @Override public String getId()                         { return candidate_id; } 
+@Override public Collection<DiadLocation> getLocations() 
+{
+   return location_set; 
+}
 
 void addCandidateListener(DiadCandidateCallback cb)
 {

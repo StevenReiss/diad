@@ -35,6 +35,8 @@
 
 package edu.brown.cs.diad.dicore;
 
+import java.util.Collection;
+
 import edu.brown.cs.diad.dicore.DiadConstants.DiadCandidateState;
 
 public interface DiadCandidate
@@ -44,8 +46,7 @@ String getId();
 DiadThread getThread();
 DiadCandidateState getState();
 DiadSymptom getSymptom();
-
-
+Collection<DiadLocation> getLocations();
 
 
 }       // end of interface DiadCandidate

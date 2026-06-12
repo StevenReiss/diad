@@ -177,7 +177,7 @@ public DisourceManager getSourceManager()       { return source_factory; }
 
 public DianalysisManager getAnalysisManager()   { return analysis_manager; }
 
-DiexecuteManager getExecuteManager()            { return execute_manager; }
+public DiexecuteManager getExecuteManager()     { return execute_manager; }
 
 DitestFactory getTestManager()
 {
