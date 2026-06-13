@@ -37,6 +37,9 @@ package edu.brown.cs.diad.dicore;
 
 import java.util.Collection;
 
+import org.w3c.dom.Element;
+
+import edu.brown.cs.diad.dicore.DiadConstants.DiadAskType;
 import edu.brown.cs.diad.dicore.DiadConstants.DiadCandidateState;
 
 public interface DiadCandidate
@@ -47,6 +50,7 @@ DiadThread getThread();
 DiadCandidateState getState();
 DiadSymptom getSymptom();
 Collection<DiadLocation> getLocations();
+Element askLimba(DiadAskType typ,String query,boolean nohistory);
 
 
 }       // end of interface DiadCandidate

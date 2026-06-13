@@ -22,13 +22,14 @@
 
 package edu.brown.cs.diad.digen;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 
+import org.w3c.dom.Element;
+
+import edu.brown.cs.diad.dicore.DiadCandidate;
 import edu.brown.cs.diad.dicore.DiadTrace;
 import edu.brown.cs.diad.dicore.DiadTrace.DiadTraceVarVal;
 import edu.brown.cs.ivy.file.IvyFormat;
@@ -36,6 +37,7 @@ import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.jcomp.JcompSymbol;
 import edu.brown.cs.ivy.jcomp.JcompType;
 import edu.brown.cs.ivy.jcomp.JcompTyper;
+import edu.brown.cs.ivy.xml.IvyXml;
 
 class DigenValueBuilder implements DigenConstants
 {
@@ -47,30 +49,15 @@ class DigenValueBuilder implements DigenConstants
 /*                                                                              */
 /********************************************************************************/
 
-private DiadTrace       for_trace;
+private DigenTestCreator test_creator;
 private long            start_time;
 private JcompTyper       jcomp_typer;
 private JcompType       collection_type;
 private JcompType       map_type;
 private DigenValueContext cur_context;
+private DiadTrace       for_trace;
 
-
-private List<DiadTraceVarVal>   work_queue;
 private Set<DiadTraceVarVal>    done_values;
-
-private static final double SCORE_PUBLIC = 4;
-private static final double SCORE_PACKAGE = 2;
-private static final double SCORE_CONSTRUCTOR = 6;
-private static final double SCORE_FACTORY = 8;
-private static final double SCORE_FIELD = 10;
-private static final double SCORE_ANY_FIELD = 5;
-private static final double SCORE_DEFAULT = 0;
-private static final double SCORE_VALUE = 1;
-private static final double SCORE_ANY_VALUE = 2;
-
-
-private static AtomicInteger variable_counter = new AtomicInteger(0);
-private static AtomicInteger string_counter = new AtomicInteger(0);
 
 
 
@@ -80,15 +67,16 @@ private static AtomicInteger string_counter = new AtomicInteger(0);
 /*                                                                              */
 /********************************************************************************/
 
-DigenValueBuilder(DigenManager mgr,DiadTrace trace,long start,JcompTyper typer)
+DigenValueBuilder(DigenTestCreator mgr,DiadTrace trace,long start,JcompTyper typer)
 {
+   test_creator = mgr;
    for_trace = trace;
    start_time = start;
    jcomp_typer = typer;
    collection_type = typer.findSystemType("java.util.Collection");
    map_type = typer.findSystemType("java.util.Map");
-   work_queue = new ArrayList<>();
    done_values = new HashSet<>();
+   cur_context = new DigenValueContext();
 }   
 
 
@@ -110,13 +98,13 @@ JcompTyper getJcompTyper()                      { return jcomp_typer; }
 
 DigenValueContext getInitializationContext()
 {
-// if (work_queue.isEmpty()) {
-//    boolean fg = setupInitializations();
-//    if (!fg) return null;
-//    work_queue.clear();
-//  }
-   
    return cur_context;
+}
+
+
+DigenCodeFragment getInitializations()
+{
+   return cur_context.getInitializations(); 
 }
 
 
@@ -126,25 +114,28 @@ DigenValueContext getInitializationContext()
 /*                                                                              */
 /********************************************************************************/
 
-void computeVarValue(DiadTraceVarVal var)
+DigenCodeFragment computeValue(DiadTraceVarVal var)
 {
-   if (var == null) return;
+   if (var == null) return null;
    IvyLog.logD("DIGEN","Work on variable " + var.getName());
-   DiadTraceVarVal val = var.getValueAt(for_trace,start_time);
-   computeValue(val);
-}
-
-
-void computeValue(DiadTraceVarVal val)
-{
-   if (val == null || done_values.contains(val)) return;
-   done_values.add(val);
+   DiadTraceVarVal val = var.getValueAt(for_trace,start_time); 
+   
+   DigenCodeFragment rslt = cur_context.getComputedValue(val);
+   if (rslt != null) return rslt;
+   
+   if (!done_values.add(val)) {
+      // need to handle recursion here
+      return null;
+    }
+   
    IvyLog.logD("DIGEN","Compute value " + val);
    
    DigenCodeFragment pcf = buildSimpleValue(val);
    if (pcf == null) {
-      queueValues(val);
+      pcf = buildComplexValue(val);
     }
+   
+   return pcf;
 }
 
 
@@ -154,39 +145,68 @@ void computeValue(DiadTraceVarVal val)
 /*                                                                              */
 /********************************************************************************/
 
-private void queueValues(DiadTraceVarVal val)
+private DigenCodeFragment buildComplexValue(DiadTraceVarVal val)
 {
    long qtime = start_time;
    String typ = val.getDataType(qtime);
    JcompType jtyp = jcomp_typer.findType(typ);
+   DigenCodeFragment rslt = null;
+   boolean issimple = false;
    
-   DiadTraceVarVal ftv =getFieldValue(val,"@toArray");
-   if (ftv != null) {
-      int ct = ftv.getArrayLength(start_time);
+   IvyLog.logD("DIGEN","Build complex value " + typ + " " + qtime + " " + val);
+   
+   if (jtyp.isArrayType()) {
+      int ct = val.getArrayLength(qtime);
+      JcompType btyp = jtyp.getBaseType();
+      rslt = new DigenCodeFragment("new " + btyp + "[" + ct + "] {\n");
       for (int i = 0; i < ct; ++i) {
-         DiadTraceVarVal etv = getIndexValue(ftv,i);
-         computeValue(etv);
-       } 
+         DiadTraceVarVal ftv1 = getIndexValue(val,i);
+         DigenCodeFragment cfg = computeValue(ftv1);
+         if (cfg == null) cfg = new DigenCodeFragment("null");
+         rslt.append(cfg + ",",true);
+       }
+      rslt.append("}");
+    }
+   else if (jtyp.isCompatibleWith(collection_type)) {
+      DiadTraceVarVal ftv1 = getFieldValue(val,"@toArray");
+      if (ftv1 != null) {
+         DigenCodeFragment cfg1 = new DigenCodeFragment("new " + jtyp.getName() + "()");
+         rslt = cur_context.saveComputedValue(val,cfg1);
+         issimple = true;
+         int ct = ftv1.getArrayLength(qtime);
+         for (int i = 0; i < ct; ++i) {
+            DiadTraceVarVal etv = getIndexValue(ftv1,i);
+            DigenCodeFragment cfg2 = computeValue(etv);
+            if (cfg2 != null) {
+               String init = rslt.getCode() + ".add(" + cfg2.getCode() + ");";
+               cur_context.addInitialization(init); 
+             }
+          } 
+       }
     }
    else if (jtyp.isCompatibleWith(map_type)) {
       DiadTraceVarVal ftv1 = getFieldValue(val,"@toArray");
       if (ftv1 != null) {
+         DigenCodeFragment cfg1 = new DigenCodeFragment("new " + jtyp.getName() + "()");
+         rslt = cur_context.saveComputedValue(val,cfg1);
          int ct = ftv1.getArrayLength(qtime);
          for (int i = 0; i < ct; ++i) {
             DiadTraceVarVal etv = getIndexValue(ftv1,i);
-            computeValue(etv);
+            DiadTraceVarVal key = getIndexValue(etv,0);
+            DigenCodeFragment keyf = computeValue(key);
+            DiadTraceVarVal val2 = getIndexValue(etv,1);
+            DigenCodeFragment valf = computeValue(val2);
+            if (valf != null) {
+               String init = rslt.getCode() + ".put(" + keyf.getCode() + "," +
+                  valf.getCode() + ");";
+               cur_context.addInitialization(init);
+             }
           } 
-       }
-    }
-   else if (jtyp.isArrayType()) {
-      int ct = val.getArrayLength(qtime);
-      for (int i = 0; i < ct; ++i) {
-         DiadTraceVarVal ftv1 = getIndexValue(val,i);
-         computeValue(ftv1);
        }
     }
    else {
       Map<String,JcompType> flds = jtyp.getFields(jcomp_typer);
+      Map<String,DigenCodeFragment> values = new HashMap<>();
       for (String fld : flds.keySet()) {
          String fnm = fld;
          int idx = fnm.lastIndexOf(".");
@@ -201,12 +221,20 @@ private void queueValues(DiadTraceVarVal val)
          
          DiadTraceVarVal ftv1 = getFieldValue(val,fld);
          IvyLog.logD("DIGEN","Work on field " + fld + " " + ftv1);
-         computeValue(ftv1);
+         DigenCodeFragment fldf = computeValue(ftv1);
+         if (fldf != null) values.put(fld,fldf);
+       }
+      DigenCodeFragment oval = askForCode(jtyp.getName(),values);
+      if (oval != null) {
+         cur_context.addInitialization(oval);
        }
     }
    
-   IvyLog.logD("DIGEN","Queue value " + val);
-   work_queue.add(val);
+   if (!issimple) {
+      rslt = cur_context.saveComputedValue(val,rslt);
+    }
+   
+   return rslt;
 }
 
 
@@ -220,6 +248,8 @@ private void queueValues(DiadTraceVarVal val)
 DiadTraceVarVal getIndexValue(DiadTraceVarVal val,int idx)
 {
    DiadTraceVarVal val1 = val.getChild(Integer.toString(idx),start_time);
+   if (val1 == null) return null;
+   
    return val1.getValueAt(for_trace,start_time);
 }
 
@@ -227,6 +257,7 @@ DiadTraceVarVal getIndexValue(DiadTraceVarVal val,int idx)
 DiadTraceVarVal getFieldValue(DiadTraceVarVal val,String fld)
 {
    DiadTraceVarVal val1 = val.getChild(fld,start_time);
+   if (val1 == null) return null;
    return val1.getValueAt(for_trace,start_time);
 }
 
@@ -243,7 +274,7 @@ DigenCodeFragment buildSimpleValue(DiadTraceVarVal var)
    
    long qtime = start_time;
    
-   IvyLog.logD("DIGEN","Build simple value: " + var);
+   IvyLog.logD("DIGEN","Build simple value: " + val);
    
    if (val.isNull(qtime)) return new DigenCodeFragment("null");
    
@@ -321,9 +352,12 @@ DigenCodeFragment buildPrimitiveValue(JcompType typ,DiadTraceVarVal var)
          else rslt = val + "F";
          break;
       case "double" :
-         if (val.contains(".") || val.contains("E") || val.contains("e")) 
+         if (val.contains(".") || val.contains("E") || val.contains("e")) {
             rslt = val;
-         else rslt = val + ".0";
+          }
+         else {
+            rslt = val + ".0";
+          }
          break;
       case "boolean" :
          if (val.equals("0") || val.equalsIgnoreCase("false")) rslt = "false";
@@ -394,7 +428,7 @@ private DigenCodeFragment buildSimpleArrayValue(DiadTraceVarVal rtv,JcompType ty
 
 /********************************************************************************/
 /*                                                                              */
-/*      Handle objects                                                          */
+/*      Handle simple objects                                                   */
 /*                                                                              */
 /********************************************************************************/
 
@@ -422,6 +456,31 @@ private DigenCodeFragment buildSimpleSystemObjectValue(DiadTraceVarVal rtv,
    return null;
 }
 
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Ask the LLM to build an object                                          */
+/*                                                                              */
+/********************************************************************************/
+
+private DigenCodeFragment askForCode(String typ,Map<String,DigenCodeFragment> vals)
+{
+   String prompt = "Without using any calls to private methods, construct ";
+   prompt += "an object of type " + typ + " with field values: \n";
+   for (Map.Entry<String,DigenCodeFragment> ent : vals.entrySet()) {
+      prompt += "  * " + ent.getKey() + " = " + ent.getValue().getCode() + ";\n";
+    }
+   prompt += "Return the resultant Java code fragment.";
+   
+   DiadCandidate dc = test_creator.getCandidate();
+   Element rslt = dc.askLimba(DiadAskType.BUILDER,prompt,true); 
+   
+   IvyLog.logD("DIGEN","ASK FOR CODE RETURNED " + " " +
+         IvyXml.convertXmlToString(rslt));
+   
+   return null;
+}
 
 
 }       // end of class DigenValueBuilder

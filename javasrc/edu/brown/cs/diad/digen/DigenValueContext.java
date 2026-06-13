@@ -24,6 +24,7 @@ package edu.brown.cs.diad.digen;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.brown.cs.diad.dicore.DiadTrace.DiadTraceVarVal;
 
@@ -37,8 +38,11 @@ class DigenValueContext implements DigenConstants
 /*                                                                              */
 /********************************************************************************/
 
-private Map<String,String>      base_value_map;
 private Map<DiadTraceVarVal,DigenCodeFragment> computed_code;
+private DigenCodeFragment initial_set;
+
+private static AtomicInteger var_counter = new AtomicInteger(0);
+
 
 
 /********************************************************************************/
@@ -47,16 +51,31 @@ private Map<DiadTraceVarVal,DigenCodeFragment> computed_code;
 /*                                                                              */
 /********************************************************************************/
 
-DigenValueContext(DigenTestCreator tc)
+DigenValueContext()
 {
-   base_value_map = new HashMap<>();
    computed_code = new HashMap<>();
+   initial_set = new DigenCodeFragment("");
 }
 
 
-DigenValueContext(DigenValueContext base,DigenCodeFragment code)
+
+/********************************************************************************/
+/*                                                                              */
+/*      Access methods                                                          */
+/*                                                                              */
+/********************************************************************************/
+
+DigenCodeFragment getInitializations()
 {
+   return initial_set;
+}
+
+
+String getNextVariable()
+{
+   String var = "var" + var_counter.incrementAndGet();
    
+   return var;
 }
 
 
@@ -69,6 +88,31 @@ DigenValueContext(DigenValueContext base,DigenCodeFragment code)
 DigenCodeFragment getComputedValue(DiadTraceVarVal var)
 {
    return computed_code.get(var);
+}
+
+
+DigenCodeFragment saveComputedValue(DiadTraceVarVal val,DigenCodeFragment code)
+{
+   String typ = val.getDataType(CURRENT);
+   String var = getNextVariable();
+   String decl = typ + " " + var + " = " + code + ";";
+   initial_set.append(decl,true);
+   DigenCodeFragment rslt = new DigenCodeFragment(var);
+   
+   noteComputed(val,rslt);
+   
+   return rslt;
+}
+
+
+void addInitialization(DigenCodeFragment code)
+{
+   initial_set.append(code,true);
+}
+
+void addInitialization(String code)
+{
+   initial_set.append(code,true);
 }
 
 

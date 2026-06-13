@@ -102,7 +102,7 @@ public DiadStackFrame getStartingFrame(DiadSymptom symp,DiadThread thrd,
 public DiadExecution createBaseExecution(DiadSymptom symp,DiadThread thrd,DiadStackFrame start)
 {
    DiexecuteBaseExecution fndr = new DiexecuteBaseExecution(this,
-         symp,thrd,start);
+         symp,thrd,start,false,true,false); 
    DiadTrace trc = fndr.createBaseExecution();
    if (trc == null) return null;
   

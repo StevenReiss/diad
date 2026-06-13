@@ -108,7 +108,9 @@ DigenCodeFragment append(DigenCodeFragment pcf,boolean line)
 DigenCodeFragment append(String addcode,boolean line)
 {
    String code = code_string;
-   if (line && !code.endsWith("\n")) code += "\n";
+   if (line && !code.endsWith("\n")) {
+      code += "\n";
+    }
    code += addcode;
    return new DigenCodeFragment(code);
 }

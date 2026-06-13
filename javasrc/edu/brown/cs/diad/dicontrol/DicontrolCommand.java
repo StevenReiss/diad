@@ -633,7 +633,7 @@ private static class CommandAskLimba extends QueryCommand {
          return;
        }
       
-      Element rslt = cand.askLimba(xw,ask_type,ask_text,
+      Element rslt = cand.askLimba(ask_type,ask_text,
             no_history); 
       String resp = IvyXml.getTextElement(rslt,"RESPONSE");
       if (resp != null) xw.cdataElement("RESPONSE",resp);

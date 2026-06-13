@@ -124,6 +124,7 @@ enum DiadAskType {
    BASEREPAIRS,
    USER,
    RETRY,
+   BUILDER,
    TEST1,
    TEST2,
    TEST3,

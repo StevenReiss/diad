@@ -170,9 +170,11 @@ private DigenTestCase buildCall(DiadTrace trace)
    
    JcompTyper typer = JcompAst.getTyper(md); 
    
-   DigenValueBuilder dvb = new DigenValueBuilder(digen_manager,trace,start,typer);
+   DigenValueBuilder dvb = new DigenValueBuilder(this,trace,start,typer);
    
-   DigenValueContext runctx = buildCall(trace,call,dvb);
+   DigenCodeFragment runctx = buildCall(trace,call,dvb);
+   
+   IvyLog.logD("DIGEN","Resultant call " + runctx);
    
    return null;
 }
@@ -205,7 +207,7 @@ private MethodDeclaration getMethod(DiadTraceCall rtc)
 /*                                                                              */
 /********************************************************************************/
 
-private DigenValueContext buildCall(DiadTrace trace,DiadTraceCall call,
+private DigenCodeFragment buildCall(DiadTrace trace,DiadTraceCall call,
       DigenValueBuilder builder) 
 {
    MethodDeclaration md = getMethod(call);
@@ -218,9 +220,9 @@ private DigenValueContext buildCall(DiadTrace trace,DiadTraceCall call,
    
    if (!js.isStatic()) {
       DiadTraceVarVal thisvar = call.getTraceVariables().get("this");
-      builder.computeVarValue(thisvar);
-      DiadTraceVarVal this0var = call.getTraceVariables().get("this$0");
-      builder.computeVarValue(this0var);
+      thisfrag = builder.computeValue(thisvar);
+//    DiadTraceVarVal this0var = call.getTraceVariables().get("this$0");
+//    builder.computeValue(this0var);
     }
    // handle this$0 if needed
    for (Object o : md.parameters()) {
@@ -240,9 +242,6 @@ private DigenValueContext buildCall(DiadTrace trace,DiadTraceCall call,
          builder.computeValue(glbls.get(vnm));
        }
     }
-   
-   DigenValueContext initctx = builder.getInitializationContext();
-   if (initctx == null) return null;
    
    if (!js.isStatic()) {
       DiadTraceVarVal thisvar = call.getTraceVariables().get("this");
@@ -281,10 +280,10 @@ private DigenValueContext buildCall(DiadTrace trace,DiadTraceCall call,
     }
    callcode += ");\n";
    
-   DigenCodeFragment callfrag = new DigenCodeFragment(callcode);
-   DigenValueContext runctx = new DigenValueContext(initctx,callfrag); 
+   DigenCodeFragment callfrag = builder.getInitializations();
+   callfrag.append(callcode,true);
    
-   return runctx;
+   return callfrag;
 }
 
 

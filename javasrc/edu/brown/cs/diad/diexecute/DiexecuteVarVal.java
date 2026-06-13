@@ -580,6 +580,11 @@ Object toJsonValue(DiadTrace trace,long t,Set<String> done)
 }
 
 
+@Override public String toString()
+{
+   return "VAR: " + getFullName();
+}
+
 
 }       // end of class DiexecuteVarVal
 

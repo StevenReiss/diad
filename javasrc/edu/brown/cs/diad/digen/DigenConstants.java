@@ -59,6 +59,8 @@ interface DigenTestCase {
 }
 
 
+long CURRENT = 1000000000L;
+
 
 }       // end of interface DigenConstants
 

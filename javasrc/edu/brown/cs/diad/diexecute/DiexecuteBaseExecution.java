@@ -92,6 +92,13 @@ private double          good_score;
 DiexecuteBaseExecution(DiexecuteManager mgr,DiadSymptom symp,DiadThread thrd,
       DiadStackFrame start)
 {
+   this(mgr,symp,thrd,start,false,false,false);
+}
+
+
+DiexecuteBaseExecution(DiexecuteManager mgr,DiadSymptom symp,DiadThread thrd,
+      DiadStackFrame start,boolean all,boolean toarray,boolean tostring)
+{
    exec_manager = mgr;
    for_symptom = symp;
    for_thread = thrd;
@@ -104,9 +111,9 @@ DiexecuteBaseExecution(DiexecuteManager mgr,DiadSymptom symp,DiadThread thrd,
    
    DicontrolMain ctrl = mgr.getDiadControl();
    
-   show_all = ctrl.getProperty("Diad.trace.show.all",false);
-   show_strings = ctrl.getProperty("Diad.trace.show.strings",false);
-   show_arrays = ctrl.getProperty("Diad.trace.show.arrays",false);
+   show_all = ctrl.getProperty("Diad.trace.show.all",all);
+   show_strings = ctrl.getProperty("Diad.trace.show.strings",tostring);
+   show_arrays = ctrl.getProperty("Diad.trace.show.arrays",toarray);
    max_checked_ok = ctrl.getProperty("Diad.max.checked.ok",MAX_CHECKED_OK);
    min_checked_ok = ctrl.getProperty("Diad.min.checked.ok",MIN_CHECKED_OK);
    max_seede_ok = ctrl.getProperty("Diad.max.seede.ok",MAX_SEEDE_OK); 
@@ -220,6 +227,14 @@ DiadTrace createBaseExecution()
    if (Thread.currentThread().isInterrupted()) return null;
    
    runBaseExecution(null);
+   if (base_execution == null) {
+      IvyLog.logD("DIEXECUTE","No base exectuion");
+      return null;
+    }
+   if (base_execution.getSeedeResult() == null) {
+      IvyLog.logD("DIEXECUTE","No seede result");
+      return null; 
+    }
    IvyLog.logI("DIEXECUTE","BASE EXECUTION STEPS " + 
          base_execution.getSeedeResult().getSymptomTime());
    if (base_execution.getSeedeResult().getSymptomTime() >= 0) {

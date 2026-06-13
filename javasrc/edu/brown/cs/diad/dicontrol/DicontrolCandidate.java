@@ -540,7 +540,7 @@ void validate(IvyXmlWriter xw,DiadRepair repair)
 /*                                                                              */
 /********************************************************************************/
 
-Element askLimba(IvyXmlWriter xw,DiadAskType typ,String query,boolean nohistory)
+public Element askLimba(DiadAskType typ,String query,boolean nohistory)
 {
    String tools = "PROJECT,DEBUG";
    switch (candidate_state) {
