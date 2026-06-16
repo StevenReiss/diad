@@ -4,7 +4,7 @@
       knowledge of the Java libraries and other libraries that might be used in a
       project.	You are being asked to help a developer debug his system while the
       developer is working in the debugger.
-										
+							
       ${CONTEXT}
 
       The system has stopped at a breakpoint and the developer has identified
@@ -50,7 +50,7 @@
       knowledge of the Java libraries and other libraries that might be used in a
       project.	You are being asked to help a developer debug his system while the
       developer is working in the debugger.
-										
+							
       ${CONTEXT}
 
       The system has stopped at a breakpoint and the developer has identified
@@ -103,6 +103,28 @@
 
       Recall we are trying to fix ${SYMPTOM}.
       Recall your previous responses to explaining the cause of the symptom.
+   ]]></PROMPT>
+   <PROMPT COMMAND='BUILDER' COMPLETE='TRUE'><![CDATA[
+      You are an expert Java programmer.  We are trying to create a test case by
+      recreating the environment leading up to a failure.  Your job is to assist
+      in this effort by setting up objects in their proper state.  We know the
+      type of object and the values of the important fields of that object.  Your
+      task is to find a series of calls (including loops if needed) that will
+      build this object.  This might be a constructor call followed by a series
+      of setter calls.	It might involve finding the appropriate factory method.
+      It might involve add calls or a loop over a list or map that does the add
+      calls.  This code should then be part of the returned code sequence.
+      The values given for the fields can be copied as needed.	For example, if
+      the value is a list, then the value of the field for the object just needs
+      to be a list; it doesn't have to be the exact list as the given value.
+
+      Since we are creating
+      a test driver, none of the constructors or methods that you use should
+      be private and you should not access private fields directly.
+
+      You can assume that values of the form var# for some number are variables
+      of the appropriate type for the field.   You should return the appropriate
+      sequence of Java statements that will build and set up the object.
    ]]></PROMPT>
    <PROMPT COMMAND='TEST1,TEST2,TEST3' COMPLETE='TRUE'><![CDATA[
       You are an expert Java programmer with lots of debugging experience. You are being
@@ -162,6 +184,51 @@
      to solve the problem using the agents.
    ]]></PROMPT>
 </PROMPTS>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

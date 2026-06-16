@@ -561,8 +561,15 @@ public Element askLimba(DiadAskType typ,String query,boolean nohistory)
       if (typ == DiadAskType.EXPLAIN) typ = DiadAskType.BASEEXPLAIN;
       if (typ == DiadAskType.REPAIRS) typ = DiadAskType.BASEREPAIRS;
     }
-   if (typ == DiadAskType.BASEEXPLAIN || typ == DiadAskType.BASEREPAIRS) { 
-      tools = "PROJECT,DEBUG"; 
+   
+   switch (typ) {
+      case BASEEXPLAIN :
+      case BASEREPAIRS :
+         tools = "PROJECT,DEBUG";
+         break;
+      case BUILDER :
+         tools = "PROJECT";
+         break;
     }
    
    Map<String,String> keymap = diad_control.getKeyMap();

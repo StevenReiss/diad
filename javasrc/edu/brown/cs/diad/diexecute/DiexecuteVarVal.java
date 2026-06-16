@@ -382,7 +382,7 @@ private void addAllTimeChanges(Element xml,Set<Long> rslt)
 {
    DiexecuteVarVal val = getValueAtTime(when);
    
-   return IvyXml.getAttrInt(val.var_element,"SiZE");
+   return IvyXml.getAttrInt(val.var_element,"SIZE");
 }
 
 
@@ -582,7 +582,7 @@ Object toJsonValue(DiadTrace trace,long t,Set<String> done)
 
 @Override public String toString()
 {
-   return "VAR: " + getFullName();
+   return "VAR: " + IvyXml.convertXmlToString(var_element);
 }
 
 

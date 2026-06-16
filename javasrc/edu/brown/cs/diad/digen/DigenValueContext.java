@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import edu.brown.cs.diad.dicore.DiadTrace.DiadTraceVarVal;
+import edu.brown.cs.ivy.file.IvyLog;
 
 class DigenValueContext implements DigenConstants
 {
@@ -96,7 +97,7 @@ DigenCodeFragment saveComputedValue(DiadTraceVarVal val,DigenCodeFragment code)
    String typ = val.getDataType(CURRENT);
    String var = getNextVariable();
    String decl = typ + " " + var + " = " + code + ";";
-   initial_set.append(decl,true);
+   initial_set = initial_set.append(decl,true);
    DigenCodeFragment rslt = new DigenCodeFragment(var);
    
    noteComputed(val,rslt);
@@ -112,12 +113,14 @@ void addInitialization(DigenCodeFragment code)
 
 void addInitialization(String code)
 {
-   initial_set.append(code,true);
+   initial_set = initial_set.append(code,true);
 }
 
 
 void noteComputed(DiadTraceVarVal var,DigenCodeFragment code)
 {
+   IvyLog.logD("DIGEN","Value for " + var.getName() + " = " + code);
+   
    if (code == null) computed_code.remove(var);
    else computed_code.put(var,code);
 }

@@ -174,7 +174,7 @@ private DigenTestCase buildCall(DiadTrace trace)
    
    DigenCodeFragment runctx = buildCall(trace,call,dvb);
    
-   IvyLog.logD("DIGEN","Resultant call " + runctx);
+   IvyLog.logD("DIGEN","Resultant test code " + runctx);
    
    return null;
 }
@@ -229,7 +229,9 @@ private DigenCodeFragment buildCall(DiadTrace trace,DiadTraceCall call,
       SingleVariableDeclaration svd = (SingleVariableDeclaration) o;
       String nm = svd.getName().getIdentifier();
       DiadTraceVarVal pvar = call.getTraceVariables().get(nm);
-      builder.computeValue(pvar);
+      DigenCodeFragment arg = builder.computeValue(pvar);
+      if (arg == null) return null;
+      args.add(arg);
     }
    Map<String,DiadTraceVarVal> glbls = trace.getGlobalVariables();
    for (String vnm : glbls.keySet()) {
@@ -244,29 +246,14 @@ private DigenCodeFragment buildCall(DiadTrace trace,DiadTraceCall call,
     }
    
    if (!js.isStatic()) {
-      DiadTraceVarVal thisvar = call.getTraceVariables().get("this");
-      thisfrag = builder.buildSimpleValue(thisvar);
       if (thisfrag == null) return null;
     }
    else {
       String cnm = js.getClassType().getName();
       thisfrag = new DigenCodeFragment(cnm);
     }
-   // handle this$0 if needed
-   for (Object o : md.parameters()) {
-      SingleVariableDeclaration svd = (SingleVariableDeclaration) o;
-      String nm = svd.getName().getIdentifier();
-      DiadTraceVarVal pvar = call.getTraceVariables().get(nm);
-      DigenCodeFragment arg = builder.buildSimpleValue(pvar);
-      if (arg == null) return null;
-      args.add(arg);
-    }
    
 // look for static fields accessed by code in the trace
-   
-// initctx = pvb.getInitializationContext();
-   
-// should clean up initcode by removing unneeded items
    
    String callcode = "";
    if (!js.getType().getBaseType().isVoidType()) {
@@ -281,7 +268,7 @@ private DigenCodeFragment buildCall(DiadTrace trace,DiadTraceCall call,
    callcode += ");\n";
    
    DigenCodeFragment callfrag = builder.getInitializations();
-   callfrag.append(callcode,true);
+   callfrag = callfrag.append(callcode,true);
    
    return callfrag;
 }

@@ -117,8 +117,9 @@ DigenCodeFragment getInitializations()
 DigenCodeFragment computeValue(DiadTraceVarVal var)
 {
    if (var == null) return null;
-   IvyLog.logD("DIGEN","Work on variable " + var.getName());
    DiadTraceVarVal val = var.getValueAt(for_trace,start_time); 
+   
+   IvyLog.logD("DIGEN","Work on variable " + var.getFullName());
    
    DigenCodeFragment rslt = cur_context.getComputedValue(val);
    if (rslt != null) return rslt;
@@ -163,9 +164,9 @@ private DigenCodeFragment buildComplexValue(DiadTraceVarVal val)
          DiadTraceVarVal ftv1 = getIndexValue(val,i);
          DigenCodeFragment cfg = computeValue(ftv1);
          if (cfg == null) cfg = new DigenCodeFragment("null");
-         rslt.append(cfg + ",",true);
+         rslt = rslt.append(cfg + ",",true);
        }
-      rslt.append("}");
+      rslt = rslt.append("}");
     }
    else if (jtyp.isCompatibleWith(collection_type)) {
       DiadTraceVarVal ftv1 = getFieldValue(val,"@toArray");
@@ -176,6 +177,7 @@ private DigenCodeFragment buildComplexValue(DiadTraceVarVal val)
          int ct = ftv1.getArrayLength(qtime);
          for (int i = 0; i < ct; ++i) {
             DiadTraceVarVal etv = getIndexValue(ftv1,i);
+            etv = etv.getValueAt(for_trace,start_time);
             DigenCodeFragment cfg2 = computeValue(etv);
             if (cfg2 != null) {
                String init = rslt.getCode() + ".add(" + cfg2.getCode() + ");";
@@ -224,10 +226,8 @@ private DigenCodeFragment buildComplexValue(DiadTraceVarVal val)
          DigenCodeFragment fldf = computeValue(ftv1);
          if (fldf != null) values.put(fld,fldf);
        }
-      DigenCodeFragment oval = askForCode(jtyp.getName(),values);
-      if (oval != null) {
-         cur_context.addInitialization(oval);
-       }
+      rslt = askForCode(jtyp.getName(),values);
+      issimple = true;
     }
    
    if (!issimple) {
@@ -466,18 +466,29 @@ private DigenCodeFragment buildSimpleSystemObjectValue(DiadTraceVarVal rtv,
 
 private DigenCodeFragment askForCode(String typ,Map<String,DigenCodeFragment> vals)
 {
-   String prompt = "Without using any calls to private methods, construct ";
-   prompt += "an object of type " + typ + " with field values: \n";
+   String var = cur_context.getNextVariable();
+   
+   String prompt = "In this case you should create an object of type " + typ;
+   prompt += " with field values: \n";
    for (Map.Entry<String,DigenCodeFragment> ent : vals.entrySet()) {
       prompt += "  * " + ent.getKey() + " = " + ent.getValue().getCode() + ";\n";
     }
-   prompt += "Return the resultant Java code fragment.";
+   prompt += "You should store the result in the variable " + var;
    
    DiadCandidate dc = test_creator.getCandidate();
    Element rslt = dc.askLimba(DiadAskType.BUILDER,prompt,true); 
    
    IvyLog.logD("DIGEN","ASK FOR CODE RETURNED " + " " +
          IvyXml.convertXmlToString(rslt));
+   
+   if (rslt != null) {
+      for (Element jelt : IvyXml.children(rslt,"JAVA")) {
+         String code = IvyXml.getText(jelt);
+         cur_context.addInitialization(code);
+       }
+      
+      return new DigenCodeFragment(var);
+    }
    
    return null;
 }
