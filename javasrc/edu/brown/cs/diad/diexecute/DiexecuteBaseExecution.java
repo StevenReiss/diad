@@ -71,8 +71,6 @@ private long            seede_total;
 private double          best_score;
 
 private boolean         show_all;
-private boolean         show_strings;
-private boolean         show_arrays;
 private int             max_checked_ok;
 private int             min_checked_ok;
 private long            max_seede_ok;
@@ -112,8 +110,6 @@ DiexecuteBaseExecution(DiexecuteManager mgr,DiadSymptom symp,DiadThread thrd,
    DicontrolMain ctrl = mgr.getDiadControl();
    
    show_all = ctrl.getProperty("Diad.trace.show.all",all);
-   show_strings = ctrl.getProperty("Diad.trace.show.strings",tostring);
-   show_arrays = ctrl.getProperty("Diad.trace.show.arrays",toarray);
    max_checked_ok = ctrl.getProperty("Diad.max.checked.ok",MAX_CHECKED_OK);
    min_checked_ok = ctrl.getProperty("Diad.min.checked.ok",MIN_CHECKED_OK);
    max_seede_ok = ctrl.getProperty("Diad.max.seede.ok",MAX_SEEDE_OK); 
@@ -197,8 +193,6 @@ DiadTrace createBaseExecution()
         "THREADID",for_thread.getThreadId(),
          "FRAMEID",start_frame.getFrameId());  
    if (show_all) args.put("SHOWALL",true);
-   if (show_strings) args.put("TOSTRING",true);
-   if (show_arrays) args.put("TOARRAY",true);
    
    Element rslt = diad.sendSeedeMessage(null,"BEGIN",args,null);
    if (!IvyXml.isElement(rslt,"RESULT")) {

@@ -72,7 +72,7 @@ interface DiadTraceVarVal {
    String getFullName();
    boolean hasChildren(long when);
    Collection<String> getChildNames(long when);
-   DiadTraceVarVal getChild(String name,long when);
+   DiadTraceVarVal getChild(String name,DiadTrace trace,long when);
    String getDataType(long when);
    List<Long> getTimeChanges();
    long getUpdateTime(long when);
@@ -82,9 +82,10 @@ interface DiadTraceVarVal {
    Long getNumericValue(long when);
    String getStringValue(long when);
    String getId(long when);
-   int getArrayLength(long when);
+   int getArrayLength(DiadTrace trace,long when);
    List<Integer> getLineNumbers();
    DiadTraceVarVal getValueAt(DiadTrace trace,long when);
+   List<DiadTraceVarVal> getElements(DiadTrace trace,long when);
 }
 
 

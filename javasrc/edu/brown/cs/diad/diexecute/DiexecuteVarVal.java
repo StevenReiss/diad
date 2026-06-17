@@ -25,9 +25,11 @@ package edu.brown.cs.diad.diexecute;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -138,7 +140,7 @@ DiexecuteVarVal(Element v,DiexecuteVarVal par)
    return rslt;
 }
 
-@Override public DiexecuteVarVal getChild(String name,long when)
+@Override public DiexecuteVarVal getChild(String name,DiadTrace trace,long when)
 {
    DiexecuteVarVal val = getValueAtTime(when);
    IvyLog.logD("DIEXECUTE","Get child " + name + " " + when + " " + 
@@ -172,29 +174,19 @@ DiexecuteVarVal(Element v,DiexecuteVarVal par)
    // Handle bad specifications from the LLM
    
    // First, check for [#] with a List or Vector
-   String typ = IvyXml.getAttrString(val.var_element,"TYPE");
    if (name.startsWith("[")) {
-      if (typ != null) {
-         String collfld = null;
-         switch (typ) {
-            case "java.util.Vector" :
-            case "java.util.Stack" :
-               collfld = "elementData";
-               break;
-          }
-         if (collfld != null) {
-            for (Element fe : IvyXml.children(val.var_element,"FIELD")) {
-               String fn = IvyXml.getAttrString(fe,"NAME");
-               int idx = fn.lastIndexOf(".");
-               if (idx > 0) fn = fn.substring(idx+1);
-               if (fn.equals(collfld)) {
-                  DiexecuteVarVal vv = new DiexecuteVarVal(fe,this);
-                  vv = vv.getValueAtTime(when);
-                  DiexecuteVarVal vv0 = vv.getChild(name,when);
-                  if (vv0 != null) return vv0;
-                }
-             }
-          }
+      int aidx = -1;
+      String sidx = name;
+      int lidx = name.lastIndexOf("]");
+      if (lidx < 0) sidx = name.substring(1);
+      else sidx = name.substring(1,lidx);
+      try {
+         aidx = Integer.parseInt(sidx);
+       }
+      catch (NumberFormatException e) { }
+      if (aidx >= 0) {
+         List<DiexecuteVarVal> elts = getElements(val,trace,when);
+         if (elts != null) return elts.get(aidx);
        }
     }
    
@@ -202,14 +194,14 @@ DiexecuteVarVal(Element v,DiexecuteVarVal par)
    for (Element fe : IvyXml.children(val.var_element)) {
       if (IvyXml.isElement(fe,"FIELD")) {
          DiexecuteVarVal vv1 = new DiexecuteVarVal(fe,this);
-         DiexecuteVarVal vv2 = vv1.getChild(name,when);
+         DiexecuteVarVal vv2 = vv1.getChild(name,trace,when);
          if (vv2 != null) return vv2;
        }
       else if (IvyXml.isElement(fe,"ELEMENT")) {
          int idx = IvyXml.getAttrInt(fe,"INDEX");
          if (idx == 0) {
             DiexecuteVarVal vv1 = new DiexecuteVarVal(fe,this);
-            DiexecuteVarVal vv2 = vv1.getChild(name,when);
+            DiexecuteVarVal vv2 = vv1.getChild(name,trace,when);
             if (vv2 != null) return vv2;
           }
        }
@@ -217,6 +209,137 @@ DiexecuteVarVal(Element v,DiexecuteVarVal par)
    
    return null;
 }
+
+
+@Override public List<DiadTraceVarVal> getElements(DiadTrace trace,long when)
+{
+   List<DiexecuteVarVal> rslt = getElements(this,trace,when);
+   
+   return new ArrayList<>(rslt);
+}
+
+
+private List<DiexecuteVarVal> getElements(DiexecuteVarVal val,DiadTrace trace,long when)
+{
+   String typ = IvyXml.getAttrString(val.var_element,"TYPE");
+   if (typ == null) return null;
+   
+   if (typ.endsWith("]")) {
+      return getArrayElements(val,trace,when,true); 
+    }
+   
+   boolean map = false;
+   if (typ.contains("Map") || typ.toLowerCase().contains("table")) map = true;
+   return getElements(val,trace,when,map);
+}
+
+
+
+private List<DiexecuteVarVal> getElements(DiexecuteVarVal varval,
+      DiadTrace trace,long when,boolean map)
+{
+   if (varval == null) return null;
+   
+   Map<String,DiexecuteVarVal> fields = new HashMap<>();
+   for (String nm : varval.getChildNames(when)) {
+      DiexecuteVarVal cvv = varval.getChild(nm,trace,when);
+      int idx = nm.lastIndexOf(".");
+      if (idx >= 0) nm = nm.substring(idx+1);
+      fields.put(nm,cvv);
+    }
+   DiexecuteVarVal arr = fields.get("eleementData");
+   if (arr == null) arr = fields.get("table");
+   if (arr != null) {
+      DiexecuteVarVal sz = fields.get("size");
+      if (sz == null) sz = fields.get("elementCount");
+      if (sz == null) sz = fields.get("count");
+      if (sz != null) {
+         return getArrayElements(arr,trace,when,map);
+       }
+    }
+   
+   DiexecuteVarVal head = fields.get("head");
+   if (head == null) head = fields.get("first");
+   if (head == null) head = fields.get("root");
+   if (head != null) {
+      return getListElements(head,trace,when,map);
+    }
+   
+   DiexecuteVarVal alt = fields.get("m");
+   if (alt == null) alt = fields.get("queue");
+   if (alt == null) alt = fields.get("map");
+   if (alt != null) {
+      return getElements(alt,trace,when,map);
+    }
+   
+   return null;
+}
+
+
+
+private List<DiexecuteVarVal> getArrayElements(DiexecuteVarVal arrval,
+      DiadTrace trace,long when,boolean map)
+{
+   List<DiexecuteVarVal> rslt = new ArrayList<>();
+   int arrsz = arrval.getArrayLength(trace,when);
+   for (int i = 0; i < arrsz; ++i) {
+      DiexecuteVarVal ev = arrval.getChild("[" + i + "]",trace,when);
+      if (ev.isNull(when)) continue;
+      addElements(ev,trace,when,map,rslt);
+    }
+   return rslt;
+}
+
+
+
+private List<DiexecuteVarVal> getListElements(DiexecuteVarVal listval,DiadTrace trace,
+      long when,boolean map)
+      {
+   List<DiexecuteVarVal> rslt = new ArrayList<>();
+   
+   addElements(listval,trace,when,map,rslt);
+   
+   return rslt;
+}
+
+
+
+private void addElements(DiexecuteVarVal vv,DiadTrace trace,long when,
+      boolean map,List<DiexecuteVarVal> rslt)
+{
+   if (vv == null || vv.isNull(when)) return;
+   String typ = vv.getDataType(when);
+   if (typ.endsWith("Node") || typ.endsWith("Entry")) {
+      if (map) {
+          rslt.add(vv);
+        }
+       else {
+          DiexecuteVarVal itm = vv.getChild("item",trace,when);
+          if (itm == null) itm = vv.getChild("key",trace,when);
+          if (itm != null) rslt.add(itm); 
+          else rslt.add(vv);
+        }
+      DiexecuteVarVal next = vv.getChild("next",trace,when);
+      if (next == null) next = vv.getChild("after",trace,when);
+      if (next != null) {
+         addElements(next,trace,when,map,rslt);
+       }
+      else {
+         DiexecuteVarVal left = vv.getChild("left",trace,when);
+         DiexecuteVarVal right = vv.getChild("right",trace,when);
+         if (left != null) {
+            addElements(left,trace,when,map,rslt);
+            addElements(right,trace,when,map,rslt);
+          }
+       }
+    }
+   else {
+      rslt.add(vv);
+    }
+}
+
+
+
 
 
 @Override public String getDataType(long when)
@@ -378,11 +501,18 @@ private void addAllTimeChanges(Element xml,Set<Long> rslt)
 }
 
 
-@Override public int getArrayLength(long when)
+@Override public int getArrayLength(DiadTrace trace,long when) 
 {
-   DiexecuteVarVal val = getValueAtTime(when);
+   DiexecuteVarVal val = getValueAtTime(trace,when);
    
-   return IvyXml.getAttrInt(val.var_element,"SIZE");
+   if (IvyXml.getAttrPresent(val.var_element,"SIZE")) {
+      return IvyXml.getAttrInt(val.var_element,"SIZE");
+    }
+   
+   List<DiexecuteVarVal> elts = getElements(val,trace,when);
+   if (elts ==  null) return -1;
+   
+   return elts.size();
 }
 
 

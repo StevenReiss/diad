@@ -97,7 +97,7 @@ DigenCodeFragment saveComputedValue(DiadTraceVarVal val,DigenCodeFragment code)
    String typ = val.getDataType(CURRENT);
    String var = getNextVariable();
    String decl = typ + " " + var + " = " + code + ";";
-   initial_set = initial_set.append(decl,true);
+   addInitialization(decl);
    DigenCodeFragment rslt = new DigenCodeFragment(var);
    
    noteComputed(val,rslt);
@@ -108,11 +108,13 @@ DigenCodeFragment saveComputedValue(DiadTraceVarVal val,DigenCodeFragment code)
 
 void addInitialization(DigenCodeFragment code)
 {
-   initial_set.append(code,true);
+   IvyLog.logD("DIGEN","Add code initialization " + code);
+   initial_set = initial_set.append(code,true);
 }
 
 void addInitialization(String code)
 {
+   IvyLog.logD("DIGEN","Add string initialization " + code);
    initial_set = initial_set.append(code,true);
 }
 

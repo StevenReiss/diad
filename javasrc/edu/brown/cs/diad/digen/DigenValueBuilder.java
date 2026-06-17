@@ -24,6 +24,7 @@ package edu.brown.cs.diad.digen;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -157,7 +158,7 @@ private DigenCodeFragment buildComplexValue(DiadTraceVarVal val)
    IvyLog.logD("DIGEN","Build complex value " + typ + " " + qtime + " " + val);
    
    if (jtyp.isArrayType()) {
-      int ct = val.getArrayLength(qtime);
+      int ct = val.getArrayLength(for_trace,qtime);
       JcompType btyp = jtyp.getBaseType();
       rslt = new DigenCodeFragment("new " + btyp + "[" + ct + "] {\n");
       for (int i = 0; i < ct; ++i) {
@@ -169,15 +170,13 @@ private DigenCodeFragment buildComplexValue(DiadTraceVarVal val)
       rslt = rslt.append("}");
     }
    else if (jtyp.isCompatibleWith(collection_type)) {
-      DiadTraceVarVal ftv1 = getFieldValue(val,"@toArray");
-      if (ftv1 != null) {
+      List<DiadTraceVarVal> elts = val.getElements(for_trace,start_time);
+      if (elts != null) {
          DigenCodeFragment cfg1 = new DigenCodeFragment("new " + jtyp.getName() + "()");
          rslt = cur_context.saveComputedValue(val,cfg1);
          issimple = true;
-         int ct = ftv1.getArrayLength(qtime);
-         for (int i = 0; i < ct; ++i) {
-            DiadTraceVarVal etv = getIndexValue(ftv1,i);
-            etv = etv.getValueAt(for_trace,start_time);
+         for (DiadTraceVarVal elt : elts) {
+            DiadTraceVarVal etv = elt.getValueAt(for_trace,start_time);
             DigenCodeFragment cfg2 = computeValue(etv);
             if (cfg2 != null) {
                String init = rslt.getCode() + ".add(" + cfg2.getCode() + ");";
@@ -187,16 +186,14 @@ private DigenCodeFragment buildComplexValue(DiadTraceVarVal val)
        }
     }
    else if (jtyp.isCompatibleWith(map_type)) {
-      DiadTraceVarVal ftv1 = getFieldValue(val,"@toArray");
-      if (ftv1 != null) {
+      List<DiadTraceVarVal> elts = val.getElements(for_trace,start_time);
+      if (elts != null) {
          DigenCodeFragment cfg1 = new DigenCodeFragment("new " + jtyp.getName() + "()");
          rslt = cur_context.saveComputedValue(val,cfg1);
-         int ct = ftv1.getArrayLength(qtime);
-         for (int i = 0; i < ct; ++i) {
-            DiadTraceVarVal etv = getIndexValue(ftv1,i);
-            DiadTraceVarVal key = getIndexValue(etv,0);
+         for (DiadTraceVarVal etv : elts) {
+            DiadTraceVarVal key = getFieldValue(etv,"key");
             DigenCodeFragment keyf = computeValue(key);
-            DiadTraceVarVal val2 = getIndexValue(etv,1);
+            DiadTraceVarVal val2 = getFieldValue(etv,"value");
             DigenCodeFragment valf = computeValue(val2);
             if (valf != null) {
                String init = rslt.getCode() + ".put(" + keyf.getCode() + "," +
@@ -247,7 +244,7 @@ private DigenCodeFragment buildComplexValue(DiadTraceVarVal val)
 
 DiadTraceVarVal getIndexValue(DiadTraceVarVal val,int idx)
 {
-   DiadTraceVarVal val1 = val.getChild(Integer.toString(idx),start_time);
+   DiadTraceVarVal val1 = val.getChild("[" + idx + "]",for_trace,start_time);
    if (val1 == null) return null;
    
    return val1.getValueAt(for_trace,start_time);
@@ -256,7 +253,7 @@ DiadTraceVarVal getIndexValue(DiadTraceVarVal val,int idx)
 
 DiadTraceVarVal getFieldValue(DiadTraceVarVal val,String fld)
 {
-   DiadTraceVarVal val1 = val.getChild(fld,start_time);
+   DiadTraceVarVal val1 = val.getChild(fld,for_trace,start_time);
    if (val1 == null) return null;
    return val1.getValueAt(for_trace,start_time);
 }
@@ -407,7 +404,7 @@ private DigenCodeFragment buildFileValue(DiadTraceVarVal var)
 
 private DigenCodeFragment buildSimpleArrayValue(DiadTraceVarVal rtv,JcompType typ)
 {
-   int sz = rtv.getArrayLength(start_time);
+   int sz = rtv.getArrayLength(for_trace,start_time);
    StringBuffer buf = new StringBuffer();
    buf.append("new " + typ.getBaseType() + "[" + sz + "]");
    if (sz > 0) {

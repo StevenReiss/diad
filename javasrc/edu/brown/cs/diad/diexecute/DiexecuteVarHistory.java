@@ -266,7 +266,7 @@ List<VarNode> findDependents(VarNode vnorig,Element dep,DiexecuteCall ctx,int ln
             case FIELD :
                IvyLog.logD("DIEXECUTE","FIELD " + vnm + " " + vty);
                for (DiexecuteVarVal compv : comps) {
-                  DiexecuteVarVal val1 = compv.getChild(vnm,when); 
+                  DiexecuteVarVal val1 = compv.getChild(vnm,exec_trace,when); 
                   if (val1 != null) {
                      val1 = val1.dereference(exec_trace);
                      bvs.add(val1);

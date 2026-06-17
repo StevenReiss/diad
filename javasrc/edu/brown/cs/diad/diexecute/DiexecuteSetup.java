@@ -429,7 +429,8 @@ private DiexecuteVarVal getValueAtTime(ASTNode n,long time)
       lval = getValueAtTime(lhs,time);
     }
    if (lval != null && js.isFieldSymbol()) {
-      rval = (DiexecuteVarVal) lval.getChild(js.getFullName(),time);
+      rval = (DiexecuteVarVal) lval.getChild(js.getFullName(),
+            active_call.getTrace(),time);
       rval = rval.dereference(active_call.getTrace());
     }
    

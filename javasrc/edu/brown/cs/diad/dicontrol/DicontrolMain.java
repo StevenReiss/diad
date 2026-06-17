@@ -402,6 +402,8 @@ String getQuery(String cmd)
 
 public Element sendBubblesMessage(String cmd,CommandArgs args,String xml)
 {
+   if (dicontrol_monitor == null) return null;
+   
    return dicontrol_monitor.sendBubblesMessage(cmd,args,xml); 
 }
 

@@ -4,7 +4,7 @@
       knowledge of the Java libraries and other libraries that might be used in a
       project.	You are being asked to help a developer debug his system while the
       developer is working in the debugger.
-							
+					
       ${CONTEXT}
 
       The system has stopped at a breakpoint and the developer has identified
@@ -50,7 +50,7 @@
       knowledge of the Java libraries and other libraries that might be used in a
       project.	You are being asked to help a developer debug his system while the
       developer is working in the debugger.
-							
+					
       ${CONTEXT}
 
       The system has stopped at a breakpoint and the developer has identified
@@ -123,8 +123,11 @@
       be private and you should not access private fields directly.
 
       You can assume that values of the form var# for some number are variables
-      of the appropriate type for the field.   You should return the appropriate
+      of the appropriate type for the field that have already been initialized.
+      You should return the appropriate
       sequence of Java statements that will build and set up the object.
+      If a field is initialized correctly in the constructor, you do not have
+      to call a setter for it.
    ]]></PROMPT>
    <PROMPT COMMAND='TEST1,TEST2,TEST3' COMPLETE='TRUE'><![CDATA[
       You are an expert Java programmer with lots of debugging experience. You are being

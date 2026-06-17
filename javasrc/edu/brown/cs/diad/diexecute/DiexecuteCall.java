@@ -227,7 +227,7 @@ DiexecuteVarVal getTraceVarValueFlex(String name,long when)
       DiexecuteVarVal v0 = getTraceVarValueFlex(pre,when);
       if (v0 == null) return null;
       v0 = v0.getValueAtTime(for_trace,when);
-      DiexecuteVarVal v1 = v0.getChild(sub,when);
+      DiexecuteVarVal v1 = v0.getChild(sub,for_trace,when);
       if (v1 != null) {
 	 v1 = v1.dereference(for_trace);
 	 return v1;
@@ -247,7 +247,7 @@ DiexecuteVarVal getTraceVarValueFlex(String name,long when)
    if (thisv != null) {
       thisv = thisv.getValueAtTime(for_trace,getStartTime()+1);
       if (thisv != null) {
-         DiexecuteVarVal var1 = thisv.getChild(name,when);
+         DiexecuteVarVal var1 = thisv.getChild(name,for_trace,when);
          if (var1 != null) return var1;
        }
     }

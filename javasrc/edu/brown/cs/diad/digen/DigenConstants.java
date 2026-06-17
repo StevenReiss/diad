@@ -47,17 +47,6 @@ public interface DigenConstants extends DiadConstants
 /*                                                                              */
 /********************************************************************************/
 
-enum DigenTestStatus {
-   FAIL,
-   NO_DUP,
-   SUCCESS
-}
-
-
-interface DigenTestCase {
-   DigenTestStatus getStatus();
-}
-
 
 long CURRENT = 1000000000L;
 

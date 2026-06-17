@@ -112,8 +112,8 @@ void process()
          xml_writer.field("STATUS","FAIL");
        }
       else {
-         xml_writer.field("STATUS",test.getStatus());
          xml_writer.begin("TESTCASE");
+         xml_writer.cdataElement("BODY",test.getTestBody()); 
          // output test case to xml_writer
          xml_writer.end("TESTCASE");
        }
@@ -176,7 +176,7 @@ private DigenTestCase buildCall(DiadTrace trace)
    
    IvyLog.logD("DIGEN","Resultant test code " + runctx);
    
-   return null;
+   return new DigenTestCase(runctx); 
 }
 
 
