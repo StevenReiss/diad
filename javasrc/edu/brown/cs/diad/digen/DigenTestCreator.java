@@ -238,11 +238,18 @@ private DigenCodeFragment buildCall(DiadTrace trace,DiadTraceCall call,
       int idx = vnm.lastIndexOf(".");
       if (idx < 0) continue;
       String cnm = vnm.substring(0,idx);
+      String fnm = vnm.substring(idx+1);
       JcompType jty = builder.getJcompTyper().findType(cnm);
       if (jty == null) continue;
-      if (jty.isCompiledType()) {
-         builder.computeValue(glbls.get(vnm));
-       }
+      if (!jty.isCompiledType()) continue;
+      JcompSymbol sym = jty.lookupField(builder.getJcompTyper(),fnm);
+      if (sym == null || sym.isPrivate() || sym.isFinal()) continue;
+      DigenCodeFragment val = builder.computeValue(glbls.get(vnm));
+      if (val == null) continue;
+      DigenCodeFragment asg = new DigenCodeFragment(vnm + " = ");
+      asg = asg.append(val,false);
+      asg = asg.append(";",false);
+      builder.getInitializationContext().addInitialization(asg);
     }
    
    if (!js.isStatic()) {
