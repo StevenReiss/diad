@@ -108,6 +108,8 @@ DigenCodeFragment getInitializations()
    return cur_context.getInitializations(); 
 }
 
+long getStartTime()                             { return start_time; }
+
 
 /********************************************************************************/
 /*                                                                              */
@@ -137,6 +139,10 @@ DigenCodeFragment computeValue(DiadTraceVarVal var)
       pcf = buildComplexValue(val);
     }
    
+   if (pcf == null && cur_context != null) {
+      cur_context.addInitialization("// Can't build value for " + var + "\n");
+    }
+  
    return pcf;
 }
 
@@ -479,11 +485,15 @@ private DigenCodeFragment askForCode(String typ,Map<String,DigenCodeFragment> va
          IvyXml.convertXmlToString(rslt));
    
    if (rslt != null) {
+      String code = null;
+      // use final result in the case where the LLM returns it multiple times
       for (Element jelt : IvyXml.children(rslt,"JAVA")) {
-         String code = IvyXml.getText(jelt);
+         code = IvyXml.getText(jelt);
+       }
+      if (code != null) {
          cur_context.addInitialization(code);
        }
-      
+
       return new DigenCodeFragment(var);
     }
    

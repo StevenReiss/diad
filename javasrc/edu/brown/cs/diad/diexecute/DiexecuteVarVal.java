@@ -171,6 +171,10 @@ DiexecuteVarVal(Element v,DiexecuteVarVal par)
        }
     }
    
+   if (name.startsWith("[") && IvyXml.getAttrBool(val.var_element,"ARRAY")) {
+      return null;
+    }
+   
    // Handle bad specifications from the LLM
    
    // First, check for [#] with a List or Vector
@@ -214,6 +218,8 @@ DiexecuteVarVal(Element v,DiexecuteVarVal par)
 @Override public List<DiadTraceVarVal> getElements(DiadTrace trace,long when)
 {
    List<DiexecuteVarVal> rslt = getElements(this,trace,when);
+   
+   if (rslt == null) return new ArrayList<>();
    
    return new ArrayList<>(rslt);
 }
@@ -284,7 +290,7 @@ private List<DiexecuteVarVal> getArrayElements(DiexecuteVarVal arrval,
    int arrsz = arrval.getArrayLength(trace,when);
    for (int i = 0; i < arrsz; ++i) {
       DiexecuteVarVal ev = arrval.getChild("[" + i + "]",trace,when);
-      if (ev.isNull(when)) continue;
+      if (ev == null || ev.isNull(when)) continue;
       addElements(ev,trace,when,map,rslt);
     }
    return rslt;
@@ -309,7 +315,7 @@ private void addElements(DiexecuteVarVal vv,DiadTrace trace,long when,
 {
    if (vv == null || vv.isNull(when)) return;
    String typ = vv.getDataType(when);
-   if (typ.endsWith("Node") || typ.endsWith("Entry")) {
+   if ((typ.endsWith("Node") || typ.endsWith("Entry")) && typ.startsWith("java")) {
       if (map) {
           rslt.add(vv);
         }
@@ -317,7 +323,6 @@ private void addElements(DiexecuteVarVal vv,DiadTrace trace,long when,
           DiexecuteVarVal itm = vv.getChild("item",trace,when);
           if (itm == null) itm = vv.getChild("key",trace,when);
           if (itm != null) rslt.add(itm); 
-          else rslt.add(vv);
         }
       DiexecuteVarVal next = vv.getChild("next",trace,when);
       if (next == null) next = vv.getChild("after",trace,when);
@@ -471,6 +476,9 @@ private void addAllTimeChanges(Element xml,Set<Long> rslt)
    DiexecuteVarVal val = getValueAtTime(when);
    
    if (IvyXml.getAttrBool(val.var_element,"NULL")) return null;
+   else if (IvyXml.getAttrPresent(val.var_element,"ENUM")) {
+      return IvyXml.getAttrString(val.var_element,"ENUM");
+    }
    else if (IvyXml.getAttrBool(val.var_element,"OBJECT")) {
       String cls = IvyXml.getAttrString(val.var_element,"CLASS");
       if (cls != null) return cls;

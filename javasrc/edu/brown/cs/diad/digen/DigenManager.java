@@ -57,9 +57,9 @@ public DigenManager(DicontrolMain diad)
 /*                                                                              */
 /********************************************************************************/
 
-public void createTestCase(DiadCandidate cand,IvyXmlWriter xw)
+public void createTestCase(DiadCandidate cand,int frame,IvyXmlWriter xw)
 {
-   DigenTestCreator tc = new DigenTestCreator(this,cand,xw); 
+   DigenTestCreator tc = new DigenTestCreator(this,cand,frame,xw);  
    tc.process();
 } 
 

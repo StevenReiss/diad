@@ -202,7 +202,6 @@ public void setupMessageServer(String mintid)
 {
    mint_id = mintid;
    dicontrol_monitor = new DicontrolMonitor(this,mint_id);
-  
 }
 
 public void bubblesReady()

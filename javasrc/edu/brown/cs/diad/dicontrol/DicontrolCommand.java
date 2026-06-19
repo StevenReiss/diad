@@ -973,13 +973,16 @@ private static class CommandValidate extends QueryCommand {
 
 private static class CommandCreateTest extends QueryCommand {
    
+   private int up_frame;
+   
    CommandCreateTest(DicontrolMain ctrl,Element xml) {
       super(ctrl,xml);
+      up_frame = IvyXml.getAttrInt(xml,"UPFRAME");
     }
    
    @Override public void process(IvyXmlWriter xw) {
       DigenManager dm = diad_control.getGenerateManager(); 
-      dm.createTestCase(getCandidate(),xw); 
+      dm.createTestCase(getCandidate(),up_frame,xw);  
     }
    
 }       // end of inner class CommandCreateTest

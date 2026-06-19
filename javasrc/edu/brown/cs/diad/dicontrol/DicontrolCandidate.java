@@ -702,6 +702,8 @@ private final class CandidateThread extends Thread {
             switch (candidate_state) {
                case INITIAL :
                   setState(DiadCandidateState.FINDING_SYMPTOM);
+                  anal = diad_control.getAnalysisManager();
+                  exec = diad_control.getExecuteManager();
                   break;
                case FINDING_SYMPTOM :  
                   findSymptom();
@@ -798,16 +800,7 @@ private final class CandidateThread extends Thread {
                   break;
                case NO_SYMPTOM_FOUND :
                case READY : 
-                  synchronized (this) {
-                     for ( ; ; ) {
-                        try {
-                           wait(10000);
-                         }
-                        catch (InterruptedException e) {
-                           break;
-                         }
-                      }
-                   }
+                  waitForInterrupt(); 
                   return;
                case DEAD :
                case INTERRUPTED : 
@@ -924,6 +917,20 @@ private final class CandidateThread extends Thread {
       if (base_execution != null) {
          base_execution.clear();  
          base_execution = null;
+       }
+    }
+   
+   
+   private void waitForInterrupt() {
+      synchronized (this) {
+         for ( ; ; ) {
+            try {
+               wait(10000);
+             }
+            catch (InterruptedException e) {
+               break;
+             }
+          }
        }
     }
    

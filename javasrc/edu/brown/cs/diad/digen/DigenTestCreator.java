@@ -59,6 +59,7 @@ class DigenTestCreator implements DigenConstants
 private DiadCandidate for_candidate;
 private DigenManager digen_manager;
 private IvyXmlWriter xml_writer;
+private int up_frame;
 
 
 /********************************************************************************/
@@ -67,11 +68,12 @@ private IvyXmlWriter xml_writer;
 /*                                                                              */
 /********************************************************************************/
 
-DigenTestCreator(DigenManager dm,DiadCandidate dc,IvyXmlWriter xw)
+DigenTestCreator(DigenManager dm,DiadCandidate dc,int frame,IvyXmlWriter xw)
 {
    digen_manager = dm;
    for_candidate = dc;
    xml_writer = xw;
+   up_frame = frame;
 }
 
 
@@ -131,7 +133,7 @@ DigenTestCase createTestCase()
 {
    // First find an appropriate starting frame
    DigenStartFinder fndr = new DigenStartFinder(this); 
-   DiadStackFrame frame = fndr.findStartingPoint(); 
+   DiadStackFrame frame = fndr.findStartingPoint(up_frame);  
    if (frame == null) return null;
    IvyLog.logD("DIGEN","Found starting frame " + frame.getMethodName());
    
@@ -233,25 +235,35 @@ private DigenCodeFragment buildCall(DiadTrace trace,DiadTraceCall call,
       if (arg == null) return null;
       args.add(arg);
     }
-   Map<String,DiadTraceVarVal> glbls = trace.getGlobalVariables();
-   for (String vnm : glbls.keySet()) {
-      int idx = vnm.lastIndexOf(".");
-      if (idx < 0) continue;
-      String cnm = vnm.substring(0,idx);
-      String fnm = vnm.substring(idx+1);
-      JcompType jty = builder.getJcompTyper().findType(cnm);
-      if (jty == null) continue;
-      if (!jty.isCompiledType()) continue;
-      JcompSymbol sym = jty.lookupField(builder.getJcompTyper(),fnm);
-      if (sym == null || sym.isPrivate() || sym.isFinal()) continue;
-      DigenCodeFragment val = builder.computeValue(glbls.get(vnm));
-      if (val == null) continue;
-      DigenCodeFragment asg = new DigenCodeFragment(vnm + " = ");
-      asg = asg.append(val,false);
-      asg = asg.append(";",false);
-      builder.getInitializationContext().addInitialization(asg);
+   if (!js.isStatic() || !js.getName().equals("main")) {
+      Map<String,DiadTraceVarVal> glbls = trace.getGlobalVariables();
+      for (String vnm : glbls.keySet()) {
+         int idx = vnm.lastIndexOf(".");
+         if (idx < 0) continue;
+         String cnm = vnm.substring(0,idx);
+         String fnm = vnm.substring(idx+1);
+         JcompType jty = builder.getJcompTyper().findType(cnm);
+         if (jty == null) continue;
+         if (!jty.isCompiledType()) continue;
+         JcompSymbol sym = jty.lookupField(builder.getJcompTyper(),fnm);
+         if (sym == null || sym.isFinal()) continue;
+         if (sym.isEnumSymbol()) continue;
+         if (sym.isPrivate()) {
+            // attempt to use LLM to set the static private field for sym
+            String cmmt = "// Can't set private symbol " + vnm + " = " +
+               glbls.get(vnm).getStringValue(builder.getStartTime()) + "\n";
+            builder.getInitializationContext().addInitialization(cmmt);
+            continue;
+          }
+         DigenCodeFragment val = builder.computeValue(glbls.get(vnm));
+         if (val == null) continue;
+         DigenCodeFragment asg = new DigenCodeFragment(vnm + " = ");
+         asg = asg.append(val,false);
+         asg = asg.append(";",false);
+         builder.getInitializationContext().addInitialization(asg);
+       }
     }
-   
+      
    if (!js.isStatic()) {
       if (thisfrag == null) return null;
     }
