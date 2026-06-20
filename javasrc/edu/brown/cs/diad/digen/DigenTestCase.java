@@ -22,7 +22,9 @@
 
 package edu.brown.cs.diad.digen;
 
-
+import edu.brown.cs.diad.dicore.DiadCandidate;
+import edu.brown.cs.diad.dicore.DiadStackFrame;
+import edu.brown.cs.ivy.xml.IvyXmlWriter;
 
 class DigenTestCase implements DigenConstants
 {
@@ -35,6 +37,10 @@ class DigenTestCase implements DigenConstants
 /********************************************************************************/
 
 private DigenCodeFragment test_code;
+private String test_name;
+private String test_assertion;
+private DiadStackFrame test_frame;
+private DiadStackFrame start_frame;
 
 
 
@@ -44,24 +50,39 @@ private DigenCodeFragment test_code;
 /*                                                                              */
 /********************************************************************************/
 
-DigenTestCase(DigenCodeFragment code)
+DigenTestCase(String name,DigenCodeFragment code,String assertion,
+      DiadCandidate cand,DiadStackFrame start)
 {
+   test_name = name;
    test_code = code;
+   test_assertion = assertion;
+   test_frame = cand.getThread().getStack().getUserFrame();
+   start_frame = start;
 }
 
 
+
 /********************************************************************************/
 /*                                                                              */
-/*      Access methods                                                          */
+/*      Output methods                                                          */
 /*                                                                              */
 /********************************************************************************/
 
-String getTestBody()
+void outputXml(IvyXmlWriter xw)
 {
-   return test_code.getCode();
+   xw.begin("TESTCASE");
+   xw.field("NAME",test_name);
+   xw.field("TESTCLASS",test_frame.getClassName());
+   xw.field("TESTMETHOD",test_frame.getMethodName());
+   xw.field("STARTCLASS",start_frame.getClassName());
+   xw.field("STARTMETHOD",start_frame.getMethodName());
+   xw.field("STARTFRAME",start_frame.getFrameId());
+   xw.cdataElement("BODY",test_code);
+   if (test_assertion != null) {
+      xw.cdataElement("ASSERTION",test_assertion);
+    }
+   xw.end("TESTCASE");       
 }
-
-
 
 
 }       // end of class DigenTestCase

@@ -23,7 +23,9 @@
 package edu.brown.cs.diad.digen;
 
 import java.io.File;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -56,10 +58,12 @@ class DigenTestCreator implements DigenConstants
 /*                                                                              */
 /********************************************************************************/
 
-private DiadCandidate for_candidate;
-private DigenManager digen_manager;
+private DiadCandidate   for_candidate;
+private DigenManager    digen_manager;
+private String          test_name;
+private String          test_assertion;
+private String          test_frame;
 private IvyXmlWriter xml_writer;
-private int up_frame;
 
 
 /********************************************************************************/
@@ -68,12 +72,24 @@ private int up_frame;
 /*                                                                              */
 /********************************************************************************/
 
-DigenTestCreator(DigenManager dm,DiadCandidate dc,int frame,IvyXmlWriter xw)
+DigenTestCreator(DigenManager dm,DiadCandidate dc,String name,
+      String frame,String assertion,IvyXmlWriter xw)
 {
    digen_manager = dm;
    for_candidate = dc;
+   test_name = name;
+   test_frame = frame;
+   test_assertion = assertion;
    xml_writer = xw;
-   up_frame = frame;
+   
+   if (test_name == null) {
+      DiadStackFrame f0 = for_candidate.getThread().getStack().getUserFrame();
+      String m = f0.getMethodName();
+      m = Character.toUpperCase(m.charAt(0)) + m.substring(1);
+      SimpleDateFormat sdf = new SimpleDateFormat("yyMMddHHmm");
+      String now = sdf.format(new Date());
+      test_name = "test" + m + now;
+    }
 }
 
 
@@ -114,10 +130,7 @@ void process()
          xml_writer.field("STATUS","FAIL");
        }
       else {
-         xml_writer.begin("TESTCASE");
-         xml_writer.cdataElement("BODY",test.getTestBody()); 
-         // output test case to xml_writer
-         xml_writer.end("TESTCASE");
+         test.outputXml(xml_writer); 
        }
     }
 }
@@ -133,7 +146,7 @@ DigenTestCase createTestCase()
 {
    // First find an appropriate starting frame
    DigenStartFinder fndr = new DigenStartFinder(this); 
-   DiadStackFrame frame = fndr.findStartingPoint(up_frame);  
+   DiadStackFrame frame = fndr.findStartingPoint(test_frame);   
    if (frame == null) return null;
    IvyLog.logD("DIGEN","Found starting frame " + frame.getMethodName());
    
@@ -147,7 +160,7 @@ DigenTestCase createTestCase()
    IvyLog.logD("DIGEN","Create execution " + trace.getSymptomTime());
    
    // Next get the starting information
-   DigenTestCase rslt = buildCall(trace);
+   DigenTestCase rslt = buildCall(trace,frame);
    
    return rslt;
 }
@@ -160,7 +173,7 @@ DigenTestCase createTestCase()
 /*                                                                              */
 /********************************************************************************/
 
-private DigenTestCase buildCall(DiadTrace trace)
+private DigenTestCase buildCall(DiadTrace trace,DiadStackFrame from)
 {
    DiadTraceCall call = trace.getRootContext();
    IvyLog.logD("DIGEN","Start building " + call.getMethod());
@@ -178,7 +191,8 @@ private DigenTestCase buildCall(DiadTrace trace)
    
    IvyLog.logD("DIGEN","Resultant test code " + runctx);
    
-   return new DigenTestCase(runctx); 
+   return new DigenTestCase(test_name,runctx,test_assertion,
+         getCandidate(),from);  
 }
 
 

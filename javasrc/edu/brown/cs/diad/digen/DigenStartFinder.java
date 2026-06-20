@@ -73,7 +73,7 @@ DigenStartFinder(DigenTestCreator dtc)
 /*                                                                              */
 /********************************************************************************/
 
-DiadStackFrame findStartingPoint(int useup)
+DiadStackFrame findStartingPoint(String fid)
 {
    DiadCandidate cand = test_creator.getCandidate(); 
    DicontrolMain ctrl = test_creator.getManager().getDiad();
@@ -88,8 +88,10 @@ DiadStackFrame findStartingPoint(int useup)
    DiadStack stk = thrd.getStack();
    DisourceManager srcm = ctrl.getSourceManager();
    
-   if (useup >= 0) {
-      return stk.getFrames().get(useup);
+   if (fid != null) {
+      for (DiadStackFrame frm : stk.getFrames()) {
+         if (frm.getFrameId().equals(fid)) return frm;
+       }
     }
    
    boolean fnd = true;          // set to false to only use frames above DIAD's

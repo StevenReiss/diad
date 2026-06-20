@@ -974,15 +974,21 @@ private static class CommandValidate extends QueryCommand {
 private static class CommandCreateTest extends QueryCommand {
    
    private int up_frame;
+   private String test_name;
+   private String test_assertion;
+   private String start_frame;
    
    CommandCreateTest(DicontrolMain ctrl,Element xml) {
       super(ctrl,xml);
       up_frame = IvyXml.getAttrInt(xml,"UPFRAME");
+      test_name = IvyXml.getAttrString(xml,"TESTNAME");
+      test_assertion = IvyXml.getTextElement(xml,"ASSERTION");
+      start_frame = IvyXml.getAttrString(xml,"STARTFRAME");
     }
    
    @Override public void process(IvyXmlWriter xw) {
       DigenManager dm = diad_control.getGenerateManager(); 
-      dm.createTestCase(getCandidate(),up_frame,xw);  
+      dm.createTestCase(getCandidate(),up_frame,start_frame,test_name,test_assertion,xw);   
     }
    
 }       // end of inner class CommandCreateTest
