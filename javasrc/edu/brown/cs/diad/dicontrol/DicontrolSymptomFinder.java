@@ -27,6 +27,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.AssertStatement;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.SwitchStatement;
@@ -118,6 +119,15 @@ private DicontrolSymptom findStatementSymptom(DiadStackFrame frm,ASTNode stmt,
    if (exc != null && frm != null && for_frame != null &&
          frm.getFrameId().equals(for_frame.getFrameId())) {
       if (ASSERTION_EXCEPTIONS.contains(exc)) { 
+         if (stmt.getNodeType() == ASTNode.ASSERT_STATEMENT) {
+            AssertStatement astmt = (AssertStatement) stmt;
+            if (astmt.getExpression().toString().equals("false")) {
+               return new DicontrolSymptom(DiadSymptomType.LOCATION);
+             }
+          }
+         else if (stmt.toString().contains("fail(")) {
+            return new DicontrolSymptom(DiadSymptomType.LOCATION);
+          }
          return new DicontrolSymptom(DiadSymptomType.ASSERTION);
        }
       else {

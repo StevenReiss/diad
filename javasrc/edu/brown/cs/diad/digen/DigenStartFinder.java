@@ -24,13 +24,16 @@ package edu.brown.cs.diad.digen;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 
 import edu.brown.cs.diad.dicontrol.DicontrolMain;
 import edu.brown.cs.diad.dicore.DiadCandidate;
+import edu.brown.cs.diad.dicore.DiadLocation;
 import edu.brown.cs.diad.dicore.DiadStack;
 import edu.brown.cs.diad.dicore.DiadStackFrame;
 import edu.brown.cs.diad.dicore.DiadThread;
@@ -134,6 +137,8 @@ DiadStackFrame findStartingPoint(String fid)
       score4 -= depth;
     }
    
+   handleFaultLocations(scores);
+   
    DiadStackFrame best = null;
    double bscore = 0;
    for (Map.Entry<DiadStackFrame,Double> ent : scores.entrySet()) {
@@ -202,6 +207,43 @@ private double getConstructorProtection(JcompTyper typer,JcompType jt)
    return score;
 }
 
+
+
+private void handleFaultLocations(Map<DiadStackFrame,Double> scores)
+{
+   DiadCandidate dc = test_creator.getCandidate();
+   DiadThread dt = dc.getThread();
+   
+   // first find all frames used by locations
+   Set<DiadStackFrame> frames = new HashSet<>();
+   for (DiadLocation dl : dc.getLocations()) {
+      String m = dl.getMethod();
+      for (DiadStackFrame nf : dt.getStack().getFrames()) {
+         String m1 = nf.getClassName() + "." + nf.getMethodName();
+         if (m1.equals(m)) {
+            frames.add(nf);
+            break;
+          }
+       }
+    }
+   
+   // next find frame that includes all locations possible
+   DiadStackFrame top = null;
+   for (DiadStackFrame sf : dt.getStack().getFrames()) {
+      if (frames.contains(sf)) top = sf;
+    }
+   if (top == null) return;
+   
+   // finally, decrement likelihood of frames that don't include locations
+   boolean fnd = false;
+   for (DiadStackFrame sf : dt.getStack().getFrames()) {
+      if (sf == top) fnd = true;
+      if (!fnd) {
+         Double dv = scores.get(sf);
+         if (dv != null) scores.put(sf,dv * 0.25);
+       }
+    }
+}
 
 
 

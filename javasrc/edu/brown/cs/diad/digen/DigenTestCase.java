@@ -74,9 +74,11 @@ void outputXml(IvyXmlWriter xw)
    xw.field("NAME",test_name);
    xw.field("TESTCLASS",test_frame.getClassName());
    xw.field("TESTMETHOD",test_frame.getMethodName());
+   xw.field("TESTFILE",test_frame.getSourceFile());
    xw.field("STARTCLASS",start_frame.getClassName());
    xw.field("STARTMETHOD",start_frame.getMethodName());
    xw.field("STARTFRAME",start_frame.getFrameId());
+   xw.field("STARTFILE",start_frame.getSourceFile());
    xw.cdataElement("BODY",test_code);
    if (test_assertion != null) {
       xw.cdataElement("ASSERTION",test_assertion);

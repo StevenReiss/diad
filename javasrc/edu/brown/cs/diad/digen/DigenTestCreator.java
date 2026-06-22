@@ -301,6 +301,9 @@ private DigenCodeFragment buildCall(DiadTrace trace,DiadTraceCall call,
    callcode += ");\n";
    
    DigenCodeFragment callfrag = builder.getInitializations();
+   
+   callfrag.append("\n// Test Call\n");
+   
    callfrag = callfrag.append(callcode,true);
    
    return callfrag;
