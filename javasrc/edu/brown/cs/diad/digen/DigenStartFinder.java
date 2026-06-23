@@ -216,13 +216,15 @@ private void handleFaultLocations(Map<DiadStackFrame,Double> scores)
    
    // first find all frames used by locations
    Set<DiadStackFrame> frames = new HashSet<>();
-   for (DiadLocation dl : dc.getLocations()) {
-      String m = dl.getMethod();
-      for (DiadStackFrame nf : dt.getStack().getFrames()) {
-         String m1 = nf.getClassName() + "." + nf.getMethodName();
-         if (m1.equals(m)) {
-            frames.add(nf);
-            break;
+   if (dc.getLocations() != null) {
+      for (DiadLocation dl : dc.getLocations()) {
+         String m = dl.getMethod();
+         for (DiadStackFrame nf : dt.getStack().getFrames()) {
+            String m1 = nf.getClassName() + "." + nf.getMethodName();
+            if (m1.equals(m)) {
+               frames.add(nf);
+               break;
+             }
           }
        }
     }

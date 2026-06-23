@@ -509,6 +509,14 @@ private void addAllTimeChanges(Element xml,Set<Long> rslt)
 }
 
 
+@Override public boolean isReference(long when)
+{
+   DiexecuteVarVal val = getValueAtTime(when); 
+   
+   return IvyXml.getAttrBool(val.var_element,"REF");
+}
+
+
 @Override public int getArrayLength(DiadTrace trace,long when) 
 {
    DiexecuteVarVal val = getValueAtTime(trace,when);

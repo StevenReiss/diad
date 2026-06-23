@@ -24,6 +24,7 @@ package edu.brown.cs.diad.digen;
 
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -32,6 +33,7 @@ import org.w3c.dom.Element;
 
 import edu.brown.cs.diad.dicore.DiadCandidate;
 import edu.brown.cs.diad.dicore.DiadTrace;
+import edu.brown.cs.diad.dicore.DiadTrace.DiadTraceCall;
 import edu.brown.cs.diad.dicore.DiadTrace.DiadTraceVarVal;
 import edu.brown.cs.ivy.file.IvyFormat;
 import edu.brown.cs.ivy.file.IvyLog;
@@ -60,6 +62,11 @@ private DiadTrace       for_trace;
 
 private Set<DiadTraceVarVal>    done_values;
 
+private Set<String> singleton_types;
+private Map<String,String> singleton_values;
+
+private static boolean build_all = false;
+
 
 
 /********************************************************************************/
@@ -78,6 +85,12 @@ DigenValueBuilder(DigenTestCreator mgr,DiadTrace trace,long start,JcompTyper typ
    map_type = typer.findSystemType("java.util.Map");
    done_values = new HashSet<>();
    cur_context = new DigenValueContext();
+   
+   singleton_values = new HashMap<>();
+   singleton_types = new HashSet<>();
+   
+   if (build_all) buildCommonObjects();
+   else buildSingletonObjects();
 }   
 
 
@@ -163,7 +176,8 @@ private DigenCodeFragment buildComplexValue(DiadTraceVarVal val)
    
    IvyLog.logD("DIGEN","Build complex value " + typ + " " + qtime + " " + val);
    
-   if (jtyp.isArrayType()) {
+   if (jtyp == null) return rslt;
+   else if (jtyp.isArrayType()) {
       int ct = val.getArrayLength(for_trace,qtime);
       JcompType btyp = jtyp.getBaseType();
       rslt = new DigenCodeFragment("new " + btyp + "[" + ct + "] {\n");
@@ -233,8 +247,12 @@ private DigenCodeFragment buildComplexValue(DiadTraceVarVal val)
       issimple = true;
     }
    
-   if (!issimple) {
+   String dt = val.getDataType(start_time);
+   if (!issimple || singleton_types.contains(dt)) {
       rslt = cur_context.saveComputedValue(val,rslt);
+      if (singleton_types.contains(dt)) {
+         singleton_values.put(dt,rslt.getCode());
+       }
     }
    
    return rslt;
@@ -460,6 +478,83 @@ private DigenCodeFragment buildSimpleSystemObjectValue(DiadTraceVarVal rtv,
 }
 
 
+/********************************************************************************/
+/*                                                                              */
+/*      Build common objects for later use                                      */
+/*                                                                              */
+/********************************************************************************/
+
+private void buildCommonObjects()
+{
+   Set<String> done = new HashSet<>();
+   buildCommonObjects(for_trace.getRootContext(),done);
+}
+
+
+private void buildCommonObjects(DiadTraceCall call,Set<String> done)
+{
+   for (DiadTraceVarVal val : call.getTraceVariables().values()) {
+      if (val.isNull(start_time) || !val.isReference(start_time)) continue;
+      String id = val.getId(start_time);
+      if (!done.add(id)) continue;
+      DiadTraceVarVal vv = val.getValueAt(for_trace,start_time);
+      if (vv == val) continue;
+      
+      JcompType typ = jcomp_typer.findType(vv.getDataType(start_time));
+      if (typ == null || !typ.isCompiledType()) continue;
+      IvyLog.logD("DIGEN","Computing common value " + vv);
+      computeValue(vv);
+    }
+   
+   for (DiadTraceCall sub : call.getInnerTraceCalls()) {
+      buildCommonObjects(sub,done);
+    }
+}
+
+
+private void buildSingletonObjects()
+{
+   Map<String,Set<DiadTraceVarVal>> common = new LinkedHashMap<>();
+   findCommonObjects(for_trace.getRootContext(),new HashSet<>(),common);
+   for (Map.Entry<String,Set<DiadTraceVarVal>> ent : common.entrySet()) {
+      Set<DiadTraceVarVal> elts = ent.getValue();
+      if (elts != null && elts.size() == 1) {
+         singleton_types.add(ent.getKey());
+//       for (DiadTraceVarVal elt : elts) {
+//          DigenCodeFragment val = computeValue(elt);
+//          singleton_values.put(ent.getKey(),val.getCode());
+//        }
+       }
+    }
+}
+
+
+private void findCommonObjects(DiadTraceCall call,Set<String> done,
+      Map<String,Set<DiadTraceVarVal>> rslt)
+{
+   for (DiadTraceVarVal val : call.getTraceVariables().values()) {
+      if (val.isNull(start_time) || !val.isReference(start_time)) continue;
+      String id = val.getId(start_time);
+      if (!done.add(id)) continue;
+      DiadTraceVarVal vv = val.getValueAt(for_trace,start_time);
+      if (vv == val) continue;
+      String typnm = vv.getDataType(start_time);
+      JcompType typ = jcomp_typer.findType(typnm);
+      if (typ == null || !typ.isCompiledType()) continue;
+      Set<DiadTraceVarVal> itms = rslt.get(typnm);
+      if (itms == null) {
+         itms = new HashSet<>();
+         rslt.put(typnm,itms);
+       }
+      itms.add(vv);
+    }
+   
+   for (DiadTraceCall sub : call.getInnerTraceCalls()) {
+      findCommonObjects(sub,done,rslt);
+    }
+}
+
+
 
 /********************************************************************************/
 /*                                                                              */
@@ -476,7 +571,15 @@ private DigenCodeFragment askForCode(String typ,Map<String,DigenCodeFragment> va
    for (Map.Entry<String,DigenCodeFragment> ent : vals.entrySet()) {
       prompt += "  * " + ent.getKey() + " = " + ent.getValue().getCode() + ";\n";
     }
-   prompt += "You should store the result in the variable " + var;
+   if (singleton_values != null && !singleton_values.isEmpty()) {
+      prompt += "\nThe following types have singleton values which you should ";
+      prompt += "use if needed in a call:\n";
+      for (Map.Entry<String,String> ent : singleton_values.entrySet()) {
+         prompt += "  * " + ent.getKey() + " : " + ent.getValue() + ";\n";
+       }
+      prompt += "Do not create other instances of these.\n";
+    }
+   prompt += "\nYou should store the result in the variable " + var + ".";
    
    DiadCandidate dc = test_creator.getCandidate();
    Element rslt = dc.askLimba(DiadAskType.BUILDER,prompt,true); 

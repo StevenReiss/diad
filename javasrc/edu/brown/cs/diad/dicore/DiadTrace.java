@@ -82,6 +82,7 @@ interface DiadTraceVarVal {
    Long getNumericValue(long when);
    String getStringValue(long when);
    String getId(long when);
+   boolean isReference(long when);
    int getArrayLength(DiadTrace trace,long when);
    List<Integer> getLineNumbers();
    DiadTraceVarVal getValueAt(DiadTrace trace,long when);
