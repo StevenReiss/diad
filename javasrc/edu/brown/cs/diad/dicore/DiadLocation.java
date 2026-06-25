@@ -47,6 +47,7 @@ import org.w3c.dom.Element;
 import edu.brown.cs.diad.dicontrol.DicontrolMain;
 import edu.brown.cs.ivy.file.IvyFile;
 import edu.brown.cs.ivy.file.IvyFormat;
+import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.jcomp.JcompAst;
 import edu.brown.cs.ivy.xml.IvyXml;
 import edu.brown.cs.ivy.xml.IvyXmlWriter;
@@ -89,7 +90,14 @@ private static CompilationUnit last_unit = null;
 public DiadLocation(DicontrolMain ctrl,Element xml,String proj)
 {
    String fnm = IvyXml.getAttrString(xml,"FILE");
-   for_file = new File(fnm);
+   if (fnm != null) {
+      for_file = new File(fnm);
+    }
+   else {
+      for_file = null;
+      IvyLog.logE("DICORE","Location without file given " + IvyXml.convertXmlToString(xml));
+    }
+   
    start_offset = IvyXml.getAttrInt(xml,"OFFSET");
    end_offset = IvyXml.getAttrInt(xml,"ENDOFFSET");
    if (end_offset < 0) {

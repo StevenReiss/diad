@@ -52,7 +52,6 @@ interface DiadCommand {
 enum DiadCandidateState {
    INITIAL,
    FINDING_SYMPTOM,
-   NO_SYMPTOM_FOUND,
    DOING_ANALYSIS,
    FINDING_STARTING_FRAME,
    FINDING_ALL_LOCATIONS,
@@ -61,6 +60,7 @@ enum DiadCandidateState {
    PREPARING_DATA,
    DOING_QUERY,
    READY,
+   NO_SYMPTOM_FOUND,
    NO_USER_STACK,
    NO_ANALYSIS,
    NO_START_FRAME,

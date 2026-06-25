@@ -223,8 +223,12 @@ void start(DiadCandidateState start)
       case INITIAL :
       case FINDING_SYMPTOM :
       case DOING_ANALYSIS :
-      case FINDING_EXECUTED_LOCATIONS :
+      case FINDING_STARTING_FRAME :
+      case FINDING_ALL_LOCATIONS :
       case DOING_BASE_EXECUTION :
+      case FINDING_EXECUTED_LOCATIONS :
+      case PREPARING_DATA :
+      case DOING_QUERY :
          candidate_processor = new CandidateThread();
          candidate_processor.start();
          break;
@@ -271,7 +275,10 @@ void setStartFrame(String frameid)
             break;
           }
        }
-      if (frame == null) return;
+      if (frame == null) {
+         IvyLog.logE("DICONTROL","Start frame not found: " + frameid);
+         return;
+       }
     }
    user_frame = frame;
    start(DiadCandidateState.FINDING_STARTING_FRAME);

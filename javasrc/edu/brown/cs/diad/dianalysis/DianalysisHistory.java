@@ -527,8 +527,15 @@ private class GraphNode {
    
    GraphNode(Element nelt) {
       Element locelt = IvyXml.getChild(nelt,"LOCATION");
-      node_location = new DiadLocation(for_analysis.getDiadControl(),
-            locelt,null); 
+      if (locelt == null) {
+         IvyLog.logE("DIANALYSIS","Graph node with no locatoin " + 
+               IvyXml.convertXmlToString(nelt));
+         node_location = null;
+       }
+      else {
+         node_location = new DiadLocation(for_analysis.getDiadControl(),
+               locelt,null); 
+       }
       node_reason = IvyXml.getAttrString(nelt,"REASON");
       node_priority = IvyXml.getAttrDouble(nelt,"PRIORITY",0.5);
       Element point = IvyXml.getChild(nelt,"POINT");
