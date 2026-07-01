@@ -81,12 +81,15 @@ DianalysisHistory(DianalysisManager fac,DiadSymptom symp,DiadThread thrd)
    for_analysis = fac;
    for_symptom = symp;
    for_thread = thrd;
-   if (thrd == null) {
-      for_frame = null;
+   for_frame = null;
+   
+   if (thrd != null) {
+      DiadStack stk = for_thread.getStack();
+      if (stk != null) {
+         for_frame = stk.getUserFrame();
+       }
     }
-   else {
-      for_frame = for_thread.getStack().getUserFrame();
-    }
+   
    node_context = null;
 }
 

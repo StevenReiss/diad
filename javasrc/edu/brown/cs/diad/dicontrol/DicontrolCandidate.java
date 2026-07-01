@@ -118,7 +118,8 @@ DicontrolCandidate(DicontrolMain ctrl,DiadThread thrd)
    file_mode = diad_control.getProperty("Diad.file.mode",
          DiadAnalysisFileMode.FAIT_FILES);
    
-   IvyLog.logD("DICONTROL","Setup candidate " + candidate_id + " for " + thrd);
+   IvyLog.logD("DICONTROL","Setup candidate " + candidate_id + 
+         " for " + thrd.getThreadId());
 }
 
 
@@ -293,7 +294,7 @@ void terminate()
 
 private synchronized void stopProcessing(boolean report)
 {
-   IvyLog.logD("DICONTROL","Stop processing " + getId() + 
+   IvyLog.logD("DICONTROL","Stop processing " + getId() + " " +
          candidate_processor);
    
    while (candidate_processor != null && candidate_processor.isAlive()) {

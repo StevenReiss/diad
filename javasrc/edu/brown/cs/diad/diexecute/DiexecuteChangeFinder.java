@@ -101,10 +101,15 @@ DiexecuteChangeFinder(DiexecuteManager mgr)
 DiexecuteChangeData process(DiadThread thrd,DiadSymptom rp,DiadStackFrame topframe)
 {
    DiexecuteChangeData rslt = new DiexecuteChangeData();
-   
    known_methods = new HashMap<>();
+   
    // need to find correct starting frame
-   DiadStackFrame bf0 = thrd.getStack().getTopFrame();
+   if (thrd == null) return rslt;
+   DiadStack stk = thrd.getStack();
+   if (stk == null) return rslt;
+   DiadStackFrame bf0 = stk.getTopFrame();
+   if (bf0 == null) return rslt;
+   
    ASTNode stmt0 = getNodeForFrame(bf0);
    
    DiexecuteChangeMap initvars = findProblemVariables(stmt0,rp,thrd);

@@ -310,7 +310,9 @@ void setThreadState(RunThreadState state)
 
 void setThreadState(RunThreadState state,RunThreadStateDetail detail)
 {
-   IvyLog.logD("DIRUNTIME","Set state of thread " + thread_name + " TO " + state);
+   IvyLog.logD("DIRUNTIME","Set state of thread " + thread_name +
+         " " + thread_id + " TO " + state);
+
    
    thread_state = state;
    thread_detail = detail;

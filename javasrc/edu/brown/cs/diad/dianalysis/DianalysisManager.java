@@ -41,6 +41,7 @@ import org.w3c.dom.Element;
 
 import edu.brown.cs.diad.dicontrol.DicontrolMain;
 import edu.brown.cs.diad.dicore.DiadLocation;
+import edu.brown.cs.diad.dicore.DiadStack;
 import edu.brown.cs.diad.dicore.DiadStackFrame;
 import edu.brown.cs.diad.dicore.DiadSymptom;
 import edu.brown.cs.diad.dicore.DiadThread;
@@ -386,8 +387,9 @@ private Set<File> findStackFiles(DiadThread thrd)
 {
    Set<File> rslt = new HashSet<>();
    if (thrd == null) return rslt;
-   
-   for (DiadStackFrame frm : thrd.getStack().getFrames()) {
+   DiadStack stk = thrd.getStack();
+   if (stk == null) return rslt;
+   for (DiadStackFrame frm : stk.getFrames()) {
       File f = frm.getSourceFile();
       if (frm.isUserFrame() && f.exists()) {
          f = IvyFile.getCanonical(f);

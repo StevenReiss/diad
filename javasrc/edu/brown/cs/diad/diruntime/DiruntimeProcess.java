@@ -92,9 +92,17 @@ DiruntimeProcess(DiruntimeManager mgr,Element xml)
 Iterable<DiruntimeThread> getThreads()
 {
    List<DiruntimeThread> rslt = new ArrayList<>();
+ 
    for (DiruntimeThread dt : thread_map.values()) {
-      if (dt.getProcess() == this && !dt.isInternal() && !dt.isTerminated()) {
+      if (process_id.equals(dt.getProcessId()) && 
+            !dt.isInternal() && !dt.isTerminated()) {
+         IvyLog.logD("DIRUNTIME","Use thread " + dt.getThreadId());
          rslt.add(dt);
+       }
+      else {
+         IvyLog.logD("DIRUNTIME","Skip thread " + dt.getThreadId() + " " +
+               process_id + " " + dt.getProcessId() + " " +
+               dt.isInternal() + " " + dt.isTerminated());
        }
     }
    
@@ -201,7 +209,8 @@ void updateThread(Element xml)
    DiruntimeThread thrd = thread_map.get(id);
    
    if (thrd == null) {
-      IvyLog.logD("DIRUNTIME","Creating new thread " + id);
+      IvyLog.logD("DIRUNTIME","Creating new thread " + id + " for " + process_id + " " +
+            hashCode() + " " + thread_map.size());
       thrd = new DiruntimeThread(this,thrdxml); 
       thrd.update(thrdxml);
       thread_map.put(id,thrd);

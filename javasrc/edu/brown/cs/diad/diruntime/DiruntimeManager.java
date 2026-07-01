@@ -99,6 +99,20 @@ DicontrolMain getDiadControl()
 
 /********************************************************************************/
 /*                                                                              */
+/*      Entry methods                                                           */
+/*                                                                              */
+/********************************************************************************/
+
+public DiadThread createStackTraceThread(String trace)
+{
+   DiruntimeStackTrace st = new DiruntimeStackTrace(trace);
+   return st.getThread(); 
+}
+
+
+
+/********************************************************************************/
+/*                                                                              */
 /*      Callback methods                                                        */
 /*                                                                              */
 /********************************************************************************/
@@ -243,6 +257,7 @@ private void handleTargetEvent(Element xml)
     }
    DiruntimeProcess proc = process_map.get(pid);
    if (proc == null) {
+      IvyLog.logD("DIRUNTIME","Process " + pid + " not found");
       // initial target event, target events after termination
       return;
     }

@@ -97,7 +97,7 @@ private DicontrolMonitor dicontrol_monitor;
 private File input_file;
 private boolean server_mode;
 private DiruntimeManager run_manager;
-private Map<DiadThread,DicontrolCandidate> debug_candidates;
+private Map<String,DicontrolCandidate> debug_candidates;
 private DisourceManager source_factory;
 private DitestFactory test_factory;
 private DianalysisManager analysis_manager;
@@ -628,7 +628,7 @@ private final class RuntimeCallback implements DiadRuntimeCallback {
    
 @Override public void threadStateChanged(DiadThread thrd)
 {
-   DicontrolCandidate dc = debug_candidates.get(thrd);
+   DicontrolCandidate dc = debug_candidates.get(thrd.getThreadId());
    IvyLog.logD("DICONTROL","Handle thread state change " + dc + " " +
          thrd.isRunning() + " " + thrd.isTerminated() + " " +
          thrd.isStopped() + " " + debug_candidates.size());
@@ -637,12 +637,14 @@ private final class RuntimeCallback implements DiadRuntimeCallback {
    if (dc != null) {
       if (thrd.isRunning() || thrd.isTerminated()) {
          dc.terminate(); 
-         debug_candidates.remove(thrd);
+         IvyLog.logD("DICONTROL","Removing candidate " + dc.getId());
+         debug_candidates.remove(thrd.getThreadId());
        }
     }
    else if (thrd.isStopped()) {
       dc = new DicontrolCandidate(DicontrolMain.this,thrd); 
-      debug_candidates.put(thrd,dc);
+      debug_candidates.put(thrd.getThreadId(),dc);
+      IvyLog.logD("DICONTROL","Candidate added " + debug_candidates.size());
       DicontrolUpdater upd = new DicontrolUpdater(DicontrolMain.this,dc);
       dc.addCandidateListener(upd);
       upd.stateChanged();

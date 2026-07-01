@@ -35,6 +35,7 @@ import edu.brown.cs.diad.dicore.DiadStackFrame;
 import edu.brown.cs.diad.dicore.DiadThread;
 import edu.brown.cs.diad.dicore.DiadConstants.DiadCommand;
 import edu.brown.cs.diad.digen.DigenManager;
+import edu.brown.cs.diad.diruntime.DiruntimeManager;
 import edu.brown.cs.diad.disource.DisourceManager;
 import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.mint.MintConstants.CommandArgs;
@@ -111,6 +112,8 @@ static DicontrolCommand createCommand(DicontrolMain ctrl,Element xml)
          return new CommandValidate(ctrl,xml);
       case "CREATETEST" :
          return new CommandCreateTest(ctrl,xml);
+      case "STACKDEBUG" :
+         return new CommandStackDebug(ctrl,xml);
       default :
          IvyLog.logE("DICONTROL","Unknown command " + cmd + " " +
                IvyXml.convertXmlToString(xml));
@@ -993,6 +996,34 @@ private static class CommandCreateTest extends QueryCommand {
    
 }       // end of inner class CommandCreateTest
 
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Debug from a stack tracd                                                */
+/*                                                                              */
+/********************************************************************************/
+
+private static class CommandStackDebug extends QueryCommand {
+
+   private String stack_trace;
+   
+   CommandStackDebug(DicontrolMain ctrl,Element xml) {
+      super(ctrl,xml);
+      stack_trace = IvyXml.getTextElement(xml,"STACK");
+    }
+   
+   @Override public void process(IvyXmlWriter xw) {
+      IvyLog.logD("DICONTROL","Perform stack debug\n" + stack_trace);
+      DiruntimeManager dm = diad_control.getRunManager();
+      DiadThread thrd = dm.createStackTraceThread(stack_trace);
+      // create candidate for thread
+      DicontrolCandidate cand = new DicontrolCandidate(diad_control,thrd);
+      xw.field("CANDIDATE", cand.getId());
+      cand.start(DiadCandidateState.INITIAL);
+    }
+   
+}       // end of inner class CommandCreateTest
 
 
 /********************************************************************************/
