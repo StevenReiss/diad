@@ -49,6 +49,7 @@ boolean isRunning();
 DiadStack getStack();
 boolean isInternal();
 String getExceptionType();
+String getExceptionDetail();
 String getProcessId();
 
 DiadValue evaluate(String expr);

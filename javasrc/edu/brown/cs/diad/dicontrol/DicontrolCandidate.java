@@ -775,6 +775,7 @@ private final class CandidateThread extends Thread {
                      setState(DiadCandidateState.FINDING_EXECUTED_LOCATIONS);
                    }
                   break;
+               case NO_BASE_EXECUTION :
                case FINDING_EXECUTED_LOCATIONS : 
                   if (base_execution == null) {
                      exec_locations = location_set;
@@ -816,7 +817,6 @@ private final class CandidateThread extends Thread {
                   return;
                case NO_USER_STACK :
                case NO_ANALYSIS :
-               case NO_BASE_EXECUTION :
 //             case NO_START_FRAME :
 //             case NO_FINAL_LOCATIONS :
                default :

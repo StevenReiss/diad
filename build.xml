@@ -14,6 +14,10 @@
    <property name='PRO' value='${setupfile}' />
    <property name='DIAD' value='${diadfile}' />
 
+   <property name='TDIR' value='/home/spr/daoadtest' />
+   <property name='EDIR' value='/home/spr/Eclipse' />
+
+
    <target name='setup' unless='setup.done'>
       <echo file='./build.properties' message="PRO=${setupfile}${line.separator}" />
       <echo file='./build.properties' message='DIAD=${diadfile}${line.separator}' append='true' />
@@ -83,78 +87,78 @@
    </target>
 
    <target name='testtc1-1' depends='compile'>
-      <delete file='/home/spr/Eclipse/tc1/limbatrans.html' />
+      <delete file='${EDIR}/tc1/limbatrans.html' />
       <java classname='edu.brown.cs.diad.dicontrol.DicontrolMain' fork='true'
-		output='/home/spr/diadtest/diad-tc1-1-err.out'>
+		output='${TDIR}/diad-tc1-1-err.out'>
 	 <classpath refid='spr.classpath' />
 	 <assertions><enable/></assertions>
 	 <arg value="-f" />
 	 <arg value="/pro/diad/testtc1-1.xml" />
 	 <arg value="-D" />
 	 <arg value="-L" />
-	 <arg value="/home/spr/diadtest/diad-tc1-1.out" />
+	 <arg value="${TDIR}/diad-tc1-1.out" />
       </java>
-      <copy file='/home/spr/Eclipse/tc1/limbatrans.html' tofile='/home/spr/diadtest/limba-tc1-1.html' />
+      <copy file='${EDIR}/tc1/limbatrans.html' tofile='${TDIR}/limba-tc1-1.html' />
    </target>
 
    <target name='testtc1-2' depends='compile'>
-      <delete file='/home/spr/Eclipse/tc1/limbatrans.html' />
+      <delete file='${EDIR}/tc1/limbatrans.html' />
       <java classname='edu.brown.cs.diad.dicontrol.DicontrolMain' fork='true'
-		output='/home/spr/diadtest/diad-tc1-2-err.out'>
+		output='${TDIR}/diad-tc1-2-err.out'>
 	 <classpath refid='spr.classpath' />
 	 <assertions><enable/></assertions>
 	 <arg value="-f" />
 	 <arg value="/pro/diad/testtc1-2.xml" />
 	 <arg value="-D" />
 	 <arg value="-L" />
-	 <arg value="/home/spr/diadtest/diad-tc1-2.out" />
+	 <arg value="${TDIR}/diad-tc1-2.out" />
       </java>
-      <copy file='/home/spr/Eclipse/tc1/limbatrans.html' tofile='/home/spr/diadtest/limba-tc1-2.html' />
+      <copy file='${EDIR}/tc1/limbatrans.html' tofile='${TDIR}/limba-tc1-2.html' />
    </target>
 
    <target name='testtc1-3' depends='compile'>
-      <delete file='/home/spr/Eclipse/tc1/limbatrans.html' />
+      <delete file='${EDIR}/tc1/limbatrans.html' />
       <java classname='edu.brown.cs.diad.dicontrol.DicontrolMain' fork='true'
-		output='/home/spr/diadtest/diad-tc1-3-err.out'>
+		output='${TDIR}/diad-tc1-3-err.out'>
 	 <classpath refid='spr.classpath' />
 	 <assertions><enable/></assertions>
 	 <arg value="-f" />
 	 <arg value="/pro/diad/testtc1-3.xml" />
 	 <arg value="-D" />
 	 <arg value="-L" />
-	 <arg value="/home/spr/diadtest/diad-tc1-3.out" />
+	 <arg value="${TDIR}/diad-tc1-3.out" />
       </java>
-      <copy file='/home/spr/Eclipse/tc1/limbatrans.html' tofile='/home/spr/diadtest/limba-tc1-3.html' />
+      <copy file='${EDIR}/tc1/limbatrans.html' tofile='${TDIR}/limba-tc1-3.html' />
    </target>
 
    <target name='testtc1-4' depends='compile'>
-      <delete file='/home/spr/Eclipse/tc1/limbatrans.html' />
+      <delete file='${EDIR}/tc1/limbatrans.html' />
       <java classname='edu.brown.cs.diad.dicontrol.DicontrolMain' fork='true'
-		output='/home/spr/diadtest/diad-tc1-4-err.out'>
+		output='${TDIR}/diad-tc1-4-err.out'>
 	 <classpath refid='spr.classpath' />
 	 <assertions><enable/></assertions>
 	 <arg value="-f" />
 	 <arg value="/pro/diad/testtc1-4.xml" />
 	 <arg value="-D" />
 	 <arg value="-L" />
-	 <arg value="/home/spr/diadtest/diad-tc1-4.out" />
+	 <arg value="${TDIR}/diad-tc1-4.out" />
       </java>
-      <copy file='/home/spr/Eclipse/tc1/limbatrans.html' tofile='/home/spr/diadtest/limba-tc1-4.html' />
+      <copy file='${EDIR}/tc1/limbatrans.html' tofile='${TDIR}/limba-tc1-4.html' />
    </target>
 
    <target name='testnano' depends='compile'>
-      <delete file='/home/spr/Eclipse/nanoxml/limbatrans.html' />
+      <delete file='${EDIR}/nanoxml/limbatrans.html' />
       <java classname='edu.brown.cs.diad.dicontrol.DicontrolMain' fork='true'
-		output='/home/spr/diadtest/diad-nanoxml-err.out'>
+		output='${TDIR}/diad-nanoxml-err.out'>
 	 <classpath refid='spr.classpath' />
 	 <assertions><enable/></assertions>
 	 <arg value="-f" />
 	 <arg value="/pro/diad/testnano.xml" />
 	 <arg value="-D" />
 	 <arg value="-L" />
-	 <arg value="/home/spr/diadtest/diad-nanoxml.out" />
+	 <arg value="${TDIR}/diad-nanoxml.out" />
       </java>
-      <copy file='/home/spr/Eclipse/nanoxml/limbatrans.html' tofile='/home/spr/diadtest/limba-nanoxml.html' />
+      <copy file='${EDIR}/nanoxml/limbatrans.html' tofile='${TDIR}/limba-nanoxml.html' />
    </target>
 
    <target name='testtc1' depends='testtc1-1,testtc1-2,testtc1-3,testtc1-4' />

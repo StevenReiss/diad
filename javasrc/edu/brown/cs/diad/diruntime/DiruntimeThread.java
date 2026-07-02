@@ -84,6 +84,7 @@ private RunThreadType thread_type;
 private RunThreadState thread_state;
 private RunThreadStateDetail thread_detail; 
 private String exception_type;
+private String exception_detail;
 private int num_frames;
 private DiruntimeStack call_stack;
 
@@ -149,6 +150,8 @@ DiruntimeThread(DiruntimeProcess proc,Element xml)
    thread_detail = RunThreadStateDetail.NONE;
    thread_type = RunThreadType.UNKNOWN;
    call_stack = null;
+   exception_type = null;
+   exception_detail = null;
 }
 
 
@@ -195,6 +198,7 @@ void update(Element xml)
     }
    
    exception_type = null;
+   exception_detail = null;
 }
 
 
@@ -237,6 +241,11 @@ RunThreadStateDetail getThreadStateDetail()
 @Override public String getExceptionType() 
 {
    return exception_type;
+}
+
+@Override public String getExceptionDetail() 
+{
+   return exception_detail;
 }
 
 boolean hasStack()
@@ -326,8 +335,9 @@ void setThreadState(RunThreadState state,RunThreadStateDetail detail)
 }
 
 
-void setException(String exc) { 
+void setException(String exc,String detail) { 
    exception_type = exc;
+   exception_detail = detail;
 }
 
 DiruntimeType findType(String typ)

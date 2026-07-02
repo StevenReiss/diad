@@ -531,8 +531,15 @@ private class GraphNode {
    GraphNode(Element nelt) {
       Element locelt = IvyXml.getChild(nelt,"LOCATION");
       if (locelt == null) {
-         IvyLog.logE("DIANALYSIS","Graph node with no locatoin " + 
+         String file = IvyXml.getAttrString(nelt,"FILE");
+         if (file == null) {
+            IvyLog.logE("DIANALYSIS","Graph node with no location " + 
                IvyXml.convertXmlToString(nelt));
+          }
+         else {
+            IvyLog.logI("DIANALYSIS","File " + file + 
+                  " is binary for analysis");
+          }
          node_location = null;
        }
       else {

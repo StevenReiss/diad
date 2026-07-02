@@ -96,6 +96,7 @@ DiadSymptom findSymptom()
    DiadStackFrame frm = for_stack.getUserFrame();
    DisourceManager srcfac = diad_control.getSourceManager();
    String exc = for_thread.getExceptionType(); 
+   String excmsg = for_thread.getExceptionDetail();
    
    ASTNode stmt = srcfac.getSourceNode(null,frm.getSourceFile(),
          -1,frm.getLineNumber(),false,true);
@@ -109,12 +110,12 @@ DiadSymptom findSymptom()
       IvyLog.logI("DICONTROL","AST Node found: " + n);
     }
    
-   return findStatementSymptom(frm,stmt,exc,null,null);
+   return findStatementSymptom(frm,stmt,exc,excmsg,null,null);
 }
 
 
 private DicontrolSymptom findStatementSymptom(DiadStackFrame frm,ASTNode stmt,
-      String exc,String msg,String libcall)
+      String exc,String detail,String msg,String libcall)
 {
    if (exc != null && frm != null && for_frame != null &&
          frm.getFrameId().equals(for_frame.getFrameId())) {
@@ -128,7 +129,9 @@ private DicontrolSymptom findStatementSymptom(DiadStackFrame frm,ASTNode stmt,
          else if (stmt.toString().contains("fail(")) {
             return new DicontrolSymptom(DiadSymptomType.LOCATION);
           }
-         return new DicontrolSymptom(DiadSymptomType.ASSERTION);
+         DicontrolSymptom symp = new DicontrolSymptom(DiadSymptomType.ASSERTION);
+         if (detail != null) symp.setAuxExpression(detail);
+         return symp;
        }
       else {
          DicontrolSymptom symp = new DicontrolSymptom(DiadSymptomType.EXCEPTION,exc);
@@ -274,7 +277,7 @@ private DicontrolSymptom getExceptionSymptom(String excvar)
                libcall);
          if (stmt !=  null) {
             DicontrolSymptom symp = findStatementSymptom(null,stmt,
-                  exc,msg,libcall);
+                  exc,msg,msg,libcall);
             if (symp != null) return symp;
           }
        }

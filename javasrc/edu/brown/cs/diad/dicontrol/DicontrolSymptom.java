@@ -291,8 +291,13 @@ private String getAssertionText()
       buf.append(target_value);
       return buf.toString();
     }
+   else if (aux_expr != null) {
+      return "an assertion failed because " + aux_expr;
+    }
+   
    IvyLog.logE("DICONTROL","Bad assertion check " + original_value + " " + 
          target_value);
+   
    return "assertion failed";
 }
 
