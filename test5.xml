@@ -1,0 +1,54 @@
+<DIAD DO='PING' />
+<DIAD DO='PARAMETER'>
+   <SET KEY='FILEMODE' VALUE='FAIT_FILES' />
+   <SET KEY='SEEDE_STEPS' VALUE='1000000' />
+   <SET KEY='SEEDE_DEPTH'>100</SET>
+   <SET KEY='AUTO_QUERY'>false</SET>
+   <SET KEY='Diad.seede.debug'>true</SET>
+   <SET KEY='Diad.seede.trace'>true</SET>
+   <SET KEY='Diad.fait.debug'>true</SET>
+   <SET KEY='Diad.fait.trace'>true</SET>
+</DIAD>
+
+<DIAD DO='SETUPBUBBLES' MINT='BUBBLES_spr_nanoxml' WORKSPACE='nanoxml' />
+
+<DIAD DO='SETMODEL' MODEL='qwen3-coder:latest' />
+
+
+<DIAD DO='STACKDEBUG'>
+<STACK><![CDATA[
+org.junit.ComparisonFailure: expected:<ns:[]Bar> but was:<ns:[:]Bar>
+at org.junit.Assert.assertEquals(Assert.java:115)
+at org.junit.Assert.assertEquals(Assert.java:144)
+at net.n3.nanoxml.ParserTest.testParsing16(ParserTest.java:458)
+at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:50)
+at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
+at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:47)
+at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
+at org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:325)
+at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:78)
+at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:57)
+at org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)
+at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)
+at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)
+at org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)
+at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)
+at org.junit.runners.ParentRunner.run(ParentRunner.java:363)
+at org.junit.runner.JUnitCore.run(JUnitCore.java:137)
+at org.junit.runner.JUnitCore.run(JUnitCore.java:115)
+at edu.brown.cs.bubbles.batt.BattJUnit.process(BattJUnit.java:514)
+at edu.brown.cs.bubbles.batt.BattJUnit.main(BattJUnit.java:84)
+]]></STACK>
+</DIAD>
+
+<DIAD DO='WAITFORSTATE' STATE='READY' />
+
+
+
+<DIAD DO='ASKLIMBA' DEBUGID='$ID' TYPE='BASEREPAIRS' />
+<DIAD DO='ASKLIMBA' DEBUGID='$ID' TYPE='EXPLAIN' />
+
+<DIAD DO='EXIT' />
+

@@ -277,7 +277,7 @@ private Element findClass(String name,boolean def)
 }
 
 
-private Element findMethod(String name0,boolean def)
+public Element findMethod(String name0,boolean def)
 {
    String name = name0;
    if (name == null) return null;

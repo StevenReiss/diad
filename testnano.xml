@@ -14,36 +14,6 @@
 
 <DIAD DO='SETMODEL' MODEL='qwen3-coder:latest' />
 
-
-<DIAD DO='STACKDEBUG'>
-<STACK><!{CDATA[
-org.junit.ComparisonFailure: expected:<ns:[]Bar> but was:<ns:[:]Bar>
-at org.junit.Assert.assertEquals(Assert.java:115)
-at org.junit.Assert.assertEquals(Assert.java:144)
-at net.n3.nanoxml.ParserTest.testParsing16(ParserTest.java:458)
-at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
-at java.base/java.lang.reflect.Method.invoke(Method.java:580)
-at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:50)
-at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
-at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:47)
-at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
-at org.junit.runners.ParentRunner.runLeaf(ParentRunner.java:325)
-at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:78)
-at org.junit.runners.BlockJUnit4ClassRunner.runChild(BlockJUnit4ClassRunner.java:57)
-at org.junit.runners.ParentRunner$3.run(ParentRunner.java:290)
-at org.junit.runners.ParentRunner$1.schedule(ParentRunner.java:71)
-at org.junit.runners.ParentRunner.runChildren(ParentRunner.java:288)
-at org.junit.runners.ParentRunner.access$000(ParentRunner.java:58)
-at org.junit.runners.ParentRunner$2.evaluate(ParentRunner.java:268)
-at org.junit.runners.ParentRunner.run(ParentRunner.java:363)
-at org.junit.runner.JUnitCore.run(JUnitCore.java:137)
-at org.junit.runner.JUnitCore.run(JUnitCore.java:115)
-at edu.brown.cs.bubbles.batt.BattJUnit.process(BattJUnit.java:514)
-at edu.brown.cs.bubbles.batt.BattJUnit.main(BattJUnit.java:84)
-]]></STACK>
-</DIAD>
-
-
 <DIAD DO='TEST' PROJECT='nanoxml' LAUNCH='testParsing16' CONTINUE='0' />
 <DIAD DO='CLEARHISTORY' DEBUGID='$ID' />
 <DIAD DO='CLEARHISTORY' DEBUGID='$ID' />

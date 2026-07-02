@@ -1017,10 +1017,9 @@ private static class CommandStackDebug extends QueryCommand {
       IvyLog.logD("DICONTROL","Perform stack debug\n" + stack_trace);
       DiruntimeManager dm = diad_control.getRunManager();
       DiadThread thrd = dm.createStackTraceThread(stack_trace);
+      if (thrd == null) return;
       // create candidate for thread
-      DicontrolCandidate cand = new DicontrolCandidate(diad_control,thrd);
-      xw.field("CANDIDATE", cand.getId());
-      cand.start(DiadCandidateState.INITIAL);
+      diad_control.handleThreadStateChanged(thrd);
     }
    
 }       // end of inner class CommandCreateTest

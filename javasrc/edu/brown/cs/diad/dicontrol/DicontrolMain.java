@@ -624,15 +624,14 @@ Map<String,String> getKeyMap()
 /*                                                                              */
 /********************************************************************************/
 
-private final class RuntimeCallback implements DiadRuntimeCallback {
-   
-@Override public void threadStateChanged(DiadThread thrd)
+
+void handleThreadStateChanged(DiadThread thrd) 
 {
    DicontrolCandidate dc = debug_candidates.get(thrd.getThreadId());
    IvyLog.logD("DICONTROL","Handle thread state change " + dc + " " +
          thrd.isRunning() + " " + thrd.isTerminated() + " " +
          thrd.isStopped() + " " + debug_candidates.size());
-
+   
    
    if (dc != null) {
       if (thrd.isRunning() || thrd.isTerminated()) {
@@ -642,15 +641,23 @@ private final class RuntimeCallback implements DiadRuntimeCallback {
        }
     }
    else if (thrd.isStopped()) {
-      dc = new DicontrolCandidate(DicontrolMain.this,thrd); 
+      dc = new DicontrolCandidate(this,thrd); 
       debug_candidates.put(thrd.getThreadId(),dc);
       IvyLog.logD("DICONTROL","Candidate added " + debug_candidates.size());
-      DicontrolUpdater upd = new DicontrolUpdater(DicontrolMain.this,dc);
+      DicontrolUpdater upd = new DicontrolUpdater(this,dc);
       dc.addCandidateListener(upd);
       upd.stateChanged();
       dc.start(DiadCandidateState.INITIAL);  
     }
 }
+
+
+
+private final class RuntimeCallback implements DiadRuntimeCallback {
+   
+   @Override public void threadStateChanged(DiadThread thrd) {
+      handleThreadStateChanged(thrd);
+    }
    
 }       // end of inner class DiadRuntimeCallback
 

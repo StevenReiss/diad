@@ -105,7 +105,7 @@ DicontrolMain getDiadControl()
 
 public DiadThread createStackTraceThread(String trace)
 {
-   DiruntimeStackTrace st = new DiruntimeStackTrace(trace);
+   DiruntimeStackTrace st = new DiruntimeStackTrace(diad_control,trace);
    return st.getThread(); 
 }
 

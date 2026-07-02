@@ -35,6 +35,7 @@
 package edu.brown.cs.diad.diruntime;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.w3c.dom.Element;
@@ -69,6 +70,12 @@ DiruntimeStack(Element xml)
       DiruntimeFrame bsf = new DiruntimeFrame(felt);
       stack_frames.add(bsf);
     }
+}
+
+
+DiruntimeStack(Collection<DiadStackFrame> frames)
+{
+   stack_frames = new ArrayList<>(frames);
 }
 
 
