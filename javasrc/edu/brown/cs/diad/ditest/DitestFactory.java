@@ -125,8 +125,20 @@ public void setupBedrock(String workspace,String mint)
 {
    IvyLog.logI("DITEST","Starting bedrock/eclipse for debugging");
    
-   File ec1 = new File(BROWN_ECLIPSE);
-   File ec2 = new File(BROWN_WS);
+   File ec1 = null;
+   File ec2 = null;
+   
+   String e1 = diad_control.getProperty("Diad.eclipse.binary");
+   String e2 = diad_control.getProperty("Diad.eclipse.wsdir");
+   if (e1 != null) ec1 = new File(e1);
+   if (e2 != null) ec2 = new File(e2);
+   
+   if (e1 == null || e1.isEmpty() || !ec1.exists()) {
+      ec1 = new File(BROWN_ECLIPSE);
+    }
+   if (e2 == null || e2.isEmpty() || !ec2.exists()) {
+      ec2 = new File(BROWN_WS);
+    }
    if (!ec1.exists()) {
       ec1 = new File(HOME_MAC_ECLIPSE);
       ec2 = new File(HOME_MAC_WS);
