@@ -114,6 +114,8 @@ static DicontrolCommand createCommand(DicontrolMain ctrl,Element xml)
          return new CommandCreateTest(ctrl,xml);
       case "STACKDEBUG" :
          return new CommandStackDebug(ctrl,xml);
+      case "STARTSTACK" :
+         return new CommandStartStack(ctrl,xml);
       default :
          IvyLog.logE("DICONTROL","Unknown command " + cmd + " " +
                IvyXml.convertXmlToString(xml));
@@ -1019,10 +1021,41 @@ private static class CommandStackDebug extends QueryCommand {
       DiadThread thrd = dm.createStackTraceThread(stack_trace);
       if (thrd == null) return;
       // create candidate for thread
-      diad_control.handleThreadStateChanged(thrd);
+      DicontrolCandidate cand = diad_control.createCandidateForThread(thrd);
+      
+//    DicontrolUpdater upd = new DicontrolUpdater(diad_control,cand);  
+//    cand.addCandidateListener(upd);
+//    upd.stateChanged();
+//    cand.start(DiadCandidateState.INITIAL);   
+//    diad_control.handleThreadStateChanged(thrd);
+      // this should be done with a separate command -- starting evaluation
+     
+      xw.field("ID",cand.getId()); 
     }
    
-}       // end of inner class CommandCreateTest
+}       // end of inner class CommandStackDebug
+
+
+
+private static class CommandStartStack extends QueryCommand {
+
+   CommandStartStack(DicontrolMain ctrl,Element xml) {
+      super(ctrl,xml);
+      
+    }
+   
+   @Override public void process(IvyXmlWriter xw) {
+      DicontrolCandidate cand = getCandidate();
+      if (cand == null) return;
+      
+      DicontrolUpdater upd = new DicontrolUpdater(diad_control,cand);  
+      cand.addCandidateListener(upd);
+      upd.stateChanged();
+      cand.start(DiadCandidateState.INITIAL);   
+      diad_control.handleThreadStateChanged(cand.getThread());
+    }
+   
+}       // end of inner class CommandStartStack
 
 
 /********************************************************************************/

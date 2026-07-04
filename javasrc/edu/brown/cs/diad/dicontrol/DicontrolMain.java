@@ -219,6 +219,22 @@ Collection<DicontrolCandidate> getActiveCandidates()
 }
 
 
+DicontrolCandidate getCandidateForThread(DiadThread dt)
+{
+   return debug_candidates.get(dt.getThreadId());
+}
+
+
+DicontrolCandidate createCandidateForThread(DiadThread thrd)
+{
+   DicontrolCandidate  dc = new DicontrolCandidate(this,thrd); 
+   debug_candidates.put(thrd.getThreadId(),dc);
+   IvyLog.logD("DICONTROL","Candidate added " + debug_candidates.size());
+   
+   return dc;
+}
+
+
 public String getProperty(String id)
 {
    return diad_properties.getProperty(id);
@@ -641,9 +657,7 @@ void handleThreadStateChanged(DiadThread thrd)
        }
     }
    else if (thrd.isStopped()) {
-      dc = new DicontrolCandidate(this,thrd); 
-      debug_candidates.put(thrd.getThreadId(),dc);
-      IvyLog.logD("DICONTROL","Candidate added " + debug_candidates.size());
+      dc = createCandidateForThread(thrd);
       DicontrolUpdater upd = new DicontrolUpdater(this,dc);
       dc.addCandidateListener(upd);
       upd.stateChanged();

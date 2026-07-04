@@ -43,6 +43,7 @@ at edu.brown.cs.bubbles.batt.BattJUnit.main(BattJUnit.java:84)
 ]]></STACK>
 </DIAD>
 
+<DIAD DO='STARTSTACK' DEBUGID='$ID' />
 <DIAD DO='WAITFORSTATE' STATE='READY' />
 
 
