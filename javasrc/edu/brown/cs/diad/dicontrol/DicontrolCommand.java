@@ -1030,6 +1030,8 @@ private static class CommandStackDebug extends QueryCommand {
 //    diad_control.handleThreadStateChanged(thrd);
       // this should be done with a separate command -- starting evaluation
      
+      // check for valid candidate before sending back its ID
+      
       xw.field("ID",cand.getId()); 
     }
    
@@ -1041,7 +1043,6 @@ private static class CommandStartStack extends QueryCommand {
 
    CommandStartStack(DicontrolMain ctrl,Element xml) {
       super(ctrl,xml);
-      
     }
    
    @Override public void process(IvyXmlWriter xw) {

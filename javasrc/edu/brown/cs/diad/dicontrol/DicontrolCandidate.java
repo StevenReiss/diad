@@ -517,6 +517,10 @@ JSONObject getJsonVarValue(String callid,String var,int line,long when)
 
 JSONArray getJsonMethodCalls(String method)
 {
+   if (base_execution == null) {
+      return new JSONArray();
+    }
+   
    return base_execution.getJsonMethodCalls(method); 
 }
 
@@ -550,17 +554,21 @@ void validate(IvyXmlWriter xw,DiadRepair repair)
 
 public Element askLimba(DiadAskType typ,String query,boolean nohistory)
 {
+   boolean havelocs = location_set != null && !location_set.isEmpty();
+   boolean execloca = exec_locations != null && !exec_locations.isEmpty();
+   boolean haveexec = base_execution != null;
+   boolean stacktrace = for_thread.getThreadId().contains("USERTHREAD");
+   
    String tools = "PROJECT,DEBUG";
    switch (candidate_state) {
       case READY :
       case DOING_QUERY :
-         tools = "PROJECT,DEBUG,DIAD";
-         break;
       case NO_ANALYSIS :
       case NO_LOCATIONS_FOUND :
       case NO_BASE_EXECUTION :
       case NO_FINAL_LOCATIONS :
-         tools = "PROJECT,DEBUG";
+         if (havelocs) tools += ",FAIT";
+         if (haveexec) tools += ",DIAD";
          break;
       default :
          return null;
@@ -580,6 +588,8 @@ public Element askLimba(DiadAskType typ,String query,boolean nohistory)
          break;
     }
    
+   if (stacktrace) tools = tools.replace("DEBUG","STACK");
+   
    Map<String,String> keymap = diad_control.getKeyMap();
    keymap.put("SYMPTOM",candidate_symptom.getText()); 
    keymap.put("DEBUGID",candidate_id);
@@ -590,12 +600,11 @@ public Element askLimba(DiadAskType typ,String query,boolean nohistory)
    keymap.put("LINE",String.valueOf(for_frame.getLineNumber()));
    keymap.put("PROCESS",for_thread.getProcessId());
    keymap.put("EXTRA",query);
-   boolean havelocs = location_set != null && !location_set.isEmpty();
-   boolean execloca = exec_locations != null && !exec_locations.isEmpty();
-   boolean haveexec = base_execution != null;
    if (havelocs) keymap.put("HAVELOCS","TRUE");
    if (execloca) keymap.put("EXECLOCS","TRUE");
    if (haveexec) keymap.put("HAVEEXEC","TRUE");
+   if (stacktrace) keymap.put("STACKTRACE","TRUE");
+
    
    if (base_execution != null) {
       int cid = base_execution.getExecutionTrace().getRootContext().getContextId();

@@ -68,7 +68,7 @@ private static AtomicInteger frame_counter = new AtomicInteger(0);
 
 
 private static final Pattern FRAME_PAT = Pattern.compile(
-      "\\s*at ([A-Za-z0-9$.]+/)?([A-Za-z0-9$.]+)\\(([A-Za-z0-9/]+\\.java)(:[0-9]+)\\)\\s*"
+      "\\s*at\\s+([A-Za-z0-9$.]+/)?([A-Za-z0-9$.]+)\\(([A-Za-z0-9/]+\\.java)(:[0-9]+)\\)\\s*"
 );
 private static final int MOD_GROUP = 1;
 private static final int METHOD_GROUP = 2;
@@ -110,13 +110,18 @@ DiadThread getThread()
 private UserThread parseTrace(String trace)
 {
    String exc = null;
-
+   
+   trace = trace.replace((char) 0xa0,' ');
+   trace = trace.replace((char) 0xc2,' ');
+   
+   boolean valid = false;
    List<DiadStackFrame> frames = new ArrayList<>();
    try (BufferedReader br = new BufferedReader(new StringReader(trace))) {
       for ( ; ; ) {
 	 String line = br.readLine();
 	 if (line == null) break;
-	 if (line.isEmpty()) continue;
+         line = line.trim();
+	 if (line.isBlank()) continue;
 	 if (exc == null) {
 	    exc = line;
 	    continue;
@@ -131,6 +136,7 @@ private UserThread parseTrace(String trace)
 		  file + " " + lno);
 	    UserFrame uf = new UserFrame(mod,method,file,lno);
 	    frames.add(uf);
+            if (uf.isUserFrame()) valid = true;
 	  }
 	 else {
 	    IvyLog.logD("DIRUNTIME","Stack frame mismatch " + line);
@@ -140,7 +146,9 @@ private UserThread parseTrace(String trace)
    catch (IOException e) {
       IvyLog.logE("DIRUNTIME","Problem parsing trace");
     }
-
+   
+   if (!valid) return null;
+   
    DiruntimeStack stack = new DiruntimeStack(frames);
    return new UserThread(stack,exc);
 }
@@ -165,12 +173,12 @@ private class UserThread implements DiadThread {
       thread_id = "USERTHREAD_" +  frame_counter.incrementAndGet();
       int idx = exc.indexOf(":");
       if (idx > 0) {
-	 exception_type = exc.substring(0,idx);
-	 exception_message = exc.substring(idx+1).trim();
+         exception_type = exc.substring(0,idx);
+         exception_message = exc.substring(idx+1).trim();
        }
       else {
-	 exception_type = exc;
-	 exception_message = null;
+         exception_type = exc;
+         exception_message = null;
        }
     }
 
@@ -239,28 +247,28 @@ private class UserFrame implements DiadStackFrame {
       if (idx >= 0) line = line.substring(idx+1).trim();
       line_number = Integer.parseInt(line);
       is_userframe = false;
-
+   
       DisourceManager dm = diad_control.getSourceManager();
       Element itms = dm.findMethod(getFullMethodName(),true);
       for (Element match : IvyXml.children(itms,"MATCH")) {
-	 IvyLog.logD("DIRUNTIME","Work on " + IvyXml.convertXmlToString(match));
-	 Element mi = IvyXml.getChild(match,"ITEM");
-	 String fnm = IvyXml.getAttrString(match,"FILE");
-	 if (!fnm.endsWith(File.separator + file)) continue;
-	 String pnm = IvyXml.getAttrString(match,"PROJECT");
-	 int soff = IvyXml.getAttrInt(match,"STARTOFFSET");
-	 ASTNode ast = dm.getSourceNode(pnm,new File(fnm),soff,-1,false,false);
-	 CompilationUnit cu = (CompilationUnit) ast.getRoot();
-	 int isoff = IvyXml.getAttrInt(mi,"STARTOFFSET");
-	 int ieoff = IvyXml.getAttrInt(mi,"ENDOFFSET");
-	 int isline = cu.getLineNumber(isoff);
-	 int ieline = cu.getLineNumber(ieoff);
-	 if (line_number < isline && line_number > ieline) continue;
-	 source_file = new File(fnm);
-	 is_userframe = true;
-	 format_signature = IvyXml.getAttrString(mi,"PARAMETERS");
-	 method_signature = format_signature;
-	 break;
+         IvyLog.logD("DIRUNTIME","Work on " + IvyXml.convertXmlToString(match));
+         Element mi = IvyXml.getChild(match,"ITEM");
+         String fnm = IvyXml.getAttrString(match,"FILE");
+         if (!fnm.endsWith(File.separator + file)) continue;
+         String pnm = IvyXml.getAttrString(match,"PROJECT");
+         int soff = IvyXml.getAttrInt(match,"STARTOFFSET");
+         ASTNode ast = dm.getSourceNode(pnm,new File(fnm),soff,-1,false,false);
+         CompilationUnit cu = (CompilationUnit) ast.getRoot();
+         int isoff = IvyXml.getAttrInt(mi,"STARTOFFSET");
+         int ieoff = IvyXml.getAttrInt(mi,"ENDOFFSET");
+         int isline = cu.getLineNumber(isoff);
+         int ieline = cu.getLineNumber(ieoff);
+         if (line_number < isline && line_number > ieline) continue;
+         source_file = new File(fnm);
+         is_userframe = true;
+         format_signature = IvyXml.getAttrString(mi,"PARAMETERS");
+         method_signature = format_signature;
+         break;
        }
     }
 
