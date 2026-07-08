@@ -51,6 +51,7 @@ boolean isInternal();
 String getExceptionType();
 String getExceptionDetail();
 String getProcessId();
+boolean isStackTraceThread();
 
 DiadValue evaluate(String expr);
 DiadValue evaluate(String expr,DiadStackFrame frm);

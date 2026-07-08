@@ -23,9 +23,12 @@
 package edu.brown.cs.diad.dianalysis;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
@@ -72,6 +75,26 @@ class DianalysisExceptionHistory extends DianalysisHistory
 /********************************************************************************/
 
 private String exception_type;
+private String exception_detail;
+
+private static final Pattern NULL_PATTERN =
+   Pattern.compile(
+         "Cannot invoke \"([^\"]+)\" because( the return value of)? \"([^\"])\" is null");
+private static final int NULL_ITEM_INDEX = 3;
+
+private static final Pattern ARRAY_INDEX_PATTERN1 =
+   Pattern.compile(
+         "Index (\\d+) out of bounds for length (\\d+)");
+
+private static final Pattern ARRAY_INDEX_PATTERN2 =
+   Pattern.compile(
+         "Array index out of range: (\\d+)");
+
+private static final Pattern ARRAY_INDEX_PATTERN3 =
+   Pattern.compile(
+         "Index: (\\d+), Size: (\\d+)");
+
+
 
 
 
@@ -85,7 +108,8 @@ DianalysisExceptionHistory(DianalysisManager fac,DiadSymptom symp,DiadThread thr
 {
    super(fac,symp,thrd);
    
-   exception_type = symp.getSymptomItem();                                                             
+   exception_type = symp.getSymptomItem();   
+   exception_detail = symp.getSymptomDetail();  // message with exception
 }
 
 
@@ -229,6 +253,7 @@ private abstract class ExceptionChecker extends ASTVisitor {
    private String orig_value;
    private String target_value;
    private DiadValueOperator value_op;
+   private List<ASTNode> possible_nodes;
    
    ExceptionChecker() {
       use_node = null;
@@ -237,6 +262,7 @@ private abstract class ExceptionChecker extends ASTVisitor {
       orig_expr = null;
       aux_expr = null;
       value_op = DiadValueOperator.NONE;
+      possible_nodes = null;
     }
    
    void doCheck(ASTNode n) {
@@ -254,6 +280,11 @@ private abstract class ExceptionChecker extends ASTVisitor {
          orig_value = orig;
          target_value = tgt;
        }
+    }
+   
+   protected void notePossible(ASTNode n) {
+      if (possible_nodes == null) possible_nodes = new ArrayList<>();
+      possible_nodes.add(n);
     }
    
    protected void setValueOp(DiadValueOperator op) {
@@ -277,6 +308,24 @@ private abstract class ExceptionChecker extends ASTVisitor {
     }
    
    ASTNode getResult() {
+      if (use_node == null && possible_nodes != null) {
+         if (exception_detail != null) {
+            boolean fnd = true;
+            Matcher m1 = ARRAY_INDEX_PATTERN1.matcher(exception_detail);
+            if (!m1.find()) {
+               m1 = ARRAY_INDEX_PATTERN2.matcher(exception_detail);
+               if (!m1.find()) {
+                  m1 = ARRAY_INDEX_PATTERN3.matcher(exception_detail);
+                  fnd = m1.find();
+                }
+             }
+            if (fnd) {
+               orig_value = m1.group(1);
+               if (m1.groupCount() >= 2) target_value = m1.group(2);
+             }
+          }
+         use_node = possible_nodes.get(0);
+       }
       return use_node; 
     }
    
@@ -294,10 +343,19 @@ private abstract class ExceptionChecker extends ASTVisitor {
 private final class NullPointerChecker extends ExceptionChecker {
    
    private ASTNode base_statement;
+   private String null_expr;
    
    NullPointerChecker(ASTNode stmt) {
       base_statement = stmt;
+      null_expr = null;
+      if (exception_detail != null) {
+         Matcher m = NULL_PATTERN.matcher(exception_detail);
+         if (m.find()) {
+            null_expr = simplify(m.group(NULL_ITEM_INDEX));
+          }
+       }
     }
+   
    @Override public void endVisit(ArrayAccess aa) {
       checkForNull(aa.getIndex());
       checkForNull(aa.getArray());
@@ -417,13 +475,10 @@ private final class NullPointerChecker extends ExceptionChecker {
    private boolean checkBoolean(Expression ex) {
       ex.accept(this);
       if (haveNode()) return false;
+      checkForNull(ex);
+
       DiadValue bv = evaluate(ex.toString());
-      if (bv == null) return false;
-      if (bv.isNull()) {
-         useNode(base_statement,ex,"null","null");
-         setValueOp(DiadValueOperator.NEQ);
-         return false;
-       }
+      if (bv == null || bv.isNull()) return false;
       
       return bv.getBoolean();
     }
@@ -435,6 +490,28 @@ private final class NullPointerChecker extends ExceptionChecker {
          useNode(base_statement,ex,"null","null");
          setValueOp(DiadValueOperator.NEQ);
        }
+      else if (bv == null && match(null_expr,ex.toString())) {
+         useNode(base_statement,ex,"null","null");
+         setValueOp(DiadValueOperator.NEQ);
+       }
+    } 
+   
+   private String simplify(String exp) {
+      if (exp == null) return null;
+      int i1 = exp.indexOf("(");
+      if (i1 > 0) exp = exp.substring(0,i1+1);    // include the (
+      int i2 = exp.lastIndexOf(".");
+      if (i2 > 0) exp = exp.substring(i2+1);
+      return exp;
+    }
+   
+   private boolean match(String exp,String to) {
+      if (exp == null || to == null) return false;
+      if (exp.equals(to)) return true;
+      if (exp.contains("(")) {
+         if (to.contains(exp) && to.endsWith(")")) return true;
+       }
+      return false;
     }
    
 }       // end of inner class NullPointerChecker dc
@@ -449,16 +526,19 @@ private final class NullPointerChecker extends ExceptionChecker {
 /********************************************************************************/
 
 private final class ArrayIndexOutOfBoundsChecker extends ExceptionChecker {
-
-@Override public void endVisit(ArrayAccess aa) {
-   DiadValue bv = evaluate("(" + aa.getArray().toString() + ").length");
-   if (bv == null) return;
-   long bnd = bv.getInt();
-   DiadValue abv = evaluate(aa.getIndex().toString());
-   if (abv == null) return;
-   long idx = abv.getInt();
-   if (idx < 0 || idx >= bnd) useNode(aa,null,Long.toString(idx),null);
-}
+   
+   @Override public void endVisit(ArrayAccess aa) {
+      DiadValue bv = evaluate("(" + aa.getArray().toString() + ").length");
+      if (bv == null) {
+         notePossible(aa);
+         return;
+       }
+      long bnd = bv.getInt();
+      DiadValue abv = evaluate(aa.getIndex().toString());
+      if (abv == null) return;
+      long idx = abv.getInt();
+      if (idx < 0 || idx >= bnd) useNode(aa,null,Long.toString(idx),null);
+    }
 
 }       // end of inner class ArrayIndexOutOfBoundsChecker
 
@@ -496,7 +576,10 @@ private final class IndexOutOfBoundsChecker extends ExceptionChecker {
        }
       
       DiadValue bv = evaluate("(" + mi.getExpression() + ").size()");
-      if (bv == null) return;
+      if (bv == null) {
+         notePossible(mi);
+         return;
+       }
       long bnd = bv.getInt();
       List<?> args = mi.arguments();
       long idx = 0;
@@ -567,7 +650,10 @@ private final class StringIndexOutOfBoundsChecker extends ExceptionChecker {
    private boolean checkIndex(MethodInvocation mi,String ex,int arg) {
       DiadValue bv = evaluate("(" + ex + ").length()");
       if (bv == null) bv = evaluate("(" + ex + ").length");
-      if (bv == null) return false;
+      if (bv == null) {
+         notePossible(mi);
+         return false;
+       }
       long bnd = bv.getInt();
       List<?> args = mi.arguments();
       long idx = 0;

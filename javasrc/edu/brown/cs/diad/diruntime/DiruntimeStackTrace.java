@@ -189,6 +189,8 @@ private class UserThread implements DiadThread {
    @Override public boolean isRunning() 		{ return false; }
    @Override public DiadStack getStack()		{ return for_stack; }
    @Override public boolean isInternal()		{ return false; }
+   
+   @Override public boolean isStackTraceThread()  { return true; } 
    @Override public String getExceptionType()	 { return exception_type; }
    @Override public String getExceptionDetail()         { return exception_message; }
    @Override public String getProcessId()		{ return thread_id; }

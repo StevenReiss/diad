@@ -47,6 +47,7 @@ class DicontrolSymptom implements DiadSymptom
 
 private DiadSymptomType symptom_type;
 private String symptom_item;
+private String symptom_detail;
 private String original_expr;
 private String aux_expr;
 private String original_value;
@@ -58,7 +59,7 @@ private String in_file;
 private int in_line;
 private int in_offset;
 
-
+ 
 
 /********************************************************************************/
 /*                                                                              */
@@ -76,6 +77,7 @@ DicontrolSymptom(DiadSymptomType type,String item)
 {
    symptom_type = type;
    symptom_item = item;
+   symptom_detail = null;
    original_expr = null;
    aux_expr = null;
    original_value = null;
@@ -93,6 +95,7 @@ DicontrolSymptom(Element xml)
 {
    symptom_type = IvyXml.getAttrEnum(xml,"TYPE",DiadSymptomType.NONE);
    symptom_item = IvyXml.getTextElement(xml,"ITEM");
+   symptom_detail = IvyXml.getTextElement(xml,"DETAIL");
    user_description = IvyXml.getTextElement(xml,"USER");
    original_value = IvyXml.getTextElement(xml,"VALUE");
    original_expr = IvyXml.getTextElement(xml,"ORIGINAL");
@@ -122,6 +125,8 @@ DicontrolSymptom(Element xml)
 
 @Override public String getSymptomItem()                { return symptom_item; }
 
+@Override public String getSymptomDetail()              { return symptom_detail; }
+
 @Override public String getOriginalValue()              { return original_value; }
 
 @Override public String getTargetValue()                { return target_value; }
@@ -149,6 +154,12 @@ DicontrolSymptom(Element xml)
 {
    if (v != null) v = v.trim();
    symptom_item = v;
+}
+
+@Override public void setSymptomDetail(String v) 
+{
+   if (v != null) v = v.trim();
+   symptom_detail = v;
 }
 
 @Override public void setOriginalValue(String v)
@@ -291,8 +302,8 @@ private String getAssertionText()
       buf.append(target_value);
       return buf.toString();
     }
-   else if (aux_expr != null) {
-      return "an assertion failed because " + aux_expr;
+   else if (symptom_detail != null) {
+      return "an assertion failed because " + symptom_detail;
     }
    
    IvyLog.logE("DICONTROL","Bad assertion check " + original_value + " " + 
@@ -315,6 +326,7 @@ private String getExceptionText()
    else {
       buf.append("the program throws an exception ");
     }
+   
    if (original_expr != null) {
       buf.append("in ```");
       buf.append(original_expr);
@@ -426,6 +438,7 @@ private String getLocationText()
     }
    
    if (symptom_item != null) xw.textElement("ITEM",symptom_item);
+   if (symptom_detail != null) xw.cdataElement("DETAIL",symptom_detail);
    if (original_value != null) xw.cdataElement("VALUE",original_value);
    if (symptom_type == DiadSymptomType.OTHER) {
       if (original_expr != null) xw.cdataElement("VARIABLES",original_expr);

@@ -48,6 +48,7 @@ public interface DiadSymptom
 DiadSymptomType getSymptomType();
 
 String getSymptomItem();
+String getSymptomDetail();
 String getOriginalValue();
 String getOriginalExpression();
 String getAuxExpression();
@@ -62,6 +63,7 @@ String getUserVariables();
 String getUserAssertion();
 
 void setSymptomType(DiadSymptomType typ);
+void setSymptomDetail(String detail);
 void setSymptomItem(String val);
 void setOriginalValue(String val);
 void setOriginalExpression(String val);

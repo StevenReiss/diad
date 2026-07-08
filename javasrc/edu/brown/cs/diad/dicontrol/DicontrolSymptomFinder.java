@@ -107,6 +107,7 @@ DiadSymptom findSymptom()
       
       ASTNode n = srcfac.getSourceNode(null,frm.getSourceFile(),
             -1,frm.getLineNumber(),false,false);
+      
       IvyLog.logI("DICONTROL","AST Node found: " + n);
     }
    
@@ -130,7 +131,7 @@ private DicontrolSymptom findStatementSymptom(DiadStackFrame frm,ASTNode stmt,
             return new DicontrolSymptom(DiadSymptomType.LOCATION);
           }
          DicontrolSymptom symp = new DicontrolSymptom(DiadSymptomType.ASSERTION);
-         if (detail != null) symp.setAuxExpression(detail);
+         if (detail != null) symp.setSymptomDetail(detail);
          return symp;
        }
       else {
@@ -139,6 +140,7 @@ private DicontrolSymptom findStatementSymptom(DiadStackFrame frm,ASTNode stmt,
             symp.setSymptomType(DiadSymptomType.LIBRARY_EXCEPTION);
             symp.setOriginalExpression(libcall);
           }
+         if (detail != null) symp.setSymptomDetail(detail);
          return symp;
        }
     }
@@ -154,6 +156,7 @@ private DicontrolSymptom findStatementSymptom(DiadStackFrame frm,ASTNode stmt,
             symp.setSymptomType(DiadSymptomType.LOCATION);
           }
        }
+      if (detail != null) symp.setSymptomDetail(detail);
       return symp;
     }
    

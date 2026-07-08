@@ -270,6 +270,11 @@ DiruntimeProcess getProcess()
    
    return false;
 }
+ 
+
+@Override public boolean isStackTraceThread() {
+   return false;
+}
 
 
 @Override public boolean isStopped() 
