@@ -299,6 +299,8 @@ private void startAnalysis()
       CommandArgs aargs = new CommandArgs("REPORT","FULL_STATS",
             "ID",session_id);
       int nth = diad_control.getProperty("Diad.fait.threads",4); 
+      boolean tr = diad_control.getProperty("Diad.fait.trace",false);
+      if (tr) nth = 1;
       if (nth > 0) aargs.put("THREADS",nth);
       Element arslt = sendFaitMessage("ANALYZE",aargs,null);
       if (!IvyXml.isElement(arslt,"RESULT")) {

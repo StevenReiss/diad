@@ -181,7 +181,7 @@ public DiexecuteManager getExecuteManager()     { return execute_manager; }
 
 DitestFactory getTestManager()
 {
-   if (test_factory ==  null) {
+   if (test_factory == null) {
       test_factory = new DitestFactory(this);
     }
    
@@ -322,8 +322,11 @@ public boolean getProperty(String id,boolean dflt)
 
 public void setWorkspace(File ws)
 {
-   if (test_factory == null) return;
-   test_factory.setWorkspace(ws);
+   IvyLog.logD("DICONTROL","Set workspace " + ws);
+   
+   DitestFactory tf = getTestManager();
+   if (tf == null) return;
+   tf.setWorkspace(ws);
 }
 
 

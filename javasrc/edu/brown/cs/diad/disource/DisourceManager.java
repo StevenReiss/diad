@@ -158,6 +158,10 @@ private void buildProjectMap()
    for (Element p : IvyXml.children(xml,"PROJECT")) {
       if (workspace_name == null) {
          workspace_name = IvyXml.getAttrString(p,"WORKSPACE");
+         if (workspace_name != null) {
+            File wsf = new File(workspace_name);
+            diad_control.setWorkspace(wsf);
+          }
        }
       String nm = IvyXml.getAttrString(p,"NAME");
       CommandArgs args = new CommandArgs("PROJECT",nm,"FILES",true);

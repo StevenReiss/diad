@@ -152,7 +152,7 @@ public void setupBedrock(String workspace,String mint)
       throw new Error("No eclipse");
     }
    ec2 = new File(ec2,workspace);
-   workspace_dir = ec2;
+   setWorkspace(ec2);
    
    diad_control.setupMessageServer(mint); 
    
@@ -197,6 +197,7 @@ public void setupBedrock(String workspace,String mint)
 
 public void setWorkspace(File wd)
 {
+   IvyLog.logD("DTEST","Set workspace " + wd);
    workspace_dir = wd;
 }
 
@@ -212,7 +213,7 @@ public boolean startFait()
    if (fait_starting) return false;
    fait_starting = true;
    
-   IvyLog.logD("DITEST","START FAIT");
+   IvyLog.logD("DITEST","START FAIT " + workspace_dir);
    
    IvyExec exec = null;
    File wd = workspace_dir;
