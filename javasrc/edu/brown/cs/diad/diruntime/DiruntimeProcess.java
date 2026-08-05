@@ -277,6 +277,7 @@ private boolean checkException(DiruntimeThread td,Element thrd)
       String btyp = IvyXml.getAttrString(bpt,"TYPE");
       if (btyp != null && btyp.equals("EXCEPTION")) {
          exc = IvyXml.getAttrString(bpt,"EXCEPTION");
+         if (td.getStack() == null) continue;
          DiadStackFrame frm = td.getStack().getTopFrame();
          if (frm == null) continue;
          for (String vnm : frm.getLocals()) {
