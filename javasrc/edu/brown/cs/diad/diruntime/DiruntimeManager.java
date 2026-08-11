@@ -287,11 +287,15 @@ private void handleTargetEvent(Element xml)
 /********************************************************************************/
 
 public void noteFileEdited(File f)
-{ }
+{ 
+   diad_control.getSourceManager().noteFileEdited(f);
+}
 
 
 private void noteFileSaved(File f)
-{ }
+{ 
+   diad_control.getSourceManager().noteFileSaved(f); 
+}
 
 
 public void handleResourceChange(Element res)

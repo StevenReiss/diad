@@ -114,6 +114,19 @@ public void getExpressionsInStatement(IvyXmlWriter xw,String proj,String file,in
 
 
 
+
+public void noteFileEdited(File f)
+{
+   // this can wait until file is saved
+}
+
+
+public void noteFileSaved(File f)
+{
+   the_compiler.noteFileSaved(f);
+}
+
+ 
 /********************************************************************************/
 /*                                                                              */
 /*      Handle file-project associations                                        */

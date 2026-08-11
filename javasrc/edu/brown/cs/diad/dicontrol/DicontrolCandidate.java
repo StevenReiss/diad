@@ -299,7 +299,7 @@ private synchronized void stopProcessing(boolean report)
    
    while (candidate_processor != null && candidate_processor.isAlive()) {
       if (!candidate_processor.isInterrupted()) {
-         IvyLog.logD("DICONTROL","Interrupting processor");
+         IvyLog.logD("DICONTROL","Interrupting processor " + report);
          candidate_processor.interrupt();
        }
       try {

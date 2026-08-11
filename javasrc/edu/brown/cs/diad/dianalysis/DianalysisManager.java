@@ -309,6 +309,8 @@ private void startAnalysis()
                IvyXml.convertXmlToString(arslt));
        }
     }
+   
+   IvyLog.logD("DIANALYSIS","Initial state " + analysis_state);
 }
 
 
@@ -350,6 +352,9 @@ public synchronized void handleAnalysis(Element xml)
       analysis_state = DiadAnalysisState.READY;
     }
    
+   IvyLog.logD("DIANALYSIS","New analysis state = " + analysis_state);
+         
+         
    notifyAll();
 }
 
@@ -372,7 +377,8 @@ public synchronized Boolean waitForAnalysis()
          wait(10000);
        }
       catch (InterruptedException e) {
-         IvyLog.logD("DIANALYSIS","Analysis interrrupted");
+         IvyLog.logD("DIANALYSIS","Analysis interrupted");
+         analysis_state = DiadAnalysisState.NONE;
          return null;
        }
     }

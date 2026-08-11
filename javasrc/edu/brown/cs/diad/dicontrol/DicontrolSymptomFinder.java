@@ -100,6 +100,8 @@ DiadSymptom findSymptom()
    
    ASTNode stmt = srcfac.getSourceNode(null,frm.getSourceFile(),
          -1,frm.getLineNumber(),false,true);
+   IvyLog.logD("DICONTROL","Found statement " + frm.getSourceFile() + " " +
+         frm.getLineNumber() + " " + stmt);
    
    if (stmt == null) {
       IvyLog.logE("DICONTROL","No statement found for " + 

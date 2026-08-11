@@ -194,6 +194,12 @@ String getSourceContents(File f)
 }
 
 
+void noteFileSaved(File f)
+{
+   SourceFile sf = getSourceFile(f);
+   sf.clearBody();
+}
+
 /********************************************************************************/
 /*                                                                              */
 /*      Handle getting Jcode factory for project                                */
@@ -415,7 +421,6 @@ private static class SourceFile implements JcompSource {
    private File for_file;
    private String file_body;
    
-   
    SourceFile(File f) {
       for_file = f;
       file_body = null;
@@ -424,6 +429,10 @@ private static class SourceFile implements JcompSource {
    File getFile()                               { return for_file; }
    
    @Override public String getFileName()        { return for_file.getPath(); }
+   
+   void clearBody() {
+      file_body = null;
+    }
    
    @Override public String getFileContents() {
       if (file_body != null) return file_body;
@@ -440,17 +449,17 @@ private static class SourceFile implements JcompSource {
 
 
 private static class DummySource implements JcompSource {
-
-private String source_name;
-private String source_cnts;
-
-DummySource(String nm,String cnts) {
-   source_name = nm;
-   source_cnts = cnts;
-}
-
-@Override public String getFileContents()            { return source_cnts; }
-@Override public String getFileName()                { return source_name; }
+   
+   private String source_name;
+   private String source_cnts;
+   
+   DummySource(String nm,String cnts) {
+      source_name = nm;
+      source_cnts = cnts;
+    }
+   
+   @Override public String getFileContents()            { return source_cnts; }
+   @Override public String getFileName()                { return source_name; }
 
 
 }
