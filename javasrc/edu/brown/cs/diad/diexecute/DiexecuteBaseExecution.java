@@ -187,6 +187,7 @@ DiadTrace createBaseExecution()
    DisourceManager srcmgr = diad.getSourceManager();
    DianalysisManager analmgr = diad.getAnalysisManager();
    String proj = srcmgr.getProjectForFile(sf);
+   IvyLog.logD("DIEXECUTE","Get project " + sf + " " + proj);
    
    CommandArgs args = new CommandArgs("TYPE","LAUNCH",
          "PROJECT",proj,

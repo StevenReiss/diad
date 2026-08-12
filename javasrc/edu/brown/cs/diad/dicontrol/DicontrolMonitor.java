@@ -29,6 +29,7 @@ import java.util.Random;
 
 import org.w3c.dom.Element;
 
+import edu.brown.cs.diad.dianalysis.DianalysisManager;
 import edu.brown.cs.diad.dicore.DiadException;
 import edu.brown.cs.diad.diexecute.DiexecuteManager;
 import edu.brown.cs.diad.ditest.DitestFactory;
@@ -634,7 +635,10 @@ private final class FaitHandler implements MintHandler {
       try {
          switch (type) {
             case "ANALYSIS" :
-               diad_control.getAnalysisManager().handleAnalysis(xml);  
+               DianalysisManager dm = diad_control.getAnalysisManager();
+               if (dm != null) {
+                  dm.handleAnalysis(xml);  
+                }
                break;
             default :
                IvyLog.logE("DICONTROL","Unknown command " + type + " from Fait");

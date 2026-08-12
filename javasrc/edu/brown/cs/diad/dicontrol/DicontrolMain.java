@@ -200,6 +200,11 @@ public String getMintId()                       { return mint_id;
 
 public void setupMessageServer(String mintid)
 {
+   if (dicontrol_monitor != null) {
+      IvyLog.logD("DICONTROL","Attempt to setup multiple monitors");
+      return;
+    }
+   
    mint_id = mintid;
    dicontrol_monitor = new DicontrolMonitor(this,mint_id);
 }

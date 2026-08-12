@@ -180,6 +180,7 @@ private DicontrolSymptom findStatementSymptom(DiadStackFrame frm,ASTNode stmt,
    if (fnd == null) {
       fnd = checkDefensiveCase(stmt);
     }
+   // possibly check for previous exception if in a catch clause
    
    if (fnd != null && frm == null) {
       fnd.setLocation(stmt);

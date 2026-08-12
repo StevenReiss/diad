@@ -99,7 +99,7 @@ public DianalysisManager(DicontrolMain ctrl)
     }
    Element sess = IvyXml.getChild(rslt,"SESSION");
    sid = IvyXml.getAttrString(sess,"ID",sid);
-   if (sid != null) session_id = sid;
+   if (sid != null && !sid.isEmpty()) session_id = sid;
    startAnalysis();
 }
 
@@ -353,7 +353,6 @@ public synchronized void handleAnalysis(Element xml)
     }
    
    IvyLog.logD("DIANALYSIS","New analysis state = " + analysis_state);
-         
          
    notifyAll();
 }

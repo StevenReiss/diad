@@ -34,6 +34,7 @@ import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.ArrayAccess;
 import org.eclipse.jdt.core.dom.CastExpression;
+import org.eclipse.jdt.core.dom.CatchClause;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.ConditionalExpression;
 import org.eclipse.jdt.core.dom.DoStatement;
@@ -239,6 +240,23 @@ private String getExceptionCause()
       checker.doCheck(stmt);
       String loc = checker.generateResult();
       if (loc != null) return loc;
+    }
+   
+   // see if statement is in a catch clause
+   CatchClause ctch = null;
+   for (ASTNode n = stmt; n != null; n = n.getParent()) {
+      if (n.getNodeType() == ASTNode.CATCH_CLAUSE) {
+         ctch = (CatchClause) n;
+         break;
+       }
+      else if (n.getNodeType() == ASTNode.METHOD_DECLARATION) {
+         break;
+       }
+    }
+   if (ctch != null) {
+       String var = ctch.getException().getName().getIdentifier();
+       IvyLog.logD("DIANALYSIS","Attempt to blame previuos exception " +
+             var);
     }
    
    return null;

@@ -188,7 +188,9 @@ private void buildProjectMap()
             project_map.putIfAbsent(f,nm);
             File f1 = IvyFile.getCanonical(f);
             if (f1 != f) project_map.putIfAbsent(f,nm);
-            if (default_project == null) default_project = nm;
+            if (default_project == null) {
+               default_project = nm;
+             }
           }
        }
     }

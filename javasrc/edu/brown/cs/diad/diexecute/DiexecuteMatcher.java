@@ -266,12 +266,6 @@ private void matchLines(DiexecuteCall origctx,DiexecuteCall matchctx)
 }
 
 
-
-
-
-
-
-
 private void matchInnerContexts(DiexecuteCall origctx,DiexecuteCall matchctx)
 {
    DiffStruct diffs = computeContextDiffs(origctx,matchctx);
@@ -496,44 +490,44 @@ private static boolean matchContext(DiexecuteCall octx,DiexecuteCall mctx)
 
 
 private static class DiffStruct {
-
-private int delete_count;
-private DiexecuteCall replace_data;
-private int line_index;
-private DiffStruct next_edit;
-
-DiffStruct(DiffStruct prior,boolean del,DiexecuteCall dat, int i) {
-   next_edit = prior;
-   delete_count = (del ? 1 : 0);
-   replace_data = dat;
-   line_index = i;
-}
-
-public int getNumDelete()               { return delete_count; }
-
-public DiexecuteCall getData()  { return replace_data; }
-
-public int getIndex()           { return line_index; }
-
-public DiffStruct getNext()             { return next_edit; }
-
-DiffStruct createEdits() {
-   DiffStruct shead = this;
-   DiffStruct ep = null;
-   DiffStruct behind = null;
-   while (shead != null) {
-      behind = ep;
-      if (ep != null && ep.delete_count > 0 && shead.delete_count > 0 &&
-            ep.line_index == shead.line_index + 1) {
-         shead.delete_count += ep.delete_count;
-         behind = ep.next_edit;
-       }
-      ep = shead;
-      shead = shead.next_edit;
-      ep.next_edit = behind;
+   
+   private int delete_count;
+   private DiexecuteCall replace_data;
+   private int line_index;
+   private DiffStruct next_edit;
+   
+   DiffStruct(DiffStruct prior,boolean del,DiexecuteCall dat, int i) {
+      next_edit = prior;
+      delete_count = (del ? 1 : 0);
+      replace_data = dat;
+      line_index = i;
     }
-   return ep;
-}
+   
+   public int getNumDelete()               { return delete_count; }
+   
+   public DiexecuteCall getData()  { return replace_data; }
+   
+   public int getIndex()           { return line_index; }
+   
+   public DiffStruct getNext()             { return next_edit; }
+   
+   DiffStruct createEdits() {
+      DiffStruct shead = this;
+      DiffStruct ep = null;
+      DiffStruct behind = null;
+      while (shead != null) {
+         behind = ep;
+         if (ep != null && ep.delete_count > 0 && shead.delete_count > 0 &&
+               ep.line_index == shead.line_index + 1) {
+            shead.delete_count += ep.delete_count;
+            behind = ep.next_edit;
+          }
+         ep = shead;
+         shead = shead.next_edit;
+         ep.next_edit = behind;
+       }
+      return ep;
+    }
 
 }       // end of inner class DiffStruct
 

@@ -26,6 +26,9 @@ import java.io.File;
 import java.util.Collection;
 
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.MethodInvocation;
 
 import edu.brown.cs.diad.dicore.DiadLocation;
 import edu.brown.cs.diad.dicore.DiadStackFrame;
@@ -139,8 +142,7 @@ private DiadStackFrame findValidStart(DiadStackFrame frm)
                if (n.getNodeType() == ASTNode.METHOD_DECLARATION) break;
                n = n.getParent();
              }
-            // might want to check if method of n is not private
-            if (n != null) {
+            if (n != null && isSuitable((MethodDeclaration) n)) {
                ++ct;
                prior = bf;
              }
@@ -160,6 +162,54 @@ private DiadStackFrame findValidStart(DiadStackFrame frm)
    return rslt;
 }
 
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Check if method is appropriate                                          */
+/*                                                                              */
+/********************************************************************************/
+
+private boolean isSuitable(MethodDeclaration md)
+{
+   // might want to check if method of n is not private
+   
+   // check for Input locally
+   InputChecker inc = new InputChecker();
+   md.accept(inc);
+   if (inc.isReadFound()) {
+      return false;
+    }
+   
+   // should also check for routine called that reads input
+   
+   return true;
+}
+
+
+private class InputChecker extends ASTVisitor {
+   
+   private boolean found_read;
+   
+   InputChecker() {
+      found_read = false;
+    }
+   
+   boolean isReadFound()                        { return found_read; }
+   
+   @Override public void endVisit(MethodInvocation n) {
+      String what = n.getName().getIdentifier();
+      if (what == null) return;
+      if (what.equals("read") || what.equals("readLine") ||
+            what.equals("readAllBytes") || what.equals("readNBtyes") ||
+            what.equals("skip") || what.equals("skipNBytes")) {
+         // might want to check type
+         found_read = true;
+       }
+    }
+   
+   
+}
 
 }       // end of class DiexecuteStartFinder
 
