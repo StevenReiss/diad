@@ -721,6 +721,7 @@ private Boolean compareObject(DiadLocalVariable local,Element valelt0,
             if (ignore_names.contains(n1)) continue;
           }
        }
+      if (nm.toLowerCase().contains("time")) continue;
       try {
          DiadValue fldval = localval.getFieldValue(nm);
          if (fldval == null) continue;
