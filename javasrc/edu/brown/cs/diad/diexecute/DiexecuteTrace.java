@@ -1055,12 +1055,16 @@ private long getActualTime(DiexecuteCall ctx,DiexecuteVarVal linevar,
    else if (line > 0 && when < 0) {
       DiexecuteVarVal lines = ctx.getLineNumbers();
       boolean next = false;
+      int closest = -1;
       for (Long t : lines.getTimeChanges()) {
          int lno = lines.getLineValue(t);
          if (lno == line) next = true;
          else if (next) {
             when = t - 1;
             break;
+          }
+         else if (lno < line && lno > closest && line - lno < 4) {
+            closest = lno;
           }
        }
       if (when < 0 && ctx.getParentCall() == null) {
@@ -1079,6 +1083,10 @@ private long getActualTime(DiexecuteCall ctx,DiexecuteVarVal linevar,
        }
       if (when < 0) {
          if (!next) {
+            if (closest > 0) {
+               // probably should check if the statement at closest spans line
+               return getActualTime(ctx,linevar,when,closest);
+             }
             IvyLog.logE("DIEXECUTE","Get actual time given bad line " + line + 
                   " " + when);
           }
