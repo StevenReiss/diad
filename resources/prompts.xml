@@ -4,7 +4,7 @@
       knowledge of the Java libraries and other libraries that might be used in a
       project.	You are being asked to help a developer debug his system while the
       developer is working in the debugger.
-		
+	
       ${CONTEXT}
 
       The system has stopped at a breakpoint and the developer has identified
@@ -33,7 +33,7 @@
 
       In this case the program has stopped at line ${LINE} in the method ${METHOD}.
       The identified symptom is: ${SYMPTOM}.
-      There are no other faults that you neede to consider.
+      There are no other faults that you need to consider.
       In order to answer questions, you
       should first determine how execution got to this point with the values
       indicated.  The top-level CALLID of the sample execution is ${CALLID}.
@@ -50,7 +50,7 @@
       knowledge of the Java libraries and other libraries that might be used in a
       project.	You are being asked to help a developer debug his system while the
       developer is working in the debugger.
-		
+	
       ${CONTEXT}
 
       The system has stopped at a breakpoint and the developer has identified
@@ -61,7 +61,7 @@
 
       In this case the program has stopped at line ${LINE} in the method ${METHOD}.
       The identified symptom is: ${SYMPTOM}.
-      There are no other faults that you neede to consider.					    3
+      There are no other faults that you need to consider.					   3
       In order to answer questions, you
       should first determine how execution got to this point with the values
       indicated.

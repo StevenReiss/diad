@@ -27,9 +27,16 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.AssertStatement;
 import org.eclipse.jdt.core.dom.Block;
+import org.eclipse.jdt.core.dom.CharacterLiteral;
+import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.NullLiteral;
+import org.eclipse.jdt.core.dom.NumberLiteral;
 import org.eclipse.jdt.core.dom.Statement;
+import org.eclipse.jdt.core.dom.StringLiteral;
 import org.eclipse.jdt.core.dom.SwitchStatement;
 
 import edu.brown.cs.diad.dicore.DiadException;
@@ -303,13 +310,15 @@ private DicontrolSymptom getExceptionSymptom(String excvar)
 
 private DicontrolSymptom checkDefensiveIf(ASTNode stmt)
 {
+   DicontrolSymptom rslt = null;
+   
    ASTNode par = stmt.getParent();
-   if (par.getNodeType() != ASTNode.BLOCK) return null;
+   if (par.getNodeType() != ASTNode.BLOCK) return rslt;
    Block blk = (Block) par; 
    ASTNode spar = par.getParent();
-   if (spar.getNodeType() != ASTNode.IF_STATEMENT) return null;
+   if (spar.getNodeType() != ASTNode.IF_STATEMENT) return rslt;
+   ASTNode stmt0 = null;
    
-   boolean isok = false;
    for (Object o1 : blk.statements()) {
       Statement s1 = (Statement) o1;
       switch (s1.getNodeType()) {
@@ -321,7 +330,7 @@ private DicontrolSymptom checkDefensiveIf(ASTNode stmt)
             break;
          case ASTNode.EXPRESSION_STATEMENT :
             if (isErrorStatement(s1)) {
-               isok = true;
+               stmt0 = s1;
                break;
              }
             else return null;
@@ -330,18 +339,110 @@ private DicontrolSymptom checkDefensiveIf(ASTNode stmt)
        }
     }
    
-   if (isok) {
-      return new DicontrolSymptom(DiadSymptomType.LOCATION); 
+   if (stmt0 != null) {
+      rslt = new DicontrolSymptom(DiadSymptomType.LOCATION); 
+      updateLocationSymptom(rslt,stmt0);
     }
    
-   return null;
+   return rslt;
 }
+
+
+private void updateLocationSymptom(DicontrolSymptom symp,ASTNode stmt)
+{
+   IvyLog.logD("DICONTROL","Check location symptom " + stmt);
+   if (stmt.getNodeType() == ASTNode.EXPRESSION_STATEMENT) {
+      LocationText lt = new LocationText();
+      stmt.accept(lt);
+      String txt = lt.getOutputText();
+      IvyLog.logD("DICONTROL","Location text result: " + txt);
+      if (txt != null && !txt.isBlank()) {
+         symp.setSymptomDetail(txt);
+       }
+    }
+}
+
+
+
+private class LocationText extends ASTVisitor {
+   
+   private StringBuffer output_text;
+   private int level_count;
+   
+   LocationText() {
+      output_text = new StringBuffer();
+      level_count = 0;
+    }
+   
+   String getOutputText() {
+      return output_text.toString();
+    }
+   
+   @Override public boolean visit(MethodInvocation mi) {
+      if (level_count == 0) {
+         level_count = 1;
+         for (Object o : mi.arguments()) {
+            ASTNode arg = (ASTNode) o;
+            IvyLog.logD("DICONTROL","Location arg " + arg);
+            // might want to evaluate the expression here
+            arg.accept(this);
+          }
+         output_text.append("\n");
+         level_count = 0;
+       } 
+      return false;
+    }
+   
+   @Override public boolean preVisit2(ASTNode n) {
+      if (level_count == 0) return true;
+      if (n instanceof Expression) {
+         switch (n.getNodeType()) {
+            case ASTNode.STRING_LITERAL :
+            case ASTNode.CHARACTER_LITERAL :
+            case ASTNode.NULL_LITERAL :
+            case ASTNode.NUMBER_LITERAL :
+               return true;
+            default :
+               DiadValue v = for_thread.evaluate("String.valueOf(" + n.toString() + ")");
+               if (v != null) {
+                  output_text.append(v.getString());
+                  output_text.append(" ");
+                }
+               return false;
+          }
+       }
+      return true;
+    }
+   
+   @Override public void endVisit(StringLiteral nd) {
+      output_text.append(nd.getLiteralValue());
+    }
+   
+   @Override public void endVisit(CharacterLiteral nd) {
+      output_text.append(nd.charValue());
+    }
+   
+   @Override public void endVisit(NullLiteral nd) {
+      output_text.append("null");
+    }
+   
+   @Override public void endVisit(NumberLiteral nd) {
+      output_text.append(nd.getToken());
+    }
+   
+}       // end of inner class LocationText
+
+   
+
+
 
 
 private DicontrolSymptom checkDefensiveCase(ASTNode stmt)
 {
+   DicontrolSymptom rslt = null;
+   
    ASTNode par = stmt.getParent();
-   if (par.getNodeType() != ASTNode.SWITCH_STATEMENT) return null;
+   if (par.getNodeType() != ASTNode.SWITCH_STATEMENT) return rslt;
    
    SwitchStatement ss = (SwitchStatement) par;
    Statement start = null;
@@ -362,20 +463,21 @@ private DicontrolSymptom checkDefensiveCase(ASTNode stmt)
        }   
     }
    
-   if (start == null) return null;
+   if (start == null) return rslt;
    
    boolean check = false;
    boolean isok = false;
-   boolean haveerr = false;
+   ASTNode stmt2 = null;
    for (Object o2 : ss.statements()) {
       Statement s2 = (Statement) o2;
       if (s2 == start) check = true;
       else if (check && s2 == end) {
          break;
        }
+      else if (!check) continue;
       switch (s2.getNodeType()) {
          case ASTNode.SWITCH_CASE :
-            return null;
+            return rslt;
          case ASTNode.EMPTY_STATEMENT :
          case ASTNode.RETURN_STATEMENT :
          case ASTNode.THROW_STATEMENT :
@@ -384,19 +486,21 @@ private DicontrolSymptom checkDefensiveCase(ASTNode stmt)
             isok = true;
             break;
          case ASTNode.EXPRESSION_STATEMENT :
-            if (!isErrorStatement(s2)) return null;
-            haveerr = true;
+            if (!isErrorStatement(s2)) return rslt;
+            stmt2 = s2;
             break;
          default :
             return null;
        } 
     }
    
-   if (isok && haveerr) {
-      return new DicontrolSymptom(DiadSymptomType.LOCATION);
+   if (isok && stmt2 != null) {
+      rslt = new DicontrolSymptom(DiadSymptomType.LOCATION);
+      updateLocationSymptom(rslt,stmt2);
+      // set information based on print/log statement
     }
    
-   return null;
+   return rslt;
 }
 
 

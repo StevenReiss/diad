@@ -412,6 +412,10 @@ private String getLocationText()
       buf.append(symptom_item);
     }
    
+   if (symptom_detail != null && !symptom_detail.isBlank()) {
+      buf.append("\nsince it reflects the problem: " + symptom_detail);
+    }
+   
    return buf.toString();
 }
 

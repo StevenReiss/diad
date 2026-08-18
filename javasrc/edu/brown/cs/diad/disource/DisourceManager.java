@@ -34,6 +34,7 @@ import org.w3c.dom.Element;
 
 import edu.brown.cs.diad.dicontrol.DicontrolMain;
 import edu.brown.cs.ivy.file.IvyFile;
+import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.mint.MintConstants.CommandArgs;
 import edu.brown.cs.ivy.xml.IvyXml;
 import edu.brown.cs.ivy.xml.IvyXmlWriter;
@@ -135,10 +136,20 @@ public void noteFileSaved(File f)
 
 public String getProjectForFile(File f)
 {
+   if (default_project == null) {
+      buildProjectMap();
+    }
+   
    if (f == null) return default_project;
    
    String p = project_map.get(f);
-   if (p == null) p = default_project;
+   if (p == null) {
+      File f1 = IvyFile.getCanonical(f);
+      p = project_map.get(f1);
+    }
+   if (p == null) {
+      p = default_project;
+    }
    
    return p;
 }
@@ -148,6 +159,10 @@ public File findProjectFile(String fnm)
 {
    File f1 = new File(fnm);
    if (f1.isAbsolute()) return f1;
+   
+   if (default_project == null) {
+      buildProjectMap();
+    }
    
    f1 = null;
    for (File pf : project_map.keySet()) {
@@ -166,6 +181,8 @@ private void buildProjectMap()
 {
    project_map = new HashMap<>();
    default_project = null;
+   
+   IvyLog.logD("DISOURCE","Build project map");
    
    Element xml = diad_control.sendBubblesMessage("PROJECTS",null,null);
    for (Element p : IvyXml.children(xml,"PROJECT")) {
@@ -189,6 +206,7 @@ private void buildProjectMap()
             File f1 = IvyFile.getCanonical(f);
             if (f1 != f) project_map.putIfAbsent(f,nm);
             if (default_project == null) {
+               IvyLog.logD("DISOURCE","Set default project " + nm);
                default_project = nm;
              }
           }
