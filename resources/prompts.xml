@@ -4,7 +4,7 @@
       knowledge of the Java libraries and other libraries that might be used in a
       project.	You are being asked to help a developer debug his system while the
       developer is working in the debugger.
-	
+
       ${CONTEXT}
 
       The system has stopped at a breakpoint and the developer has identified
@@ -50,7 +50,7 @@
       knowledge of the Java libraries and other libraries that might be used in a
       project.	You are being asked to help a developer debug his system while the
       developer is working in the debugger.
-	
+
       ${CONTEXT}
 
       The system has stopped at a breakpoint and the developer has identified
@@ -189,61 +189,3 @@
      to solve the problem using the agents.
    ]]></PROMPT>
 </PROMPTS>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
