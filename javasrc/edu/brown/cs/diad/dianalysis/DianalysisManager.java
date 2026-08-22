@@ -25,9 +25,11 @@ package edu.brown.cs.diad.dianalysis;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Random;
@@ -282,6 +284,30 @@ public Collection<DiadLocation> findInitialLocations(DiadSymptom symp,DiadThread
    return locs.findInitialLocations();
 }
 
+
+/********************************************************************************/
+/*                                                                              */
+/*      Variable queries                                                        */
+/*                                                                              */
+/********************************************************************************/
+
+public Collection<DiadLocation> getVariableLocations(String method,int line,
+      String var,boolean reaching)
+{ 
+   List<DiadLocation> rslt = new ArrayList<>();
+   
+// DisourceManager srcmgr = diad_control.getSourceManager();
+// Element xml = srcmgr.findMethod(method,true);
+   // go through matches and find the one with the proper line
+   // get its file
+   // getSourceNode(null,file,-1,line,false,true)
+   // find rigthmost SimpleName that matches 'var' argument
+   // get its offset
+   // then use queryflow from Fait UI to set up FAIT query
+   // then convert the result to a list of locations
+   
+   return rslt;
+}
 
 
 /********************************************************************************/

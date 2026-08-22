@@ -84,6 +84,8 @@ static DicontrolCommand createCommand(DicontrolMain ctrl,Element xml)
           return new QueryEval(ctrl,xml);
       case "Q_LOCATIONS" :
          return new QueryLocations(ctrl,xml);
+      case "Q_VARFLOW" :
+         return new QueryVarFlow(ctrl,xml);
       case "Q_EXECTRACE" :
          return new QueryExecTrace(ctrl,xml);
       case "Q_LINETRACE" :
@@ -449,6 +451,28 @@ private static class QueryLocations extends QueryCommand {
    
 
 }       // end of inner class QueryLocations
+
+
+private static class QueryVarFlow extends QueryCommand {
+   
+   private String method_name;
+   private int line_number;
+   private String variable_name;
+   private boolean do_reaching;
+   
+   QueryVarFlow(DicontrolMain ctrl,Element xml) {
+      super(ctrl,xml);
+      method_name = IvyXml.getAttrString(xml,"METHOD");
+      line_number = IvyXml.getAttrInt(xml,"LINE");
+      variable_name = IvyXml.getAttrString(xml,"VARIABLE");
+      do_reaching = IvyXml.getAttrBool(xml,"REACHING");   
+    }
+   
+   @Override protected JSONArray getJsonArray() {
+      return getCandidate().getJsonVarFlow(method_name,line_number,variable_name,do_reaching);
+    }
+   
+}       // end of inner class QueryVarFlow
 
 
 private static class QueryExecTrace extends QueryCommand {
@@ -993,7 +1017,8 @@ private static class CommandCreateTest extends QueryCommand {
    
    @Override public void process(IvyXmlWriter xw) {
       DigenManager dm = diad_control.getGenerateManager(); 
-      dm.createTestCase(getCandidate(),up_frame,start_frame,test_name,test_assertion,xw);   
+      dm.createTestCase(getCandidate(),up_frame,start_frame,
+            test_name,test_assertion,xw);   
     }
    
 }       // end of inner class CommandCreateTest

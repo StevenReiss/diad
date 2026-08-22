@@ -383,14 +383,19 @@ JSONObject getEvaluate(String frameid,String expr,int levels)
 
 JSONArray getJsonLocations(boolean all)
 {
-   JSONArray rslt = new JSONArray();
-   
    Collection<DiadLocation> base = (all ? location_set : exec_locations);
    
-   if (base == null) return rslt;
+   return convertLocationsToJson(base);
+}
+
+
+private JSONArray convertLocationsToJson(Collection<DiadLocation> locs)
+{
+   JSONArray rslt = new JSONArray();
+   if (locs == null || locs.isEmpty()) return rslt;
    
    Map<String,List<DiadLocation>> bymethod = new LinkedHashMap<>();
-   for (DiadLocation dloc : base) {
+   for (DiadLocation dloc : locs) {
       String m = dloc.getFullMethod();
       List<DiadLocation> ll = bymethod.get(m);
       if (ll == null) {
@@ -431,6 +436,24 @@ JSONArray getJsonLocations(boolean all)
    
    return rslt;
 }
+
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Query methods : VarFlow                                                 */
+/*                                                                              */
+/********************************************************************************/
+
+JSONArray getJsonVarFlow(String method,int line,String var,boolean reaching)
+{
+   DianalysisManager anal = diad_control.getAnalysisManager();
+         
+   Collection<DiadLocation> locs = anal.getVariableLocations(method,line,var,reaching);
+   
+   return convertLocationsToJson(locs);
+}
+
 
 
 private static class LocationSummary {

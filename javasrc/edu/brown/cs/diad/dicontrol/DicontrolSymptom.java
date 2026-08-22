@@ -406,7 +406,7 @@ private String getLocationText()
    
    buf.append("execution should not reach ");
    if (symptom_item == null) {
-      buf.append("this breakpoint");
+      buf.append("this point");
     }
    else {
       buf.append(symptom_item);
@@ -414,6 +414,16 @@ private String getLocationText()
    
    if (symptom_detail != null && !symptom_detail.isBlank()) {
       buf.append("\nsince it reflects the problem: " + symptom_detail);
+    }
+   
+   String expr = getOriginalExpression();
+   if (expr != null) {
+      if (expr.equals("*SWITCH*")) {
+         buf.append("\nwhere you can assume the switch value that got us here is correct");
+       }
+      else {
+         buf.append("\nwhere you can assume that the condition " + expr + " is correct");
+       }
     }
    
    return buf.toString();

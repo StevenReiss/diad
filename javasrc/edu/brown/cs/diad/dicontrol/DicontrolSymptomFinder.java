@@ -32,6 +32,7 @@ import org.eclipse.jdt.core.dom.AssertStatement;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.CharacterLiteral;
 import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.IfStatement;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.NullLiteral;
 import org.eclipse.jdt.core.dom.NumberLiteral;
@@ -317,6 +318,7 @@ private DicontrolSymptom checkDefensiveIf(ASTNode stmt)
    Block blk = (Block) par; 
    ASTNode spar = par.getParent();
    if (spar.getNodeType() != ASTNode.IF_STATEMENT) return rslt;
+   IfStatement ifstmt = (IfStatement) spar;
    ASTNode stmt0 = null;
    
    for (Object o1 : blk.statements()) {
@@ -341,7 +343,8 @@ private DicontrolSymptom checkDefensiveIf(ASTNode stmt)
    
    if (stmt0 != null) {
       rslt = new DicontrolSymptom(DiadSymptomType.LOCATION); 
-      updateLocationSymptom(rslt,stmt0);
+      updateLocationSymptom(rslt,stmt0);       
+      rslt.setOriginalExpression(ifstmt.getExpression().toString());
     }
    
    return rslt;
@@ -443,7 +446,6 @@ private DicontrolSymptom checkDefensiveCase(ASTNode stmt)
    
    ASTNode par = stmt.getParent();
    if (par.getNodeType() != ASTNode.SWITCH_STATEMENT) return rslt;
-   
    SwitchStatement ss = (SwitchStatement) par;
    Statement start = null;
    Statement end = null;
@@ -497,7 +499,7 @@ private DicontrolSymptom checkDefensiveCase(ASTNode stmt)
    if (isok && stmt2 != null) {
       rslt = new DicontrolSymptom(DiadSymptomType.LOCATION);
       updateLocationSymptom(rslt,stmt2);
-      // set information based on print/log statement
+      rslt.setOriginalExpression("*SWITCH*");
     }
    
    return rslt;
