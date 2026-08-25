@@ -15,6 +15,11 @@
 
 <DIAD DO='TEST' PROJECT='nanoxml' LAUNCH='testParsing16' CONTINUE='0' />
 <DIAD DO='WAITFORSTATE' STATE='READY' />
+<DIAD DO='Q_VARFLOW' METHOD='net.n3.nanoxml.StdXMLParser.processElement'
+	LINE='359' VARIABLE='name' REACHING='false' />
+<DIAD DO='Q_VARFLOW' METHOD='net.n3.nanoxml.StdXMLParser.processElement'
+	LINE='359' VARIABLE='name' REACHING='true' />
+
 <DIAD DO='Q_REFERENCES' NAME='net.n3.nanoxml.StdXMLParser' />
 <DIAD DO='Q_REFERENCES' NAME='net.n3.nanoxml.StdXMLParser.processElement' />
 <DIAD DO='Q_REFERENCES' NAME='net.n3.nanoxml.StdXMLParser.entityResolver' />

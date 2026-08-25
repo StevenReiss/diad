@@ -106,6 +106,7 @@ Collection<DiadLocation> findInitialLocations()
     }
    if (Thread.currentThread().isInterrupted()) return null;
    
+   // USE DianalysisManger.getLocationResult and then filter
    for (Element nodes : IvyXml.children(xml,"NODES")) {
       IvyLog.logD("DIANALYSIS","RESULT OF LOCATION QUERY " + IvyXml.convertXmlToString(nodes));
       Map<String,DiadLocation> done = new HashMap<>();

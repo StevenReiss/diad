@@ -23,14 +23,10 @@
 package edu.brown.cs.diad.dicontrol;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.json.JSONArray;
@@ -385,108 +381,8 @@ JSONArray getJsonLocations(boolean all)
 {
    Collection<DiadLocation> base = (all ? location_set : exec_locations);
    
-   return convertLocationsToJson(base);
+   return DicontrolCommand.convertLocationsToJson(base);
 }
-
-
-private JSONArray convertLocationsToJson(Collection<DiadLocation> locs)
-{
-   JSONArray rslt = new JSONArray();
-   if (locs == null || locs.isEmpty()) return rslt;
-   
-   Map<String,List<DiadLocation>> bymethod = new LinkedHashMap<>();
-   for (DiadLocation dloc : locs) {
-      String m = dloc.getFullMethod();
-      List<DiadLocation> ll = bymethod.get(m);
-      if (ll == null) {
-         ll = new ArrayList<>();
-         bymethod.put(m,ll);
-       }
-      ll.add(dloc);
-    }
-   
-   for (Map.Entry<String,List<DiadLocation>> ent : bymethod.entrySet()) {
-      Map<Integer,LocationSummary> found = new TreeMap<>();
-      for (DiadLocation loc1 : ent.getValue()) {
-         LocationSummary sum = found.get(loc1.getLineNumber());
-         if (sum == null) {
-            sum = new LocationSummary(loc1);
-            found.put(loc1.getLineNumber(),sum);
-          }
-         else {
-            sum.merge(loc1);
-          }
-       }
-      JSONObject obj = new JSONObject();
-      obj.put("METHOD",ent.getKey());
-//    DiadLocation loc0 = ent.getValue().get(0);
-//    obj.put("FILE",loc0.getFile());
-//    obj.put("START_POSITION",loc0.getMethodOffset());
-//    obj.put("END_POSITION",loc0.getMethodEndOffset());
-      JSONArray arr = new JSONArray();
-      for (LocationSummary sum : found.values()) {
-         int lno = sum.getLineNumber();
-         arr.put(lno);
-//       JSONObject sobj = sum.toJson();
-//       arr.put(sobj);
-       }
-      obj.put("LINES",arr);
-      rslt.put(obj);
-    }
-   
-   return rslt;
-}
-
-
-
-/********************************************************************************/
-/*                                                                              */
-/*      Query methods : VarFlow                                                 */
-/*                                                                              */
-/********************************************************************************/
-
-JSONArray getJsonVarFlow(String method,int line,String var,boolean reaching)
-{
-   DianalysisManager anal = diad_control.getAnalysisManager();
-         
-   Collection<DiadLocation> locs = anal.getVariableLocations(method,line,var,reaching);
-   
-   return convertLocationsToJson(locs);
-}
-
-
-
-private static class LocationSummary {
-  
-   private int line_number;
-   private int start_offset;
-   private int end_offset;
-   private double loc_priority;
-   
-   LocationSummary(DiadLocation loc) {
-      line_number = loc.getLineNumber();
-      start_offset = loc.getStartOffset();
-      end_offset = loc.getEndOffset();
-      loc_priority = loc.getPriority();
-    }
-   
-   void merge(DiadLocation loc) {
-      start_offset = Math.min(start_offset,loc.getStartOffset());
-      end_offset = Math.max(end_offset,loc.getEndOffset());
-      loc_priority = Math.max(loc_priority,loc.getPriority());
-    }
-   
-// JSONObject toJson() {
-//    JSONObject rslt = new JSONObject();
-//    rslt.put("LINE",line_number); 
-//    rslt.put("PRIORITY",loc_priority);
-//    return rslt;
-//  }
-   
-   int getLineNumber()          { return line_number; }
-   
-}       // end of inner class LocationSummary
-
 
 
 /********************************************************************************/

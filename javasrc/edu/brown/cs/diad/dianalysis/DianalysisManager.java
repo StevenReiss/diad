@@ -36,9 +36,12 @@ import java.util.Random;
 import java.util.Set;
 
 import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.ASTVisitor;
+import org.eclipse.jdt.core.dom.BodyDeclaration;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.ImportDeclaration;
 import org.eclipse.jdt.core.dom.PackageDeclaration;
+import org.eclipse.jdt.core.dom.SimpleName;
 import org.w3c.dom.Element;
 
 import edu.brown.cs.diad.dicontrol.DicontrolMain;
@@ -292,22 +295,108 @@ public Collection<DiadLocation> findInitialLocations(DiadSymptom symp,DiadThread
 /********************************************************************************/
 
 public Collection<DiadLocation> getVariableLocations(String method,int line,
-      String var,boolean reaching)
+      String var,String fld,boolean reaching)
 { 
    List<DiadLocation> rslt = new ArrayList<>();
    
-// DisourceManager srcmgr = diad_control.getSourceManager();
-// Element xml = srcmgr.findMethod(method,true);
-   // go through matches and find the one with the proper line
-   // get its file
-   // getSourceNode(null,file,-1,line,false,true)
-   // find rigthmost SimpleName that matches 'var' argument
-   // get its offset
-   // then use queryflow from Fait UI to set up FAIT query
-   // then convert the result to a list of locations
+   DisourceManager srcmgr = diad_control.getSourceManager();
+   Element xml = srcmgr.findMethod(method,true);
+   
+   String project = null;
+   File file = null;
+   ASTNode node = null;
+   CompilationUnit cu = null;
+   
+   for (Element mxml : IvyXml.children(xml,"MATCH")) {
+      Element itmxml = IvyXml.getChild(mxml,"ITEM");
+      if (itmxml == null) continue;
+      project = IvyXml.getAttrString(itmxml,"PROJECT");
+      String fnm = IvyXml.getAttrString(itmxml,"PATH");
+      int off = IvyXml.getAttrInt(itmxml,"STARTOFFSET");
+      file = new File(fnm);
+      node = srcmgr.getSourceNode(project,file,off,-1,
+            false,false);
+      while (node != null) {
+         if (node instanceof BodyDeclaration) break;
+         node = node.getParent();
+       }
+      if (node == null) continue;
+      cu = (CompilationUnit) node.getRoot();
+      int sln = cu.getLineNumber(node.getStartPosition());
+      int eln = cu.getLineNumber(node.getStartPosition() + node.getLength());
+      if (line >= sln && line <= eln) {
+         break;
+       }
+      node = null;
+    }
+   
+   if (node == null) return rslt;
+   int lstart = cu.getPosition(line,0);
+   int lend = cu.getPosition(line+1,0);
+   if (lend < 0) lend = node.getStartPosition() + node.getLength();
+   VarFinder vf = new VarFinder(lstart,lend,var,fld);
+   node.accept(vf);
+   SimpleName varnode = vf.getResultantNode();
+   if (varnode == null) return rslt;
+   
+   CommandArgs args = new CommandArgs("FILE",file.getPath(),
+         "PROJECT",project,
+         "START",varnode.getStartPosition(),
+         "LINE",line,
+         "TOKEN",varnode.getIdentifier(),
+         "METHOD",method,
+//       "CONDDEPTH",4,
+//       "DETPH",10,
+         "QTYPE","TOKEN");
+   
+   Element qrslt = null;
+   if (!reaching) {
+      Element rslt1 = sendFaitMessage("FLOWQUERY",args,null);
+      qrslt = IvyXml.getChild(rslt1,"QUERY");
+    }
+   else {
+      Element rslt2 =  sendFaitMessage("VARQUERY",args,null);
+      qrslt = IvyXml.getChild(rslt2,"VALUESET");
+    }
+   
+   if (qrslt != null) {
+      rslt = getLocationResult(qrslt);
+    }
    
    return rslt;
 }
+
+
+private static class VarFinder extends ASTVisitor {
+   
+   private int line_start;
+   private int line_end;
+   private String var_name;
+   private String field_name;
+   private SimpleName use_node;
+   
+   VarFinder(int lstart,int lend,String var,String fld) {
+      line_start = lstart;
+      line_end = lend;
+      var_name = var;
+      field_name = fld;
+      use_node = null;
+    }
+   
+   SimpleName getResultantNode()                { return use_node; }
+   
+   @Override public void endVisit(SimpleName n) {
+      int pos = n.getStartPosition();
+      if (pos < line_start || pos > line_end) return;
+      if (n.getIdentifier().equals(var_name)) {
+         use_node = n;
+       }
+      else if (field_name != null && n.getIdentifier().equals(field_name)) {
+         use_node = n;
+       }
+    }
+   
+}       // end of inner class VarFinder
 
 
 /********************************************************************************/
@@ -695,7 +784,54 @@ private Set<File> getProjectSourceFiles(String proj)
 }
 
 
+/********************************************************************************/
+/*                                                                              */
+/*      Helper methods                                                          */
+/*                                                                              */
+/********************************************************************************/
 
+List<DiadLocation> getLocationResult(Element xml)
+{
+   DisourceManager src = getSourceManager(); 
+   List<DiadLocation> rslt = new ArrayList<>();
+   
+   for (Element nodes : IvyXml.children(xml,"NODES")) {
+      IvyLog.logD("DIANALYSIS","Process query result: " + IvyXml.convertXmlToString(nodes));
+      Map<String,DiadLocation> done = new HashMap<>();
+      for (Element n : IvyXml.children(nodes,"NODE")) {
+         double p = IvyXml.getAttrDouble(n,"PRIORITY");
+         String reason = IvyXml.getAttrString(n,"REASON");
+         Element locelt = IvyXml.getChild(n,"LOCATION");
+         String fnm = IvyXml.getAttrString(locelt,"FILE");
+         if (fnm == null) {
+            IvyLog.logE("DIANALYSIS","Graph element without FILE " +
+                  IvyXml.convertXmlToString(n));
+            continue;
+          }
+         File f = new File(fnm);
+         String proj = src.getProjectForFile(f);
+         DiadLocation loc = new DiadLocation(null,locelt,proj); 
+         double p1 = loc.getPriority();
+         p1 = p1 * p;
+         loc.setPriority(p1);
+         loc.setReason(reason);
+         IvyLog.logD("DIANALYSIS","Consider file " + loc.getFile() +
+               " " + loc.getLineNumber());
+         String s = loc.getFile().getPath() + "@" + loc.getStatementLine();
+         DiadLocation oloc = done.putIfAbsent(s,loc);
+         if (oloc != null) {
+            double p2 = oloc.getPriority();
+            if (p1 > p2) oloc.setPriority(p1);
+          }
+         else {
+            IvyLog.logD("DIANALYSIS","USE LOCATION " + loc);
+            rslt.add(loc);
+          }
+       }   
+    }
+   
+   return rslt;
+}
 
 }       // end of class DianalysisFactory
 

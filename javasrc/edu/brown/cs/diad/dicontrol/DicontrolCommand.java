@@ -22,13 +22,20 @@
 
 package edu.brown.cs.diad.dicontrol;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.w3c.dom.Element;
 
+import edu.brown.cs.diad.dianalysis.DianalysisManager;
+import edu.brown.cs.diad.dicore.DiadLocation;
 import edu.brown.cs.diad.dicore.DiadRepair;
 import edu.brown.cs.diad.dicore.DiadStack;
 import edu.brown.cs.diad.dicore.DiadStackFrame;
@@ -178,6 +185,86 @@ protected boolean isInteger(String v)
    
    return v.matches("[0-9]+");
 }
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Convert set of diad locations to JSON array                             */
+/*                                                                              */
+/********************************************************************************/
+
+static JSONArray convertLocationsToJson(Collection<DiadLocation> locs)
+{
+   JSONArray rslt = new JSONArray();
+   if (locs == null || locs.isEmpty()) return rslt;
+   
+   Map<String,List<DiadLocation>> bymethod = new LinkedHashMap<>();
+   for (DiadLocation dloc : locs) {
+      String m = dloc.getFullMethod();
+      List<DiadLocation> ll = bymethod.get(m);
+      if (ll == null) {
+         ll = new ArrayList<>();
+         bymethod.put(m,ll);
+       }
+      ll.add(dloc);
+    }
+   
+   for (Map.Entry<String,List<DiadLocation>> ent : bymethod.entrySet()) {
+      Map<Integer,LocationSummary> found = new TreeMap<>();
+      for (DiadLocation loc1 : ent.getValue()) {
+         LocationSummary sum = found.get(loc1.getLineNumber());
+         if (sum == null) {
+            sum = new LocationSummary(loc1);
+            found.put(loc1.getLineNumber(),sum);
+          }
+         else {
+            sum.merge(loc1);
+          }
+       }
+      JSONObject obj = new JSONObject();
+      obj.put("METHOD",ent.getKey());
+//    DiadLocation loc0 = ent.getValue().get(0);
+//    obj.put("FILE",loc0.getFile());
+//    obj.put("START_POSITION",loc0.getMethodOffset());
+//    obj.put("END_POSITION",loc0.getMethodEndOffset());
+      JSONArray arr = new JSONArray();
+      for (LocationSummary sum : found.values()) {
+         int lno = sum.getLineNumber();
+         arr.put(lno);
+//       JSONObject sobj = sum.toJson();
+//       arr.put(sobj);
+       }
+      obj.put("LINES",arr);
+      rslt.put(obj);
+    }
+   
+   return rslt;
+}
+
+
+private static class LocationSummary {
+   
+   private int line_number;
+   private int start_offset;
+   private int end_offset;
+   private double loc_priority;
+   
+   LocationSummary(DiadLocation loc) {
+      line_number = loc.getLineNumber();
+      start_offset = loc.getStartOffset();
+      end_offset = loc.getEndOffset();
+      loc_priority = loc.getPriority();
+    }
+   
+   void merge(DiadLocation loc) {
+      start_offset = Math.min(start_offset,loc.getStartOffset());
+      end_offset = Math.max(end_offset,loc.getEndOffset());
+      loc_priority = Math.max(loc_priority,loc.getPriority());
+    }
+   
+   int getLineNumber()          { return line_number; }
+   
+}       // end of inner class LocationSummary
 
 
 
@@ -362,7 +449,7 @@ private abstract static class QueryCommand extends DicontrolCommand {
     }
    
    @Override public void process(IvyXmlWriter xw) {
-      if (debug_candidate == null) return;
+      if (debug_candidate == null && requireCandidate()) return;
       
       long start = System.currentTimeMillis();
       
@@ -394,6 +481,7 @@ private abstract static class QueryCommand extends DicontrolCommand {
    protected JSONObject getJsonObject()                 { return null; }
    protected JSONArray getJsonArray()                   { return null; }
    protected void localProcess(IvyXmlWriter xw)         { }
+   protected boolean requireCandidate()                 { return true; }
    
 }       // end of inner class QueryCommand
 
@@ -458,6 +546,7 @@ private static class QueryVarFlow extends QueryCommand {
    private String method_name;
    private int line_number;
    private String variable_name;
+   private String field_name;
    private boolean do_reaching;
    
    QueryVarFlow(DicontrolMain ctrl,Element xml) {
@@ -465,11 +554,18 @@ private static class QueryVarFlow extends QueryCommand {
       method_name = IvyXml.getAttrString(xml,"METHOD");
       line_number = IvyXml.getAttrInt(xml,"LINE");
       variable_name = IvyXml.getAttrString(xml,"VARIABLE");
+      field_name = IvyXml.getAttrString(xml,"FIELD");
+      if (field_name != null && field_name.isBlank()) field_name = null;
       do_reaching = IvyXml.getAttrBool(xml,"REACHING");   
     }
    
+   @Override protected boolean requireCandidate()               { return false; }
+   
    @Override protected JSONArray getJsonArray() {
-      return getCandidate().getJsonVarFlow(method_name,line_number,variable_name,do_reaching);
+      DianalysisManager anal = diad_control.getAnalysisManager();
+      Collection<DiadLocation> locs =  anal.getVariableLocations(method_name,
+            line_number,variable_name,field_name,do_reaching);
+      return DicontrolCommand.convertLocationsToJson(locs);
     }
    
 }       // end of inner class QueryVarFlow
@@ -615,18 +711,7 @@ private static class QueryReferences extends QueryCommand {
       search_name = IvyXml.getAttrString(xml,"NAME");
     }
    
-   @Override public void process(IvyXmlWriter xw) {
-      long start = System.currentTimeMillis();
-      
-      JSONArray ja = getJsonArray();
-      xw.begin("JSON");
-      xw.field("TYPE","ARRAY");
-      xw.cdata(ja.toString(2));
-      xw.end("JSON");
-      
-      long time = System.currentTimeMillis() - start;
-      IvyLog.logI("DICONTROL","Command " + getCommandName() + " TIME = " + time);
-    }
+   @Override protected boolean requireCandidate()               { return false; }
    
    @Override protected JSONArray getJsonArray() {
       DisourceManager src = diad_control.getSourceManager();
