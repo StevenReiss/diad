@@ -23,12 +23,6 @@
 package edu.brown.cs.diad.dianalysis;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
@@ -39,18 +33,15 @@ import org.w3c.dom.Element;
 
 import edu.brown.cs.diad.dicontrol.DicontrolMain;
 import edu.brown.cs.diad.dicore.DiadException;
-import edu.brown.cs.diad.dicore.DiadLocation;
 import edu.brown.cs.diad.dicore.DiadNodeContext;
 import edu.brown.cs.diad.dicore.DiadStack;
 import edu.brown.cs.diad.dicore.DiadStackFrame;
 import edu.brown.cs.diad.dicore.DiadSymptom;
 import edu.brown.cs.diad.dicore.DiadThread;
 import edu.brown.cs.diad.disource.DisourceManager;
-import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.jcomp.JcompAst;
 import edu.brown.cs.ivy.jcomp.JcompSource;
 import edu.brown.cs.ivy.mint.MintConstants.CommandArgs;
-import edu.brown.cs.ivy.xml.IvyXml;
 import edu.brown.cs.ivy.xml.IvyXmlWriter;
 
 abstract class DianalysisHistory implements DianalysisConstants
@@ -286,71 +277,12 @@ protected String getXmlForLocation(String elt,ASTNode node,boolean next)
 
 protected void outputGraph(Element hrslt,IvyXmlWriter xw) throws DiadException
 {
-// RoseLog.logD("STEM","HISTORY RESULT: " + IvyXml.convertXmlToString(hrslt));
-   
    if (hrslt == null) throw new DiadException("Can't find history");
-   xw.begin("RESULT");
-   if (for_symptom != null) for_symptom.outputXml(xw); 
-   xw.begin("NODES");
-   int lsz = 0;
-   int tsz = 0;
-   long ttim = 0;
-   for (Element qrslt : IvyXml.children(hrslt,"QUERY")) {
-      Element grslt = IvyXml.getChild(qrslt,"GRAPH");
-      int sz = IvyXml.getAttrInt(grslt,"SIZE");
-      tsz += sz;
-      ttim += IvyXml.getAttrLong(grslt,"TIME");
-      if (sz > 0) lsz += processGraphNodes(grslt,xw);
-    }
-   xw.end("NODES");
-   xw.end("RESULT");
    
-   IvyLog.logI("DIANALYSIS","Location query counts, GRAPH: " + tsz + 
-         " NODES: " + lsz + " TIME: " + ttim);
+   DianalysisGraph dg = new DianalysisGraph(for_analysis);
+   dg.outputGraph(hrslt,for_symptom,xw);
 }
 
-
-private int processGraphNodes(Element gelt,IvyXmlWriter xw)
-{
-   Map<String,GraphNode> locs = new HashMap<>();
-   
-   List<GraphNode> allnodes = new ArrayList<>();
-   for (Element nelt : IvyXml.children(gelt,"NODE")) {
-      GraphNode gn = new GraphNode(nelt);
-      if (gn.shouldCheck()) allnodes.add(gn);
-    }
-   
-   Set<File> done = new HashSet<>();
-   for ( ; ; ) {
-      File workon = null;
-      for (GraphNode gn : allnodes) {
-         File gfile = gn.getFile();
-         if (done.contains(gfile)) continue;
-         if (workon == null) {
-            workon = gfile;
-            gn.getLineNumber();
-          }
-         else if (gfile.equals(workon)) gn.getLineNumber();
-       }
-      if (workon == null) break;
-      done.add(workon); 
-    }
-   
-   for (GraphNode gn : allnodes) {
-      if (!gn.isValid()) continue;
-      String id = gn.getLocationString();
-      GraphNode ogn = locs.get(id);
-      if (ogn != null) {
-         if (ogn.getPriority() >= gn.getPriority()) continue;
-       }
-      locs.put(id,gn);
-    }
-   for (GraphNode gn : locs.values()) {
-      gn.outputXml(xw);
-    }
-   
-   return locs.size();
-}
 
 
 /********************************************************************************/
@@ -517,103 +449,10 @@ private static class AfterFinder extends ASTVisitor {
       else last_node = n;
     }
    
-}
+}       // end of inner class AfterFinder
 
-
-
-private class GraphNode {
-
-   private DiadLocation node_location;
-   private double node_priority;
-   private String node_reason;
-   private String node_type;
-   
-   GraphNode(Element nelt) {
-      Element locelt = IvyXml.getChild(nelt,"LOCATION");
-      if (locelt == null) {
-         String file = IvyXml.getAttrString(nelt,"FILE");
-         if (file == null) {
-            IvyLog.logE("DIANALYSIS","Graph node with no location " + 
-               IvyXml.convertXmlToString(nelt));
-          }
-         else {
-            IvyLog.logI("DIANALYSIS","File " + file + 
-                  " is binary for analysis");
-          }
-         node_location = null;
-       }
-      else {
-         node_location = new DiadLocation(for_analysis.getDiadControl(),
-               locelt,null); 
-       }
-      node_reason = IvyXml.getAttrString(nelt,"REASON");
-      node_priority = IvyXml.getAttrDouble(nelt,"PRIORITY",0.5);
-      Element point = IvyXml.getChild(nelt,"POINT");
-      node_type = IvyXml.getAttrString(point,"NODETYPE");
-    }
-   
-   boolean isValid() {
-      if (node_location == null || node_reason == null) return false;
-      if (node_location.getFile() == null) return false;
-      if (!node_location.getFile().exists()) return false;
-      if (node_location.getLineNumber() <= 0) return false;
-      if (node_type == null) return false;
-      switch (node_type) {
-         case "MethodDeclaration" :
-            return false;
-         default :
-            
-       }
-      
-      return true;
-    }
-   
-   boolean shouldCheck() {
-      if (node_location == null || node_reason == null) return false;
-      if (node_location.getFile() == null) return false;
-      if (!node_location.getFile().exists()) return false;
-      if (node_type == null) return false;
-      switch (node_type) {
-         case "MethodDeclaration" :
-            return false;
-         default :
-            
-       }
-      
-      return true;
-    }
-   
-   double getPriority()                    { return node_priority; }
-   
-   String getLocationString() {
-      String s = node_location.getFile().getPath();
-      s += "@" + node_location.getLineNumber();
-      s += ":" + node_location.getStartOffset();
-      s += "-" + node_location.getEndOffset();
-      return s;
-    }
-   
-   File getFile() {
-      return  node_location.getFile();
-    }
-   
-   int getLineNumber() {
-      return node_location.getLineNumber();
-    }
-   
-   void outputXml(IvyXmlWriter xw) {
-      xw.begin("NODE");
-      xw.field("PRIORITY",node_priority);
-      xw.field("REASON",node_reason);
-      node_location.outputXml(xw);
-      xw.end("NODE");
-    }
-   
-}       // end of inner class GraphNode
 
 }       // end of class DianalysisHistory
-
-
 
 
 /* end of DianalysisHistory.java */

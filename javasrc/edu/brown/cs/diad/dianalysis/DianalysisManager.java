@@ -349,18 +349,22 @@ public Collection<DiadLocation> getVariableLocations(String method,int line,
 //       "DETPH",10,
          "QTYPE","TOKEN");
    
-   Element qrslt = null;
+   DianalysisGraph dg = new DianalysisGraph(this);
    if (!reaching) {
       Element rslt1 = sendFaitMessage("FLOWQUERY",args,null);
-      qrslt = IvyXml.getChild(rslt1,"QUERY");
+      Element grslt = null;
+      try (IvyXmlWriter xw = new IvyXmlWriter()) {
+         dg.outputGraph(rslt1,null,xw);
+         grslt = IvyXml.convertStringToXml(xw.toString());
+       }
+      rslt = dg.getLocationResult(grslt,null);
     }
    else {
-      Element rslt2 =  sendFaitMessage("VARQUERY",args,null);
-      qrslt = IvyXml.getChild(rslt2,"VALUESET");
-    }
-   
-   if (qrslt != null) {
-      rslt = getLocationResult(qrslt);
+      // DIAD doesn't have a query call for this yet
+//    Element rslt2 =  sendFaitMessage("VARQUERY",args,null);
+//    qrslt = IvyXml.getChild(rslt2,"VALUESET");
+//    IvyLog.logD("DIANALYSIS","REACHING: " + 
+//          IvyXml.convertXmlToString(qrslt));
     }
    
    return rslt;
@@ -783,55 +787,6 @@ private Set<File> getProjectSourceFiles(String proj)
    return rslt;
 }
 
-
-/********************************************************************************/
-/*                                                                              */
-/*      Helper methods                                                          */
-/*                                                                              */
-/********************************************************************************/
-
-List<DiadLocation> getLocationResult(Element xml)
-{
-   DisourceManager src = getSourceManager(); 
-   List<DiadLocation> rslt = new ArrayList<>();
-   
-   for (Element nodes : IvyXml.children(xml,"NODES")) {
-      IvyLog.logD("DIANALYSIS","Process query result: " + IvyXml.convertXmlToString(nodes));
-      Map<String,DiadLocation> done = new HashMap<>();
-      for (Element n : IvyXml.children(nodes,"NODE")) {
-         double p = IvyXml.getAttrDouble(n,"PRIORITY");
-         String reason = IvyXml.getAttrString(n,"REASON");
-         Element locelt = IvyXml.getChild(n,"LOCATION");
-         String fnm = IvyXml.getAttrString(locelt,"FILE");
-         if (fnm == null) {
-            IvyLog.logE("DIANALYSIS","Graph element without FILE " +
-                  IvyXml.convertXmlToString(n));
-            continue;
-          }
-         File f = new File(fnm);
-         String proj = src.getProjectForFile(f);
-         DiadLocation loc = new DiadLocation(null,locelt,proj); 
-         double p1 = loc.getPriority();
-         p1 = p1 * p;
-         loc.setPriority(p1);
-         loc.setReason(reason);
-         IvyLog.logD("DIANALYSIS","Consider file " + loc.getFile() +
-               " " + loc.getLineNumber());
-         String s = loc.getFile().getPath() + "@" + loc.getStatementLine();
-         DiadLocation oloc = done.putIfAbsent(s,loc);
-         if (oloc != null) {
-            double p2 = oloc.getPriority();
-            if (p1 > p2) oloc.setPriority(p1);
-          }
-         else {
-            IvyLog.logD("DIANALYSIS","USE LOCATION " + loc);
-            rslt.add(loc);
-          }
-       }   
-    }
-   
-   return rslt;
-}
 
 }       // end of class DianalysisFactory
 

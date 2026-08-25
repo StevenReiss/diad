@@ -22,27 +22,17 @@
 
 package edu.brown.cs.diad.dianalysis;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
-import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.w3c.dom.Element;
 
 import edu.brown.cs.diad.dicore.DiadException;
 import edu.brown.cs.diad.dicore.DiadLocation;
 import edu.brown.cs.diad.dicore.DiadSymptom;
 import edu.brown.cs.diad.dicore.DiadThread;
-import edu.brown.cs.diad.disource.DisourceManager;
 import edu.brown.cs.ivy.file.IvyLog;
-import edu.brown.cs.ivy.jcomp.JcompAnnotation;
-import edu.brown.cs.ivy.jcomp.JcompAst;
-import edu.brown.cs.ivy.jcomp.JcompSymbol;
 import edu.brown.cs.ivy.xml.IvyXml;
 import edu.brown.cs.ivy.xml.IvyXmlWriter;
 
@@ -86,7 +76,6 @@ DianalysisLocations(DianalysisManager anal,DiadSymptom sym,DiadThread thrd)
 Collection<DiadLocation> findInitialLocations()
 {
    DianalysisHistory hq = setupHistory();
-   Set<String> execlocs = null;
    List<DiadLocation> rslt = new ArrayList<>();
    
    if (hq == null) {
@@ -94,7 +83,6 @@ Collection<DiadLocation> findInitialLocations()
       return null;
     }
    
-   DisourceManager src = for_analysis.getSourceManager();
    Element xml = null;
    try (IvyXmlWriter xw = new IvyXmlWriter()) {
       hq.process(xw);
@@ -106,50 +94,9 @@ Collection<DiadLocation> findInitialLocations()
     }
    if (Thread.currentThread().isInterrupted()) return null;
    
-   // USE DianalysisManger.getLocationResult and then filter
-   for (Element nodes : IvyXml.children(xml,"NODES")) {
-      IvyLog.logD("DIANALYSIS","RESULT OF LOCATION QUERY " + IvyXml.convertXmlToString(nodes));
-      Map<String,DiadLocation> done = new HashMap<>();
-      for (Element n : IvyXml.children(nodes,"NODE")) {
-         double p = IvyXml.getAttrDouble(n,"PRIORITY");
-         String reason = IvyXml.getAttrString(n,"REASON");
-         Element locelt = IvyXml.getChild(n,"LOCATION");
-         String fnm = IvyXml.getAttrString(locelt,"FILE");
-         if (fnm == null) {
-            IvyLog.logE("DIANALYSIS","Graph element without FILE " +
-                  IvyXml.convertXmlToString(n));
-            continue;
-          }
-         File f = new File(fnm);
-         String proj = src.getProjectForFile(f);
-         DiadLocation loc = new DiadLocation(null,locelt,proj); 
-         double p1 = loc.getPriority();
-         p1 = p1 * p;
-         loc.setPriority(p1);
-         loc.setReason(reason);
-         IvyLog.logD("DIANALYSIS","Consider file " + loc.getFile() +
-               " " + loc.getLineNumber());
-         //TODO:  need to map location line number to start of statement
-         if (!isLocationRelevant(src,loc)) {
-            continue;
-          }
-         String s = loc.getFile().getPath() + "@" + loc.getStatementLine();
-         if (execlocs != null && !execlocs.contains(s)) {
-            IvyLog.logD("DIANALYSIS","IGNORE location " + s + 
-                  " because it isn't executed");
-            continue;
-          }
-         DiadLocation oloc = done.putIfAbsent(s,loc);
-         if (oloc != null) {
-            double p2 = oloc.getPriority();
-            if (p1 > p2) oloc.setPriority(p1);
-          }
-         else {
-            IvyLog.logD("DIANALYSIS","USE LOCATION " + loc);
-            rslt.add(loc);
-          }
-       }   
-    }
+   // USE DianalysisGrpah.getLocationResult
+   DianalysisGraph dg = new DianalysisGraph(for_analysis);
+   rslt = dg.getLocationResult(xml,for_symptom);
    
    return rslt;
 }
@@ -200,73 +147,6 @@ private DianalysisHistory setupHistory()
   
    return hq;
 }
-
-
-/********************************************************************************/
-/*                                                                              */
-/*      Check relevance of a location                                           */
-/*                                                                              */
-/********************************************************************************/
-
-private boolean isLocationRelevant(DisourceManager src,DiadLocation loc)
-{
-   for (String s : for_symptom.ignorePatterns()) {
-      String nm = loc.getMethod(); 
-      if (nm.matches(s)) return false;
-    }
-   
-   if (for_symptom.ignoreMain() || 
-         for_symptom.ignoreTests() || 
-         for_symptom.ignoreDriver()) { 
-      ASTNode n = src.getSourceNode(loc.getProject(),
-            loc.getFile(),loc.getStartOffset(),
-            loc.getLineNumber(),true,false);
-      while (n != null) {
-         if (n instanceof MethodDeclaration) break;
-         n = n.getParent();
-       }
-      if (n != null) {
-         JcompSymbol js = JcompAst.getDefinition(n);
-         if (js != null) {
-            if (for_symptom.ignoreMain()) {
-               if (js.getName().equals("main") && js.isStatic() &&
-                     js.getType().getBaseType().isVoidType()) {
-                  IvyLog.logD("DIANALYSIS","IGNORE MAIN " + js.getFullName());
-                  return false;
-                }
-             }
-            if (for_symptom.ignoreTests() && js.getAnnotations() != null) {
-               for (JcompAnnotation ja : js.getAnnotations()) {
-                  if (ja.getAnnotationType().getName().equals("org.junit.Test")) {
-                     IvyLog.logD("DIANALYSIS","IGNORE TEST " + js.getFullName());
-                     return false;
-                   }
-                }
-               if (js.isPublic() && js.getName().startsWith("test")) {
-                  IvyLog.logD("DIANALYSIS","IGNORE TEST " + js.getFullName());
-                  return false;
-                }
-             }
-            if (for_symptom.ignoreTests() && js.getName().startsWith("test")) {
-               IvyLog.logD("DIANALYSIS","IGNORE TEST " + js.getFullName());
-               return false;
-             }
-            if (for_symptom.ignoreDriver()) {
-               DiadLocation loc0 = for_symptom.getBugLocation();
-               if (loc != null && loc0 != null && loc.getMethod().equals(loc0.getMethod())) {
-                  IvyLog.logD("DIANALYSIS","IGNORE DRIVER " + js.getFullName());
-                  return false; 
-                }
-             }
-          }
-       }
-    }
-   
-   return true;
-}
-
-
-
 
 
 }       // end of class DianalysisLocations

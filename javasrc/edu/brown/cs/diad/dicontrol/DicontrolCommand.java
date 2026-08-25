@@ -91,8 +91,6 @@ static DicontrolCommand createCommand(DicontrolMain ctrl,Element xml)
           return new QueryEval(ctrl,xml);
       case "Q_LOCATIONS" :
          return new QueryLocations(ctrl,xml);
-      case "Q_VARFLOW" :
-         return new QueryVarFlow(ctrl,xml);
       case "Q_EXECTRACE" :
          return new QueryExecTrace(ctrl,xml);
       case "Q_LINETRACE" :
@@ -103,6 +101,8 @@ static DicontrolCommand createCommand(DicontrolMain ctrl,Element xml)
          return new QueryVarHistory(ctrl,xml);
       case "Q_VARVALUE" :
          return new QueryVarValue(ctrl,xml);
+      case "Q_VARFLOW" :
+         return new QueryVarFlow(ctrl,xml);
       case "Q_METHODCALLS" :
          return new QueryMethodCalls(ctrl,xml);
       case "Q_REFERENCES" :
