@@ -89,7 +89,9 @@ DiruntimeFrame(Element xml)
    else source_file = new File(fnm);
    
    String typ = IvyXml.getAttrString(xml,"FILETYPE");
-   if (source_file == null || !source_file.exists() || !typ.equals("JAVAFILE")) is_userframe = false;
+   if (source_file == null || 
+         !source_file.exists() || 
+         !typ.equals("JAVAFILE")) is_userframe = false;
    else is_userframe = true;
    
    String sgn = IvyXml.getAttrString(xml,"SIGNATURE");
