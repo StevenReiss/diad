@@ -573,9 +573,9 @@ public Map<String,DiadValue> getParameterValues(DiadStackFrame basefrm)
    ASTNode past = getAstForFrame(prev,mthd);
    if (past == null) return null; 
    List<ASTNode> callargs = findMethodCallArgs(past,cur.getMethodName());
+   if (callargs == null) return null;
    
    // then for each argument (or this), evaluate the corresponding expression
-   
    
    Map<String,DiadValue> pvals = new HashMap<>();
    for (int i = 0; i < callargs.size(); ++i) {

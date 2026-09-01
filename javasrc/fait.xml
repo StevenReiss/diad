@@ -1,7 +1,6 @@
 <FAIT>
    <PACKAGE NAME='com.sun.org.apache.xerces.internal' />
    <PACKAGE NAME='org.eclipse.jdt.internal' />
-   <PACKAGE NAME='org.eclipse.jdt.core.dom' />
    <PACKAGE NAME='org.objectweb.asm' />
    <METHOD NAME='java.lang.Object.equals' />
    <CLASS NAME='edu.brown.cs.ivy.file.IvyLog' />
