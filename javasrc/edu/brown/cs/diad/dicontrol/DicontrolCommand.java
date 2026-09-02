@@ -2,7 +2,7 @@
 /*                                                                              */
 /*              DicontrolCommand.java                                           */
 /*                                                                              */
-/*      Implementation of the variuos commands                                                 */
+/*      Implementation of the various commands                                  */
 /*                                                                              */
 /********************************************************************************/
 /*      Copyright 2025 Brown University -- Steven P. Reiss                    */

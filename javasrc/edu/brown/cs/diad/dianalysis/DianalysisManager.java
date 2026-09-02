@@ -98,6 +98,7 @@ public DianalysisManager(DicontrolMain ctrl)
    Random r = new Random();
    String sid = "DIAD_" + r.nextInt(10000000);
    CommandArgs args = new CommandArgs("SID",sid);
+   session_id = sid;
    Element rslt = sendFaitMessage("BEGIN",args,null);
    if (!IvyXml.isElement(rslt,"RESULT")) {
       analysis_state = DiadAnalysisState.NONE;

@@ -98,6 +98,8 @@ DiexecuteTrace(DiexecuteExecution exec,Element rslt,DiadThread thrd)
    callid_map.put("-1",root);
    
    ignore_names = new HashSet<>();
+   ignore_names.add("java.lang.Throwable.depth");
+   ignore_names.add("java.lang.Throwable.backtrace");
    DicontrolMain diad = exec.getContext().getManager().getDiadControl();
    String ws = diad.getSourceManager().getWorksapceShortName();
    String ign = diad.getProperty("Diad." + ws + ".ignore");
@@ -565,6 +567,9 @@ private void findContextTime(Element ctx,DiadThread thread,int line,long from,lo
                Boolean fg = compareVariable(local,prevval,
                      thread,from,to);
                if (fg != null) {
+                  if (!fg) {
+                     IvyLog.logD("DIEXECUTE","Variable " + var + " doesn't match");
+                   }
                   ++foundct;
                   found |= fg;
                 }

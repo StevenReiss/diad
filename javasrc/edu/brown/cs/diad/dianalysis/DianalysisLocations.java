@@ -89,7 +89,7 @@ Collection<DiadLocation> findInitialLocations()
       xml = IvyXml.convertStringToXml(xw.toString());
     }
    catch (DiadException e) {
-      IvyLog.logE("DIANALYSIS","Problem finding locations for problem",e);
+      IvyLog.logW("DIANALYSIS","Problem finding locations for problem: " + e);
       return null;
     }
    if (Thread.currentThread().isInterrupted()) return null;

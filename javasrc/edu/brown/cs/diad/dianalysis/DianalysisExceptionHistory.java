@@ -255,7 +255,7 @@ private String getExceptionCause()
     }
    if (ctch != null) {
        String var = ctch.getException().getName().getIdentifier();
-       IvyLog.logD("DIANALYSIS","Attempt to blame previuos exception " +
+       IvyLog.logD("DIANALYSIS","Attempt to blame previous exception " +
              var);
     }
    
