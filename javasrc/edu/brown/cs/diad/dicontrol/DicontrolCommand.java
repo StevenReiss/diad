@@ -1132,17 +1132,11 @@ private static class CommandStackDebug extends QueryCommand {
       if (thrd == null) return;
       // create candidate for thread
       DicontrolCandidate cand = diad_control.createCandidateForThread(thrd);
-      
-//    DicontrolUpdater upd = new DicontrolUpdater(diad_control,cand);  
-//    cand.addCandidateListener(upd);
-//    upd.stateChanged();
-//    cand.start(DiadCandidateState.INITIAL);   
-//    diad_control.handleThreadStateChanged(thrd);
-      // this should be done with a separate command -- starting evaluation
      
       // check for valid candidate before sending back its ID
-      
       xw.field("ID",cand.getId()); 
+      
+      // The actual analysis is then done using the STARTSTACK command
     }
    
 }       // end of inner class CommandStackDebug
