@@ -654,7 +654,8 @@ void handleThreadStateChanged(DiadThread thrd)
    DicontrolCandidate dc = debug_candidates.get(thrd.getThreadId());
    IvyLog.logD("DICONTROL","Handle thread state change " + dc + " " +
          thrd.isRunning() + " " + thrd.isTerminated() + " " +
-         thrd.isStopped() + " " + debug_candidates.size());
+         thrd.isStopped() + " " + thrd.getStateCount() + " " +
+         debug_candidates.size());
    
    
    if (dc != null) {
@@ -668,7 +669,7 @@ void handleThreadStateChanged(DiadThread thrd)
       dc = createCandidateForThread(thrd);
       DicontrolUpdater upd = new DicontrolUpdater(this,dc);
       dc.addCandidateListener(upd);
-      upd.stateChanged();
+//    upd.stateChanged();               // done in candidate thread after delay
       dc.start(DiadCandidateState.INITIAL);  
     }
 }

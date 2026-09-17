@@ -55,6 +55,7 @@ import org.eclipse.jdt.core.dom.SuperConstructorInvocation;
 import org.w3c.dom.Element;
 
 import edu.brown.cs.diad.dicontrol.DicontrolMain;
+import edu.brown.cs.diad.dicore.DiadStack;
 import edu.brown.cs.diad.dicore.DiadStackFrame;
 import edu.brown.cs.diad.dicore.DiadThread;
 import edu.brown.cs.diad.dicore.DiadValue;
@@ -87,6 +88,7 @@ private String exception_type;
 private String exception_detail;
 private int num_frames;
 private DiruntimeStack call_stack;
+private AtomicInteger state_count;
 
 private static final Map<String,RunThreadType> KNOWN_THREADS;
 private static AtomicInteger eval_counter = new AtomicInteger();
@@ -152,6 +154,7 @@ DiruntimeThread(DiruntimeProcess proc,Element xml)
    call_stack = null;
    exception_type = null;
    exception_detail = null;
+   state_count = new AtomicInteger(0);
 }
 
 
@@ -187,6 +190,7 @@ void update(Element xml)
       call_stack = null;
     }
    
+   RunThreadState ost = thread_state;
    if (IvyXml.getAttrBool(xml,"TERMINATED")) {
       thread_state = RunThreadState.DEAD;
     }
@@ -195,6 +199,21 @@ void update(Element xml)
     }
    else {
       thread_state = RunThreadState.RUNNING;
+    }
+   
+   if (ost != thread_state) {
+      if (thread_state == RunThreadState.EXCEPTION && ost == RunThreadState.STOPPED) {
+         // no real change of state
+       }
+      else if (thread_state == RunThreadState.STOPPED && ost == RunThreadState.EXCEPTION) {
+         // no real change of state
+       }
+      else {
+         state_count.incrementAndGet();
+         IvyLog.logD("DIRUNTIME","Update thread state count " + 
+               getThreadName() + " " +
+               ost + " " + thread_state + " " + state_count);
+       }
     }
    
    exception_type = null;
@@ -326,7 +345,6 @@ void setThreadState(RunThreadState state,RunThreadStateDetail detail)
 {
    IvyLog.logD("DIRUNTIME","Set state of thread " + thread_name +
          " " + thread_id + " TO " + state);
-
    
    thread_state = state;
    thread_detail = detail;
@@ -369,6 +387,12 @@ DiruntimeType stringType()
 @Override public String getProcessId()
 {
    return for_process.getId(); 
+}
+
+
+@Override public int getStateCount()
+{
+   return state_count.get();
 }
 
 
@@ -415,10 +439,16 @@ DiruntimeType stringType()
    String eid = "DIAD_E_" + eval_counter.incrementAndGet();
    // expr = "edu.brown.cs.seede.poppy.PoppyValue.register(" + expr + ")";
    
+   DiadStack stk = getStack();
+   if (stk == null) {
+      IvyLog.logW("DIRUNTIME","No stack found for evaluating " + expr);
+      return null;
+    }
+   
    if (frm == null) {
-      frm = getStack().getUserFrame();
+      frm = stk.getUserFrame();
       if (frm == null) {
-         IvyLog.logE("DIRUNTIME","No frame found for evaluating " + expr);
+         IvyLog.logW("DIRUNTIME","No frame found for evaluating " + expr);
          return null;
        }
     }
@@ -443,6 +473,7 @@ DiruntimeType stringType()
       svd = getUniqueValue(svd);
       return svd.getDiadValue(); 
     }
+   
    return null;
 }
 

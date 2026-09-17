@@ -128,7 +128,7 @@ DiadSymptom findSymptom()
 private DicontrolSymptom findStatementSymptom(DiadStackFrame frm,ASTNode stmt,
       String exc,String detail,String msg,String libcall)
 {
-   if (exc != null && frm != null && for_frame != null &&
+   if (exc != null && frm != null && for_frame != null && stmt != null &&
          frm.getFrameId().equals(for_frame.getFrameId())) {
       if (ASSERTION_EXCEPTIONS.contains(exc)) { 
          if (stmt.getNodeType() == ASTNode.ASSERT_STATEMENT) {

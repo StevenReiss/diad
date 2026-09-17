@@ -32,6 +32,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.CompilationUnit;
@@ -82,7 +83,7 @@ DisourceCompiler(DicontrolMain sm,DisourceManager fac)
    diad_control = sm;
    source_factory = fac;
    file_map = new HashMap<>();
-   project_map = new HashMap<>();
+   project_map = new ConcurrentHashMap<>();
    binary_map = new HashMap<>();
    jcomp_control = new JcompControl();
 }
@@ -198,6 +199,7 @@ void noteFileSaved(File f)
 {
    SourceFile sf = getSourceFile(f);
    sf.clearBody();
+   invalidateProject(sf);
 }
 
 /********************************************************************************/
@@ -288,6 +290,7 @@ private synchronized SourceFile getSourceFile(File f)
       file_map.put(f,sf);
       File f1 = IvyFile.getCanonical(f);
       file_map.put(f1,sf);
+      IvyLog.logD("DISOURCE","Create source file " + f + " " + f1);
     }
    
    return sf;
@@ -342,6 +345,18 @@ private JcompProject getJcompProject(String proj,SourceFile file)
     }
    
    return jp;
+}
+
+
+private void invalidateProject(SourceFile sf) 
+{
+   JcompProject jp = project_map.get(sf);
+   if (jp == null) return;
+   
+   for (Iterator<JcompProject> it = project_map.values().iterator(); it.hasNext(); ) {
+      JcompProject xjp = it.next();
+      if (xjp == jp) it.remove();
+    }
 }
 
 
@@ -437,6 +452,7 @@ private static class SourceFile implements JcompSource {
    @Override public String getFileContents() {
       if (file_body != null) return file_body;
       try {
+         IvyLog.logD("DISOURCE","Load source file " + for_file);
          file_body = IvyFile.loadFile(for_file);
          return file_body;
        }

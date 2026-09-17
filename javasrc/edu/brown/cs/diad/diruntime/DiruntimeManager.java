@@ -302,7 +302,7 @@ public void handleResourceChange(Element res)
 {
    String k = IvyXml.getAttrString(res,"KIND");
    Element re = IvyXml.getChild(res,"RESOURCE");
-   String rtyp = IvyXml.getAttrString(res,"TYPE");
+   String rtyp = IvyXml.getAttrString(re,"TYPE");
    if (rtyp != null && rtyp.equals("FILE")) {
       String fp = IvyXml.getAttrString(re,"LOCATION");
       String proj = IvyXml.getAttrString(re,"PROJECT");

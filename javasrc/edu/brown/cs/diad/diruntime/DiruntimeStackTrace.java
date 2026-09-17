@@ -194,6 +194,7 @@ private class UserThread implements DiadThread {
    @Override public String getExceptionType()	 { return exception_type; }
    @Override public String getExceptionDetail()         { return exception_message; }
    @Override public String getProcessId()		{ return thread_id; }
+   @Override public int getStateCount()                 { return 0; }
 
    @Override public DiadValue evaluate(String e)	{ return null; }
    @Override public DiadValue evaluate(String e,DiadStackFrame frm) {

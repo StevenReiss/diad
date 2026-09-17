@@ -53,6 +53,8 @@ String getExceptionDetail();
 String getProcessId();
 boolean isStackTraceThread();
 
+int getStateCount();
+
 DiadValue evaluate(String expr);
 DiadValue evaluate(String expr,DiadStackFrame frm);
 void outputXml(IvyXmlWriter xw);

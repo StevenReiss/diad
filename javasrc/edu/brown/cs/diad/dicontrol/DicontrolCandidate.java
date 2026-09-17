@@ -79,6 +79,7 @@ private SwingEventListenerList<DiadCandidateCallback> candidate_listeners;
 private CandidateThread candidate_processor;
 private Set<File>       candidate_files;
 private DiadAnalysisFileMode file_mode;
+private int             state_count;
 
 private static AtomicInteger candidate_counter = new AtomicInteger(0);
 private static final String QUERY_COMMAND =
@@ -105,6 +106,7 @@ DicontrolCandidate(DicontrolMain ctrl,DiadThread thrd)
    user_symptom = null;
    user_frame = null;
    query_response = null;
+   state_count = for_thread.getStateCount();
    
    candidate_listeners = new SwingEventListenerList<>(DiadCandidateCallback.class);
    candidate_processor = null;
@@ -115,7 +117,7 @@ DicontrolCandidate(DicontrolMain ctrl,DiadThread thrd)
          DiadAnalysisFileMode.FAIT_FILES);
    
    IvyLog.logD("DICONTROL","Setup candidate " + candidate_id + 
-         " for " + thrd.getThreadId());
+         " for " + thrd.getThreadId() + " " + state_count);
 }
 
 
@@ -173,6 +175,12 @@ void setState(DiadCandidateState st)
       candidate_files.clear();
     }
    
+   fireStateChanged();
+}
+
+
+private void fireStateChanged()
+{
    for (DiadCandidateCallback cb : candidate_listeners) {
       cb.stateChanged();
     }
@@ -322,7 +330,11 @@ JSONArray getJsonStack()
 {
    JSONArray rslt = new JSONArray();
    boolean use = false;
-   for (DiadStackFrame frm : for_thread.getStack().getFrames()) {
+   
+   DiadStack stk = for_thread.getStack();
+   if (stk == null) return rslt;
+   
+   for (DiadStackFrame frm : stk.getFrames()) {
       if (!use && frm.equals(for_frame)) use = true;
       if (use) {
          JSONObject jo = frm.toJson(); 
@@ -637,6 +649,12 @@ private final class CandidateThread extends Thread {
                   candidate_state);
             switch (candidate_state) {
                case INITIAL :
+                  if (state_count > 0) {
+                     if (checkInterrupted(20)) {
+                        break;
+                      }
+                     fireStateChanged();                // handle initial state
+                   }
                   setState(DiadCandidateState.FINDING_SYMPTOM);
                   anal = diad_control.getAnalysisManager();
                   exec = diad_control.getExecuteManager();
@@ -842,6 +860,22 @@ private final class CandidateThread extends Thread {
        }
       return false;
     }
+   
+   private boolean checkInterrupted(long t) {
+      if (checkInterrupted()) return true;
+      synchronized (this) {
+         try {
+            wait(t);
+          }
+         catch (InterruptedException e) { }
+       }
+      if (checkInterrupted()) return true;
+      if (state_count != for_thread.getStateCount()) {
+         setState(DiadCandidateState.INTERRUPTED);
+         return true;
+       }
+      return false;
+   }
    
    private void cleanup(boolean all) {
       if (all) {
