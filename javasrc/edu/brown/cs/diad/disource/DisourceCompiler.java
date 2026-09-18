@@ -331,7 +331,7 @@ private JcompProject getJcompProject(String proj,SourceFile file)
    
    JcodeFactory jf = getJcodeFactory(proj);
    List<JcompSource> srcs = new ArrayList<>();
-   srcs.add(file);
+   if (file != null) srcs.add(file);
    addRelatedSources(srcs);
    jp = jcomp_control.getProject(jf,srcs);
    if (jp == null) return null;
@@ -340,7 +340,7 @@ private JcompProject getJcompProject(String proj,SourceFile file)
       JcompProject njp = project_map.putIfAbsent(file,jp);
       if (njp != null) jp = njp;
       for (JcompSource src : srcs) {
-         project_map.putIfAbsent((SourceFile) src,njp);
+         project_map.putIfAbsent((SourceFile) src,jp);
        }
     }
    
