@@ -128,6 +128,9 @@ DiadSymptom findSymptom()
 private DicontrolSymptom findStatementSymptom(DiadStackFrame frm,ASTNode stmt,
       String exc,String detail,String msg,String libcall)
 {
+   IvyLog.logD("DICONTROL","Find symptom " + exc + " " + frm + " " +
+         for_frame + " " + stmt);
+   
    if (exc != null && frm != null && for_frame != null && stmt != null &&
          frm.getFrameId().equals(for_frame.getFrameId())) {
       if (ASSERTION_EXCEPTIONS.contains(exc)) { 

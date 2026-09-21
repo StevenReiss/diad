@@ -327,22 +327,35 @@ private CompilationUnit getAstForFile(String proj,SourceFile file,boolean resolv
 private JcompProject getJcompProject(String proj,SourceFile file)
 {
    JcompProject jp = project_map.get(file);
-   if (jp != null) return jp;
+   if (jp != null) {
+      IvyLog.logD("DISOURCE","Found project for " + file + " " + jp);
+      return jp;
+    }
    
    JcodeFactory jf = getJcodeFactory(proj);
    List<JcompSource> srcs = new ArrayList<>();
    if (file != null) srcs.add(file);
    addRelatedSources(srcs);
+   IvyLog.logD("DISOURCE","Set up project for " + file + " " + srcs);
+   
    jp = jcomp_control.getProject(jf,srcs);
-   if (jp == null) return null;
+   if (jp == null) {
+      IvyLog.logD("DISOURCE","Failed to create project");
+      return null;
+    }
    
    synchronized (this) {
       JcompProject njp = project_map.putIfAbsent(file,jp);
-      if (njp != null) jp = njp;
+      if (njp != null) {
+         jp = njp;
+         IvyLog.logD("DISOURCE","Old project found for " + file);
+       }
       for (JcompSource src : srcs) {
          project_map.putIfAbsent((SourceFile) src,jp);
        }
     }
+   
+   IvyLog.logD("DISOURCE","Return project " + jp);
    
    return jp;
 }
@@ -353,9 +366,13 @@ private void invalidateProject(SourceFile sf)
    JcompProject jp = project_map.get(sf);
    if (jp == null) return;
    
-   for (Iterator<JcompProject> it = project_map.values().iterator(); it.hasNext(); ) {
-      JcompProject xjp = it.next();
-      if (xjp == jp) it.remove();
+   for (Iterator<Map.Entry<SourceFile,JcompProject>> it = project_map.entrySet().iterator(); it.hasNext(); ) {
+      Map.Entry<SourceFile,JcompProject> ent = it.next();
+      JcompProject xjp = ent.getValue();
+      if (xjp == jp) {
+         IvyLog.logD("DISOURCE","Remove project for file " + ent.getKey());
+         it.remove();
+       }
     }
 }
 
@@ -458,6 +475,10 @@ private static class SourceFile implements JcompSource {
        }
       catch (IOException e) { }
       return null;
+    }
+   
+   @Override public String toString() {
+      return getFileName();
     }
    
 }       // end of inner class SourceFile

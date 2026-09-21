@@ -129,7 +129,9 @@ public ASTNode getAssertionExpression(DiadSymptom symp,DiadThread thrd)
    if (symp.getSymptomType() == DiadSymptomType.ASSERTION) {
       DianalysisAssertionHistory query = new DianalysisAssertionHistory(this,symp,thrd);
       DiadAssertionData ad = query.getAssertionData();
-      return ad.getExpression();
+      if (ad != null) {
+         return ad.getExpression();
+       }
     }
    
    return null;

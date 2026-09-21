@@ -265,7 +265,6 @@ void updateThread(Element xml)
 private boolean checkException(DiruntimeThread td,Element thrd) 
 {
    boolean fnd = false;
-   td.setException(null,null);
    
    String exc = IvyXml.getAttrString(thrd,"EXCEPTION");
    if (exc != null) {
@@ -287,12 +286,19 @@ private boolean checkException(DiruntimeThread td,Element thrd)
                   typ.contains("Error") ||
                   typ.contains("Throwable")) {
                exc = typ;
+               if (vnm.contains("is throwing")) break;
               // want to use the last one in the list that is an exception 
              }
+          }
+         if (exc != null) {
             td.setException(exc,null);
             fnd = true; 
+            break;
           }
        }
+    }
+   if (!fnd) {
+      td.setException(null,null);
     }
    
    return fnd;

@@ -262,6 +262,8 @@ void setLocation(ASTNode node)
 
 private String getAssertionText() 
 {
+   StringBuffer buf = new StringBuffer();
+   
    if (original_value != null && target_value != null) {
       String typ = null;
       String v = original_value;
@@ -272,7 +274,6 @@ private String getAssertionText()
             v = original_value.substring(idx+2);
           }
        }
-      StringBuffer buf = new StringBuffer();
       if (symptom_item == null) {
          buf.append("an assertion failed because ");
        }
@@ -300,16 +301,20 @@ private String getAssertionText()
        }
       addOperatorInfo(buf);
       buf.append(target_value);
-      return buf.toString();
     }
    else if (symptom_detail != null) {
-      return "an assertion failed because " + symptom_detail;
+      buf.append("an assertion failed because " + symptom_detail);
     }
+   else {
+      buf.append("an assertion failed");
+    }
+   
+   buf.append("\nwhere you can assume that the assertion is correct");
    
    IvyLog.logE("DICONTROL","Bad assertion check " + original_value + " " + 
          target_value);
    
-   return "assertion failed";
+   return buf.toString();
 }
 
 

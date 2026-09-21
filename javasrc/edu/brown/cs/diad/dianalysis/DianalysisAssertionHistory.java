@@ -116,7 +116,10 @@ DiadAssertionData getAssertionData()
    getAnalysis().waitForAnalysis(); 
    
    ASTNode stmt = getSourceStatement();
-   if (stmt == null) return null;
+   if (stmt == null) {
+      IvyLog.logE("DIANALYSIS","No statement four for assertion");
+      return null;
+    }
    
    AssertionChecker checker = new AssertionChecker();
    stmt.accept(checker);
