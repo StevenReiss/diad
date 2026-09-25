@@ -170,9 +170,13 @@ DiadStackFrame getStartingFrame()
    if (runner == null) return null;
    String fid = IvyXml.getAttrString(runner,"FRAME");
    if (fid == null) return null;
-   for (DiadStackFrame frm : for_thread.getStack().getFrames()) {
+   DiadStack stk = for_thread.getStack();
+   if (stk == null) return null;
+   
+   for (DiadStackFrame frm : stk.getFrames()) {
       if (frm.getFrameId().equals(fid)) return frm;
     }
+   
    return null;
 }
 

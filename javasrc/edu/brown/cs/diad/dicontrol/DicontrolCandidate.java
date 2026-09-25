@@ -45,7 +45,6 @@ import edu.brown.cs.diad.dicore.DiadSymptom;
 import edu.brown.cs.diad.dicore.DiadThread;
 import edu.brown.cs.diad.dicore.DiadValue;
 import edu.brown.cs.diad.diexecute.DiexecuteManager;
-import edu.brown.cs.ivy.file.IvyFile;
 import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.mint.MintConstants.CommandArgs;
 import edu.brown.cs.ivy.swing.SwingEventListenerList;
@@ -512,10 +511,10 @@ public Element askLimba(DiadAskType typ,String query,boolean nohistory)
    switch (typ) {
       case BASEEXPLAIN :
       case BASEREPAIRS :
-         tools = "PROJECT,DEBUG";
+         tools = "PROJECT,DEBUG,STRUCTURE";
          break;
       case BUILDER :
-         tools = "PROJECT";
+         tools = "PROJECT,STRUCTURE";
          break;
     }
    
@@ -549,7 +548,7 @@ public Element askLimba(DiadAskType typ,String query,boolean nohistory)
    prompt = DicontrolExpander.expand(prompt,keymap);
    
    String ask = diad_control.getQuery(typ.toString()); 
-   ask = IvyFile.expandName(ask,keymap);
+   ask = DicontrolExpander.expand(ask,keymap);
    
    if (ask == null && query != null) ask = query;
    else if (query != null) ask = ask + " " + query;

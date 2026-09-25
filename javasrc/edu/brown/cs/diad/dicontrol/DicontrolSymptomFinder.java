@@ -128,8 +128,9 @@ DiadSymptom findSymptom()
 private DicontrolSymptom findStatementSymptom(DiadStackFrame frm,ASTNode stmt,
       String exc,String detail,String msg,String libcall)
 {
-   IvyLog.logD("DICONTROL","Find symptom " + exc + " " + frm + " " +
-         for_frame + " " + stmt);
+   IvyLog.logD("DICONTROL","Find symptom " + exc + " " + 
+         (frm == null ? null : frm.getFrameId()) + " " +
+         (for_frame == null ? null : for_frame.getFrameId()) + " " + stmt);
    
    if (exc != null && frm != null && for_frame != null && stmt != null &&
          frm.getFrameId().equals(for_frame.getFrameId())) {
@@ -211,6 +212,7 @@ private DicontrolSymptom checkErrorStatement(ASTNode stmt)
 {
    switch (stmt.getNodeType()) {
       case ASTNode.THROW_STATEMENT :
+         IvyLog.logD("DICONTROL","Error statement found");
          return new DicontrolSymptom(DiadSymptomType.LOCATION);
     }
    
@@ -317,7 +319,8 @@ private DicontrolSymptom checkDefensiveIf(ASTNode stmt)
    DicontrolSymptom rslt = null;
    
    ASTNode par = stmt.getParent();
-   if (par.getNodeType() != ASTNode.BLOCK) return rslt;
+   if (stmt.getNodeType() == ASTNode.BLOCK) par = stmt;
+   else if (par.getNodeType() != ASTNode.BLOCK) return rslt;
    Block blk = (Block) par; 
    ASTNode spar = par.getParent();
    if (spar.getNodeType() != ASTNode.IF_STATEMENT) return rslt;
@@ -332,6 +335,7 @@ private DicontrolSymptom checkDefensiveIf(ASTNode stmt)
          case ASTNode.THROW_STATEMENT :
          case ASTNode.CONTINUE_STATEMENT :
          case ASTNode.BREAK_STATEMENT :
+         case ASTNode.ASSERT_STATEMENT :
             break;
          case ASTNode.EXPRESSION_STATEMENT :
             if (isErrorStatement(s1)) {
@@ -342,6 +346,7 @@ private DicontrolSymptom checkDefensiveIf(ASTNode stmt)
          default :
             return null;
        }
+      if (stmt0 != null) break;
     }
    
    if (stmt0 != null) {

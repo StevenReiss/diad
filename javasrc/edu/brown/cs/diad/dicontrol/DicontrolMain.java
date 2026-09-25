@@ -44,6 +44,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.StringTokenizer;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -374,10 +375,16 @@ String getPrompt(String cmd)
    for (Element pmpt : IvyXml.children(xml,"PROMPT")) {
       String what = IvyXml.getAttrString(pmpt,"COMMAND");
       if (what == null) base = IvyXml.getText(pmpt);
-      else if (what.contains(cmd)) {
-         ptxt = IvyXml.getText(pmpt);
-         if (IvyXml.getAttrBool(pmpt,"COMPLETE")) {
-            useboth = false;
+      else {
+         StringTokenizer tok = new StringTokenizer(what,",; ");
+         while (tok.hasMoreTokens()) {
+            String w = tok.nextToken();
+            if (cmd.equals(w)) {
+               ptxt = IvyXml.getText(pmpt);
+               if (IvyXml.getAttrBool(pmpt,"COMPLETE")) {
+                  useboth = false;
+                }
+             }
           }
        }
     }
@@ -404,8 +411,14 @@ String getQuery(String cmd)
    for (Element pmpt : IvyXml.children(xml,"QUERY")) {
       String what = IvyXml.getAttrString(pmpt,"COMMAND");
       if (what == null) base = IvyXml.getText(pmpt);
-      else if (what.equals(cmd)) {
-         ptxt = IvyXml.getText(pmpt);
+      else {
+         StringTokenizer tok = new StringTokenizer(what,",; ");
+         while (tok.hasMoreTokens()) {
+            String w = tok.nextToken();
+            if (cmd.equals(w)) {
+               ptxt = IvyXml.getText(pmpt);
+             }
+          }
        }
     }
    

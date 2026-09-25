@@ -29,7 +29,6 @@ import org.w3c.dom.Element;
 import edu.brown.cs.diad.dicore.DiadSymptom;
 import edu.brown.cs.diad.dicore.DiadConstants.DiadSymptomType;
 import edu.brown.cs.diad.dicore.DiadConstants.DiadValueOperator;
-import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.jcomp.JcompAst;
 import edu.brown.cs.ivy.jcomp.JcompSource;
 import edu.brown.cs.ivy.xml.IvyXml;
@@ -310,9 +309,6 @@ private String getAssertionText()
     }
    
    buf.append("\nwhere you can assume that the assertion is correct");
-   
-   IvyLog.logE("DICONTROL","Bad assertion check " + original_value + " " + 
-         target_value);
    
    return buf.toString();
 }
