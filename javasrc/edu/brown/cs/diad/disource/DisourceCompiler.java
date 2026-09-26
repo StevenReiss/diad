@@ -336,7 +336,8 @@ private JcompProject getJcompProject(String proj,SourceFile file)
    List<JcompSource> srcs = new ArrayList<>();
    if (file != null) srcs.add(file);
    addRelatedSources(srcs);
-   IvyLog.logD("DISOURCE","Set up project for " + file + " " + srcs);
+   IvyLog.logD("DISOURCE","Set up project for " + proj + " " +
+         file + " " + srcs);
    
    jp = jcomp_control.getProject(jf,srcs);
    if (jp == null) {
@@ -366,11 +367,16 @@ private void invalidateProject(SourceFile sf)
    JcompProject jp = project_map.get(sf);
    if (jp == null) return;
    
+   String pnm = source_factory.getProjectForFile(sf.getFile());
    for (Iterator<Map.Entry<SourceFile,JcompProject>> it = project_map.entrySet().iterator(); it.hasNext(); ) {
       Map.Entry<SourceFile,JcompProject> ent = it.next();
       JcompProject xjp = ent.getValue();
       if (xjp == jp) {
          IvyLog.logD("DISOURCE","Remove project for file " + ent.getKey());
+         it.remove();
+       }
+      else if (source_factory.isFileInProject(sf.getFile(),pnm)) {
+         IvyLog.logD("DISOURCE","Removed project for file " + ent.getKey());
          it.remove();
        }
     }
@@ -424,22 +430,36 @@ private void addRelatedSources(List<JcompSource> srcs)
       used.add(jcs.getFileName());
     }
    
-   List<JcompSource> add = new ArrayList<>();
+   Set<JcompSource> add = new HashSet<>();
    for (JcompSource jcs : srcs) {
       SourceFile sf = (SourceFile) jcs;
       File f = sf.getFile();
       File dir = f.getParentFile();
-      for (File srcf : dir.listFiles()) {
-         if (srcf.getName().endsWith(".java")) {
-            if (used.contains(srcf.getPath())) continue;
-            SourceFile sf1 = getSourceFile(srcf);
-            used.add(sf1.getFileName());
-            add.add(sf1);
-          }
-       }
+      addSourceFiles(dir,used,add);
+    }
+   for (SourceFile sf1 : file_map.values()) {
+      if (used.contains(sf1.getFileName())) continue;
+      used.add(sf1.getFileName());
+      add.add(sf1);
     }
    
    srcs.addAll(add);
+}
+
+
+private void addSourceFiles(File dir,Set<String> used,Set<JcompSource> add) 
+{
+   for (File srcf : dir.listFiles()) {
+      if (srcf.getName().endsWith(".java")) {
+         if (used.contains(srcf.getPath())) continue;
+         SourceFile sf1 = getSourceFile(srcf);
+         used.add(sf1.getFileName());
+         add.add(sf1);
+       }
+      else if (srcf.isDirectory()) {
+         addSourceFiles(srcf,used,add);
+       }
+    }
 }
 
 /********************************************************************************/

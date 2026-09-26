@@ -24,7 +24,9 @@ package edu.brown.cs.diad.disource;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.CompilationUnit;
@@ -52,6 +54,7 @@ public class DisourceManager implements DisourceConstants
 private DicontrolMain   diad_control;
 private DisourceCompiler the_compiler;
 private Map<File,String> project_map;
+private Map<String,Set<File>> project_uses;
 private String          default_project;
 private String          workspace_name;
 
@@ -155,6 +158,24 @@ public String getProjectForFile(File f)
 }
 
 
+public boolean isFileInProject(File f,String proj)
+{
+   if (default_project == null) {
+      buildProjectMap();
+    }
+   
+   Set<File> uses = project_uses.get(proj);
+   if (uses == null) return false;
+   if (uses.contains(f)) return true;
+   File f1 = IvyFile.getCanonical(f);
+   if (uses.contains(f1)) {
+      uses.add(f);
+      return true;
+    }
+   return false; 
+}
+
+
 public File findProjectFile(String fnm)
 {
    File f1 = new File(fnm);
@@ -210,6 +231,31 @@ private void buildProjectMap()
                default_project = nm;
              }
           }
+       }
+    }
+   
+   project_uses = new HashMap<>();
+   for (Element p : IvyXml.children(xml,"PROJECT")) {
+      String nm = IvyXml.getAttrString(p,"NAME");
+      addUses(nm,nm);
+      for (Element ref : IvyXml.children(p,"REFERENCES")) {
+         String pnm = IvyXml.getText(ref);
+         addUses(nm,pnm);
+       }
+    }
+}
+
+
+private void addUses(String pnm,String subnm)
+{
+   Set<File> use = project_uses.get(pnm);
+   for (Map.Entry<File,String> ent : project_map.entrySet()) {
+      if (ent.getValue().equals(subnm)) {
+         if (use == null) {
+            use = new HashSet<>();
+            project_uses.put(pnm,use);
+          }
+         use.add(ent.getKey());
        }
     }
 }

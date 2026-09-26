@@ -70,6 +70,7 @@ private Map<String,DiexecuteCall> callid_map;
 private String          session_id;
 private DiexecuteExecution for_exec;
 private Set<String>     ignore_names;
+private Set<String>     ignore_subnames;
 
 private static final Pattern UUID_PATTERN = Pattern.compile("\\p{XDigit}{8}");
 
@@ -108,6 +109,17 @@ DiexecuteTrace(DiexecuteExecution exec,Element rslt,DiadThread thrd)
       while (tok.hasMoreTokens()) {
          String ig = tok.nextToken();
          ignore_names.add(ig);
+       }
+    }
+   String subign = diad.getProperty("Diad.ignore.text");
+   ignore_subnames = new HashSet<>();
+   ignore_subnames.add("time");
+   ignore_subnames.add("id");
+   if (subign != null) {
+      StringTokenizer tok = new StringTokenizer(ign," \t,;");
+      while (tok.hasMoreTokens()) {
+         String ig = tok.nextToken();
+         ignore_subnames.add(ig.toLowerCase());
        }
     }
 }
@@ -418,6 +430,7 @@ void findProblemTime(Element ctx,DiadThread thread,Stack<String> stack)
       findContextTime(ctx,thread);
     }
    else {
+      IvyLog.logD("DIEXECUTE","Look at sub contexts");
       for (Element subctx : IvyXml.children(ctx,"CONTEXT")) {
          findProblemTime(subctx,thread,stack);
        }
@@ -492,10 +505,16 @@ private boolean checkStack(DiadThread thread,Stack<String> stack,int start)
       id = normalizeName(id);
       IvyLog.logD("DIEXECUTE","Check Stack " + i + " " + id + " " +
             start + " " + stack.size());
-      if (start-i >= stack.size()) return false;
+      if (start-i >= stack.size()) {
+         IvyLog.logD("DIEXECUTE","No match size");
+         return false;
+       }
       IvyLog.logD("DIEXECUTE","Compare stack " + id + " " + 
             stack.get(start-i));
-      if (!id.equals(stack.get(start-i))) return false;
+      if (!id.equals(stack.get(start-i))) {
+         IvyLog.logD("DIEXECUTE","No match " + stack.get(start-i));
+         return false;
+       }
       if (frm.equals(topframe)) return true;
     }
    return false;
@@ -631,7 +650,7 @@ private Element findVariableInContext(Element ctx,String nm,int lno)
 private Boolean compareVariable(DiadLocalVariable local,Element valelt,
       DiadThread thread,long from,long to)
 {
-   if (ignore_names.contains(local.getName())) {
+   if (ignoreName(local.getName())) {
       return null;
     }
       
@@ -721,16 +740,7 @@ private Boolean compareObject(DiadLocalVariable local,Element valelt0,
    int ct = 0;
    for (Element fldelt : IvyXml.children(valelt,"FIELD")) {
       String nm = IvyXml.getAttrString(fldelt,"NAME");
-      if (nm.startsWith("@")) continue;
-      if (!ignore_names.isEmpty()) {
-         if (ignore_names.contains(nm)) continue;
-         int idx = nm.lastIndexOf(".");
-         if (idx > 0) {
-            String n1 = nm.substring(idx+1);
-            if (ignore_names.contains(n1)) continue;
-          }
-       }
-      if (nm.toLowerCase().contains("time")) continue;
+      if (ignoreName(nm)) continue;
       try {
          DiadValue fldval = localval.getFieldValue(nm);
          if (fldval == null) continue;
@@ -1272,6 +1282,37 @@ private boolean matchMethod(String user0,String seede0)
 }
 
 
+
+/********************************************************************************/
+/*                                                                              */
+/*      Check if name should be ignored (can be random/time-based)              */
+/*                                                                              */
+/********************************************************************************/
+
+private boolean ignoreName(String name)
+{
+   if (name.startsWith("@")) return true;
+   if (ignore_names.contains(name)) return true;
+   int idx = name.lastIndexOf(".");
+   if (idx > 0) {
+      String n1 = name.substring(idx+1);
+      if (ignore_names.contains(n1)) return true;
+    }
+   
+   for (String s : ignore_subnames) {
+      if (name.toLowerCase().contains(s)) return true;
+    }
+   
+   return false;
+}
+
+
+
+/********************************************************************************/
+/*                                                                              */
+/*      Output methods                                                          */
+/*                                                                              */
+/********************************************************************************/
 
 @Override public String toString()
 {

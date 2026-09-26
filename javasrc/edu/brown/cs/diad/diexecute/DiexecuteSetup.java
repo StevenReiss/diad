@@ -74,6 +74,7 @@ import org.eclipse.jdt.core.dom.WhileStatement;
 import edu.brown.cs.diad.dicore.DiadStackFrame;
 import edu.brown.cs.diad.disource.DisourceManager;
 import edu.brown.cs.ivy.file.IvyFormat;
+import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.jcomp.JcompAst;
 import edu.brown.cs.ivy.jcomp.JcompSymbol;
 import edu.brown.cs.ivy.jcomp.JcompType;
@@ -431,7 +432,13 @@ private DiexecuteVarVal getValueAtTime(ASTNode n,long time)
    if (lval != null && js.isFieldSymbol()) {
       rval = (DiexecuteVarVal) lval.getChild(js.getFullName(),
             active_call.getTrace(),time);
-      rval = rval.dereference(active_call.getTrace());
+      if (rval != null) {
+         rval = rval.dereference(active_call.getTrace());
+       }
+      else {
+         IvyLog.logD("DIEXECUTE","Can't find child " +
+               js.getFullName() + " " + time);
+       }
     }
    
    return rval;

@@ -24,9 +24,14 @@ package edu.brown.cs.diad.ditest;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.module.ModuleFinder;
+import java.lang.module.ModuleReader;
+import java.lang.module.ModuleReference;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.StringTokenizer;
+import java.util.TreeSet;
 
 import org.junit.Assert;
 import org.w3c.dom.Element;
@@ -62,35 +67,7 @@ private boolean         limba_starting;
 private File            workspace_dir;
 private LaunchData      active_launch;
 
-public static final String [] OPENS;
-
-static {
-   OPENS = new String [] {
-         "java.desktop/sun.font",
-         "java.desktop/sun.awt",
-         "java.desktop/sun.swing",
-         "java.desktop/javax.swing", 
-         "java.base/jdk.internal.math",
-         "java.base/sun.nio.cs", 
-         "java.base/java.nio",
-         "java.base/sun.util.locale.provider",
-         "java.base/jdk.internal.math",
-         "java.base/jdk.internal.misc",
-         "java.base/java.util",
-         "java.base/java.lang",
-         "java.base/java.util.concurrent",
-         "java.base/sun.util.locale",
-         "java.desktop/sun.java2d",
-         "java.desktop/sun.java2d.loops",
-         "java.desktop/sun.java2d.metal",
-         "java.desktop/sun.java2d.pipe",
-         "java.desktop/java.awt.geom",
-         "java.base/sun.util.calendar",
-         "java.base/sun.security.provider",
-         "java.base/jdk.internal.util",
-         "java.base/java.time",
-    };
-}
+private static Set<String> open_modules = null;
 
 
 
@@ -112,7 +89,10 @@ public DitestFactory(DicontrolMain ctrl)
    limba_starting = false;
    workspace_dir = null;
    active_launch = null;
+   
+   setupOpens();
 }
+
 
 
 /********************************************************************************/
@@ -644,12 +624,37 @@ public LaunchData setupTest(String project,String launch,int contct)
 }
 
 
+private void setupOpens()
+{
+   if (open_modules != null) return;
+   
+   open_modules = new TreeSet<>();
+   for (ModuleReference ref : ModuleFinder.ofSystem().findAll()) {
+      String mnam = ref.descriptor().name();
+      if (mnam.contains("unsupported")) continue;
+      try (ModuleReader mr = ref.open()) {
+         mr.list().forEach(entry -> {
+            if (entry.endsWith(".class") && entry.contains("/")) {
+               String pkg = entry.substring(0,entry.lastIndexOf("/"));
+               pkg = pkg.replace("/",".");
+               pkg = mnam + "/" + pkg;
+               open_modules.add(pkg);
+             }
+          });
+       }
+      catch (IOException e) {
+         IvyLog.logE("DITEST","Problem opening or reading module",e);
+       }
+    }
+}
+
+
 private LaunchData startLaunch(String proj,String name)
 {
    stopped_thread = null;
    
    String dargs = null;
-   for (String s : OPENS) {
+   for (String s : open_modules) {
       String arg = "--add-opens=" + s + "=ALL-UNNAMED";
       if (dargs == null) dargs = arg;
       else dargs += " " + arg;
