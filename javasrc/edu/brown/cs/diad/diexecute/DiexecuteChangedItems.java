@@ -101,6 +101,8 @@ List<DiexecuteAction> getResetActions(DiexecuteManager mgr,DiexecuteExecution ve
        }
     }
    
+   if (startframe == null) return new ArrayList<>();
+   
    DiexecuteTrace vt = ve.getSeedeResult();
    DiexecuteCall vc = vt.getRootContext();
    

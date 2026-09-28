@@ -176,8 +176,8 @@ List<DiadLocation> getLocationResult(Element xml,DiadSymptom symp)
          p1 = p1 * p;
          loc.setPriority(p1);
          loc.setReason(reason);
-         IvyLog.logD("DIANALYSIS","Consider file " + loc.getFile() +
-               " " + loc.getLineNumber());
+//       IvyLog.logD("DIANALYSIS","Consider file " + loc.getFile() +
+//             " " + loc.getLineNumber());
          //TODO:  need to map location line number to start of statement
          if (!isLocationRelevant(symp,src,loc)) {
             continue;
@@ -189,7 +189,7 @@ List<DiadLocation> getLocationResult(Element xml,DiadSymptom symp)
             if (p1 > p2) oloc.setPriority(p1);
           }
          else {
-            IvyLog.logD("DIANALYSIS","USE LOCATION " + loc);
+//          IvyLog.logD("DIANALYSIS","USE LOCATION " + loc);
             rslt.add(loc);
           }
        }   

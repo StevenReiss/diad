@@ -40,8 +40,10 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.StringTokenizer;
@@ -322,6 +324,22 @@ public boolean getProperty(String id,boolean dflt)
    else if ("fFnN0".indexOf(s.charAt(0)) >= 0) return false;
    
    return dflt;
+}
+
+
+public List<String> getPropertyList(String id)
+{
+   List<String> rslt = new ArrayList<>();
+   
+   String s = getProperty(id);
+   if (s != null) {
+      StringTokenizer tok = new StringTokenizer(s," \t,;");
+      while (tok.hasMoreTokens()) {
+         String v = tok.nextToken();
+         rslt.add(v);
+       }
+    }
+   return rslt;
 }
 
 

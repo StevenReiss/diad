@@ -143,8 +143,8 @@ DiexecuteVarVal(Element v,DiexecuteVarVal par)
 @Override public DiexecuteVarVal getChild(String name,DiadTrace trace,long when)
 {
    DiexecuteVarVal val = getValueAtTime(when);
-   IvyLog.logD("DIEXECUTE","Get child " + name + " " + when + " " + 
-         val.getFullName());
+// IvyLog.logD("DIEXECUTE","Get child " + name + " " + when + " " + 
+//       val.getFullName());
    
    for (Element e : IvyXml.children(val.var_element)) {
       String key = null;

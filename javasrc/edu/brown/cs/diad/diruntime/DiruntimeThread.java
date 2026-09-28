@@ -201,12 +201,16 @@ void update(Element xml)
       thread_state = RunThreadState.RUNNING;
     }
    
+   boolean clearex = true;
    if (ost != thread_state) {
       if (thread_state == RunThreadState.EXCEPTION && ost == RunThreadState.STOPPED) {
          // no real change of state
        }
       else if (thread_state == RunThreadState.STOPPED && ost == RunThreadState.EXCEPTION) {
-         // no real change of state
+         clearex = false;
+       }
+      else if (thread_state == RunThreadState.STOPPED && ost == RunThreadState.STOPPED) {
+         clearex = false;
        }
       else {
          state_count.incrementAndGet();
@@ -216,8 +220,10 @@ void update(Element xml)
        }
     }
    
-   exception_type = null;
-   exception_detail = null;
+   if (clearex) {
+      exception_type = null;
+      exception_detail = null;
+    }
 }
 
 

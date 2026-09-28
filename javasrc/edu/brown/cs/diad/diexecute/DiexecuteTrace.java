@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
-import java.util.StringTokenizer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -71,6 +70,7 @@ private String          session_id;
 private DiexecuteExecution for_exec;
 private Set<String>     ignore_names;
 private Set<String>     ignore_subnames;
+private Set<String>     ignore_types;
 
 private static final Pattern UUID_PATTERN = Pattern.compile("\\p{XDigit}{8}");
 
@@ -98,33 +98,21 @@ DiexecuteTrace(DiexecuteExecution exec,Element rslt,DiadThread thrd)
    callid_map.put("*",root);
    callid_map.put("-1",root);
    
-   ignore_names = new HashSet<>();
-   ignore_names.add("java.lang.Throwable.depth");
-   ignore_names.add("java.lang.Throwable.backtrace");
    DicontrolMain diad = exec.getContext().getManager().getDiadControl();
    String ws = diad.getSourceManager().getWorksapceShortName();
-   String ign = diad.getProperty("Diad." + ws + ".ignore");
-   if (ign != null) {
-      StringTokenizer tok = new StringTokenizer(ign," \t,;");
-      while (tok.hasMoreTokens()) {
-         String ig = tok.nextToken();
-         ignore_names.add(ig);
-       }
-    }
-   String subign = diad.getProperty("Diad.ignore.text");
+   
+   ignore_names = new HashSet<>();
+   ignore_names.addAll(diad.getPropertyList("Diad.name.ignore"));
+   ignore_names.addAll(diad.getPropertyList("Diad.name." + ws + ".ignore"));
+      
    ignore_subnames = new HashSet<>();
-   ignore_subnames.add("time");
-   ignore_subnames.add("id");
-   if (subign != null) {
-      StringTokenizer tok = new StringTokenizer(ign," \t,;");
-      while (tok.hasMoreTokens()) {
-         String ig = tok.nextToken();
-         ignore_subnames.add(ig.toLowerCase());
-       }
-    }
+   ignore_subnames.addAll(diad.getPropertyList("Diad.text.ignore"));
+   ignore_subnames.addAll(diad.getPropertyList("Diad.text." + ws + ".ignore"));
+   
+   ignore_types = new HashSet<>();
+   ignore_types.addAll(diad.getPropertyList("Diad.type.ignore"));
+   ignore_types.addAll(diad.getPropertyList("Diad.type." + ws + ".ignore"));
 }
-
-
 
 
 /********************************************************************************/
@@ -430,7 +418,7 @@ void findProblemTime(Element ctx,DiadThread thread,Stack<String> stack)
       findContextTime(ctx,thread);
     }
    else {
-      IvyLog.logD("DIEXECUTE","Look at sub contexts");
+//    IvyLog.logD("DIEXECUTE","Look at sub contexts");
       for (Element subctx : IvyXml.children(ctx,"CONTEXT")) {
          findProblemTime(subctx,thread,stack);
        }
@@ -461,7 +449,7 @@ private boolean checkStack(DiadThread thread,Stack<String> stack)
       String sgn = frame.getFormatSignature();
       String id = frame.getClassName() + "." + frame.getMethodName() + sgn;
       id = normalizeName(id);
-      IvyLog.logD("DIEXECUTE","Check stack " + id + " " + base);
+//    IvyLog.logD("DIEXECUTE","Check stack " + id + " " + base);
       if (id.equals(base)) {
          return checkStack(thread,stack,i);
        }
@@ -503,16 +491,16 @@ private boolean checkStack(DiadThread thread,Stack<String> stack,int start)
       String id = frm.getClassName() + "." + frm.getMethodName() + 
             frm.getFormatSignature();
       id = normalizeName(id);
-      IvyLog.logD("DIEXECUTE","Check Stack " + i + " " + id + " " +
-            start + " " + stack.size());
+//    IvyLog.logD("DIEXECUTE","Check Stack " + i + " " + id + " " +
+//          start + " " + stack.size());
       if (start-i >= stack.size()) {
          IvyLog.logD("DIEXECUTE","No match size");
          return false;
        }
-      IvyLog.logD("DIEXECUTE","Compare stack " + id + " " + 
-            stack.get(start-i));
+//    IvyLog.logD("DIEXECUTE","Compare stack " + id + " " + 
+//          stack.get(start-i));
       if (!id.equals(stack.get(start-i))) {
-         IvyLog.logD("DIEXECUTE","No match " + stack.get(start-i));
+//       IvyLog.logD("DIEXECUTE","No match " + stack.get(start-i));
          return false;
        }
       if (frm.equals(topframe)) return true;
@@ -524,6 +512,7 @@ private boolean checkStack(DiadThread thread,Stack<String> stack,int start)
 
 private void findContextTime(Element ctx,DiadThread thread)
 {
+   IvyLog.logD("DIEXECUTE","Find Context Time");
    Element linevar = null;
    for (Element var : IvyXml.children(ctx,"VARIABLE")) {
       String varname = IvyXml.getAttrString(var,"NAME");
@@ -680,6 +669,21 @@ private Boolean compareVariable(DiadLocalVariable local,Element valelt,
                if (s1 != null && s1.length() > 0) c1 = s1.charAt(0); 
                int c2 = Integer.parseInt(valtxt);
                return c1 == c2;
+            case "long" :
+               if (lclval.equals(valtxt)) return true;
+               try {
+                  long v1 = Long.valueOf(lclval);
+                  long v2 = Long.valueOf(valtxt);
+                  if (v1 == v2) return true;
+                  // allow time values to always match
+                  long t0 = System.currentTimeMillis();
+                  long t1 = t0*9/10;
+                  long t2 = t0*11/10;
+                  if (v1 >= t1 && v1 <= t2) return null;
+                  if (v2 >= t1 && v2 <= t2) return null;
+                }
+               catch (NumberFormatException e) { }
+               return false;
             default :
                return lclval.equals(valtxt);
           }
@@ -701,6 +705,7 @@ private Boolean compareVariable(DiadLocalVariable local,Element valelt,
          else if (local.getType().equals("java.lang.Class")) {
             return true;
           }
+         else if (ignore_types.contains(local.getType())) return null; 
          return compareObject(local,valelt,thread,from,to);
       case "CLASS" :
          System.err.println("CHECK HERE compare CLASS");
@@ -877,6 +882,9 @@ private Boolean compareValueAtTime(DiadValue actval,Element valctx,DiadThread th
       if ((s1.endsWith("Set") || s1.endsWith("SetN")) &&
             (s2.endsWith("Set") || s2.endsWith("SetN"))) {
          return null; 
+       }
+      if (s2.equals("java.lang.Object[]") && s1.endsWith("[]")) {
+         return null;
        }
       return false;
     }

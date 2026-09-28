@@ -328,7 +328,7 @@ private JcompProject getJcompProject(String proj,SourceFile file)
 {
    JcompProject jp = project_map.get(file);
    if (jp != null) {
-      IvyLog.logD("DISOURCE","Found project for " + file + " " + jp);
+//    IvyLog.logD("DISOURCE","Found project for " + file + " " + jp);
       return jp;
     }
    
