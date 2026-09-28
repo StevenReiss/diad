@@ -521,6 +521,7 @@ private boolean isErrorStatement(Statement s)
    String cnts = s.toString();
    if (cnts.contains("Log") || cnts.contains("log")) return true;
    if (cnts.contains(".print")) return true;
+   if (cnts.contains("fail")) return true;
    
    return false;
 }
