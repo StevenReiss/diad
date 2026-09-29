@@ -128,7 +128,15 @@ private DicontrolMain(String [] args)
    log_file = new File(f1,"diad.log");
    File f2 = new File(f1,".bubbles");
    File f3 = new File(f2,"Diad.props");
+   File f4 = new File(f2,"System.props");
    diad_properties = new Properties();
+   try (InputStream ins4 = new FileInputStream(f4)) {
+      diad_properties.loadFromXML(ins4);
+    }
+   catch (FileNotFoundException e) { }
+   catch (IOException e) {
+      IvyLog.logE("DICONTROL","Problem loading user properties");
+    }
    try {
       InputStream ins = getClass().getClassLoader().getResourceAsStream("Diad.props");
       if (ins != null) diad_properties.loadFromXML(ins);
@@ -247,6 +255,13 @@ public String getProperty(String id)
 {
    return diad_properties.getProperty(id);
 }
+
+
+public String getProperty(String id,String dflt) 
+{
+   return diad_properties.getProperty(id,dflt);
+}
+
 
 public void setProperty(String id,Object val)
 {

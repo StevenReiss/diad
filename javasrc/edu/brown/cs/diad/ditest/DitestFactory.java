@@ -120,30 +120,59 @@ public void setupBedrock(String workspace,String mint)
    File ec1 = null;
    File ec2 = null;
    
+   String arch = System.getProperty("os.arch");
+   String d1 = "edu.brown.cs.bubbles.baseide." + arch;
    String e1 = diad_control.getProperty("Diad.eclipse.binary");
-   String e2 = diad_control.getProperty("Diad.eclipse.wsdir");
+   e1 = diad_control.getProperty(d1,e1);
+   
+   String e2 = null;
+   String rec = diad_control.getProperty("edu.brown.cs.bubbles.recents");
+   if (rec !=  null) {
+      StringTokenizer tok = new StringTokenizer(rec,";");
+      while (tok.hasMoreTokens()) {
+         String rct = tok.nextToken();
+         if (rct.endsWith(workspace)) {
+            e2 = rct;
+            break;
+          }
+       }
+      if (e2 == null) {
+         tok = new StringTokenizer(rec,";");
+         while (tok.hasMoreTokens()) {
+            String rct = tok.nextToken();
+            File f1 = new File(rct);
+            File f2 = f1.getParentFile();
+            File f3 = new File(f2,workspace);
+            if (f3.exists() && f3.isDirectory()) {
+               e2 = f3.getAbsolutePath();
+             }
+          }
+       }
+    }
+   if (e2 == null) {
+      String e2d = null;
+      String ws = diad_control.getProperty("edu.brown.cs.bubbles.workspace");
+      if (ws != null) {
+         File wsf = new File(ws);
+         e2d = wsf.getParent();
+       }
+      e2d = diad_control.getProperty("Diad.eclipse.wsdir",e2d);
+      File f4 = new File(e2d);
+      File f5 = new File(f4,workspace);
+      e2 = f5.getAbsolutePath();
+    }
+   
    if (e1 != null) ec1 = new File(e1);
    if (e2 != null) ec2 = new File(e2);
    
-   if (e1 == null || e1.isEmpty() || !ec1.exists()) {
-      ec1 = new File(BROWN_ECLIPSE);
-    }
-   if (e2 == null || e2.isEmpty() || !ec2.exists()) {
-      ec2 = new File(BROWN_WS);
-    }
-   if (!ec1.exists()) {
-      ec1 = new File(HOME_MAC_ECLIPSE);
-      ec2 = new File(HOME_MAC_WS);
-    }
-   if (!ec1.exists()) {
-      ec1 = new File(HOME_LINUX_ECLIPSE);
-      ec2 = new File(HOME_LINUX_WS);
-    }
-   if (!ec1.exists()) {
+   if (ec1 == null || !ec1.exists()) {
       System.err.println("Can't find bubbles version of eclipse to run");
       throw new Error("No eclipse");
     }
-   ec2 = new File(ec2,workspace);
+   if (ec2 == null || !ec2.exists()) {
+      System.err.println("Can't find workspace for " + workspace);
+      throw new Error("No workspace");
+    }
    setWorkspace(ec2);
    
    diad_control.setupMessageServer(mint); 
