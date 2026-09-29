@@ -577,6 +577,7 @@ protected class IDEHandler implements MintHandler {
                      resp = "<OK/>";
                    }
                 }
+               IvyLog.logD("DICONTROL","Finished run event");
                if (resp == null) msg.replyTo();
                else msg.replyTo(resp);
                break;

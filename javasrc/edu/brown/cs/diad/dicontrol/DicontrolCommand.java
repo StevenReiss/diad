@@ -22,6 +22,7 @@
 
 package edu.brown.cs.diad.dicontrol;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -44,6 +45,7 @@ import edu.brown.cs.diad.dicore.DiadConstants.DiadCommand;
 import edu.brown.cs.diad.digen.DigenManager;
 import edu.brown.cs.diad.diruntime.DiruntimeManager;
 import edu.brown.cs.diad.disource.DisourceManager;
+import edu.brown.cs.diad.ditest.DitestFactory;
 import edu.brown.cs.ivy.file.IvyLog;
 import edu.brown.cs.ivy.mint.MintConstants.CommandArgs;
 import edu.brown.cs.ivy.xml.IvyXml;
@@ -297,15 +299,27 @@ private static class CommandSetupBubbles extends DicontrolCommand {
    
    private String workspace_name;
    private String mint_name;
+   private boolean clear_html;
    
    CommandSetupBubbles(DicontrolMain ctrl,Element xml) {
       super(ctrl,xml);
       workspace_name = IvyXml.getTextElement(xml,"WORKSPACE");
       mint_name = IvyXml.getAttrString(xml,"MINT");
+      clear_html = IvyXml.getAttrBool(xml,"CLEAR",true);
     }
    
    @Override public void process(IvyXmlWriter xw) { 
-      diad_control.getTestManager().setupBedrock(workspace_name,mint_name); 
+      DitestFactory tm = diad_control.getTestManager();
+      tm.setupBedrock(workspace_name,mint_name);
+      
+      if (clear_html) {
+         File ws = tm.getWorkspaceDirectory();
+         File trans = new File(ws,"limbatrans.html");
+   //    trans.delete();
+         CommandArgs targs = new CommandArgs("FILE",trans.getPath(),
+               "APPEND",false);
+         diad_control.sendLimbaMessage("TRANSCRIPT",targs,null);
+       }
       
       CommandArgs args = new CommandArgs("MESSAGE",
             "Start workspace " + workspace_name);
@@ -836,6 +850,9 @@ private static class CommandParameter extends DicontrolCommand {
                 }
                catch (NumberFormatException e) { }
                break;
+            case "MODEL" :
+               diad_control.setProperty("Diad.ollama.model",ent.getValue());
+               break;
             default :
                if (ent.getKey().startsWith("Diad.")) {
                   diad_control.setProperty(ent.getKey(),ent.getValue());
@@ -993,6 +1010,16 @@ private static class CommandTranscript extends QueryCommand {
    CommandTranscript(DicontrolMain ctrl,Element xml) {
       super(ctrl,xml);
       file_name = IvyXml.getAttrString(xml,"FILE");
+      if (file_name ==  null) {
+         DitestFactory tm = diad_control.getTestManager();
+         if (tm != null) {
+            File ws = tm.getWorkspaceDirectory();
+            if (ws != null) {
+               File trans = new File(ws,"limbatrans.html");
+               file_name = trans.getPath();
+             }
+          }
+       }
       do_append = IvyXml.getAttrBool(xml,"APPEND");
     }
    
