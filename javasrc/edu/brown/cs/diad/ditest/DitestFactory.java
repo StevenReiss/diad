@@ -369,6 +369,17 @@ private String getLibraryPath(String elt)
 
 private File getDropinDirectory()
 {
+   String cp = System.getProperty("java.class.path");
+   StringTokenizer tok = new StringTokenizer(cp,File.pathSeparator);
+   while (tok.hasMoreTokens()) {
+      String pe = tok.nextToken();
+      File pf = new File(pe);
+      if (pf.getName().equals("diad.jar")) {
+         File ppf = pf.getParentFile();
+         return ppf;
+       }
+    }
+   
    String pro = System.getenv("PRO");
    if (pro == null) pro = System.getenv("BROWN_IVY_PRO");
    if (pro == null) pro = "/pro";
