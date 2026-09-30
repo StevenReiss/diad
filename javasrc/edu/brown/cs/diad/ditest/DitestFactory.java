@@ -275,6 +275,7 @@ public boolean startFait()
        }
       xcp = buf.toString();
     }
+   xcp = xcp.trim();
    
    args.add(xcp);
    args.add("edu.brown.cs.fait.iface.FaitMain");
@@ -417,6 +418,7 @@ public boolean startSeede()
     }
    else {
       StringBuffer buf = new StringBuffer();
+      xcp = xcp.trim();
       StringTokenizer tok = new StringTokenizer(xcp,":;");
       while (tok.hasMoreTokens()) {
          String elt = tok.nextToken();
@@ -541,6 +543,7 @@ private boolean startLimba()
        }
       xcp = buf.toString();
     }
+   xcp = xcp.trim();
    args.add("-cp");
    args.add(xcp);
    
