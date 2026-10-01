@@ -69,7 +69,13 @@ private LaunchData      active_launch;
 
 private static Set<String> open_modules = null;
 
-
+private static final String [] ECLIPSE_START = new String [] {
+   "eclipse", "eclipse.exe", "Eclipse.app",
+   "STS.exe", "STS", "STS.app",
+   "sts.exe", "stS", "sts.app",
+   "myeclipse", "myeclipse.exe", "myeclipse.app",
+   "Eclipse JEE.app", "eclipse JEE.app",
+};
 
 /********************************************************************************/
 /*                                                                              */
@@ -166,9 +172,23 @@ public void setupBedrock(String workspace,String mint)
    if (e2 != null) ec2 = new File(e2);
    
    if (ec1 == null || !ec1.exists()) {
-      System.err.println("Can't find bubbles version of eclipse to run");
+      System.err.println("Can't find bubbles version of eclipse dir o run");
       throw new Error("No eclipse");
     }
+   
+   File ec3 = null;
+   for (String s : ECLIPSE_START) {
+      File ec4 = new File(ec1,s);
+      if (ec4.exists() && ec4.canExecute()) {
+         ec3 = ec4;
+         break;
+       }
+    }
+   if (ec3 == null) {
+      System.err.println("Can't find bubbles version of eclipse binary to run");
+      throw new Error("No eclipse");
+    }
+   
    if (ec2 == null || !ec2.exists()) {
       System.err.println("Can't find workspace for " + workspace);
       throw new Error("No workspace");
@@ -177,7 +197,7 @@ public void setupBedrock(String workspace,String mint)
    
    diad_control.setupMessageServer(mint); 
    
-   String cmd = ec1.getAbsolutePath();
+   String cmd = ec3.getAbsolutePath();
    cmd += " -application edu.brown.cs.bubbles.bedrock.application";
    cmd += " -data " + ec2.getAbsolutePath();
    cmd += " -nosplash";

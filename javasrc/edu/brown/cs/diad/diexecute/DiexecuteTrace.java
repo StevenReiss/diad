@@ -1103,7 +1103,7 @@ private long getActualTime(DiexecuteCall ctx,DiexecuteVarVal linevar,
           }
        }
       if (when < 0 && line > 10000) {
-         IvyLog.logE("DIEXECUTE","Line and time confused in call " + line + 
+         IvyLog.logW("DIEXECUTE","Line and time confused in call " + line + 
                " " + when);
          when = line;
          line = -1;
