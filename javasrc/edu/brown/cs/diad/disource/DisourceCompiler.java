@@ -70,6 +70,8 @@ private Map<SourceFile,JcompProject> project_map;
 private Map<String,JcodeFactory> binary_map;
 private Map<File,SourceFile>    file_map;
 private JcompControl            jcomp_control;
+private Map<String,JcompProject> our_projects;
+private Map<String,Set<JcompSource>> active_files;
 
 
 /********************************************************************************/
@@ -86,6 +88,8 @@ DisourceCompiler(DicontrolMain sm,DisourceManager fac)
    project_map = new ConcurrentHashMap<>();
    binary_map = new HashMap<>();
    jcomp_control = new JcompControl();
+   our_projects = new ConcurrentHashMap<>();
+   active_files = new HashMap<>();
 }
 
 
@@ -98,19 +102,20 @@ DisourceCompiler(DicontrolMain sm,DisourceManager fac)
 
 void compileAll(String proj,Collection<File> use)
 {
-   List<JcompSource> files = new ArrayList<>();
    for (File f : use) {
       SourceFile sf = getSourceFile(f);
       if (proj == null) {
          proj = source_factory.getProjectForFile(f);
        }
-      files.add(sf);
+      addRelatedSources(proj,sf);
     }
-   addRelatedSources(files);
    JcodeFactory jf = getJcodeFactory(proj);
-   JcompProject jp = jcomp_control.getProject(jf,files);
-   for (JcompSource js : files) {
+   Set<JcompSource> sources = active_files.get(proj);
+   JcompProject jp = jcomp_control.getProject(jf,sources);
+   our_projects.put(proj,jp);
+   for (JcompSource js : sources) {
       SourceFile sf = (SourceFile) js;
+      IvyLog.logD("DISOURCE","Add file to project " + sf + " " + jp);
       project_map.put(sf,jp);
     }
 }
@@ -326,33 +331,28 @@ private CompilationUnit getAstForFile(String proj,SourceFile file,boolean resolv
 
 private JcompProject getJcompProject(String proj,SourceFile file)
 {
-   JcompProject jp = project_map.get(file);
-   if (jp != null) {
-//    IvyLog.logD("DISOURCE","Found project for " + file + " " + jp);
-      return jp;
+   JcompProject jp1 = project_map.get(file);
+   if (jp1 != null) {
+      IvyLog.logD("DISOURCE","Found project for " + file + " " + jp1);
+      return jp1;
     }
    
    JcodeFactory jf = getJcodeFactory(proj);
-   List<JcompSource> srcs = new ArrayList<>();
-   if (file != null) srcs.add(file);
-   addRelatedSources(srcs);
+   addRelatedSources(proj,file);
+   Set<JcompSource> srcs = active_files.get(proj);
    IvyLog.logD("DISOURCE","Set up project for " + proj + " " +
          file + " " + srcs);
    
-   jp = jcomp_control.getProject(jf,srcs);
+   JcompProject jp = jcomp_control.getProject(jf,srcs);
    if (jp == null) {
       IvyLog.logD("DISOURCE","Failed to create project");
       return null;
     }
+   our_projects.put(proj,jp);
    
    synchronized (this) {
-      JcompProject njp = project_map.putIfAbsent(file,jp);
-      if (njp != null) {
-         jp = njp;
-         IvyLog.logD("DISOURCE","Old project found for " + file);
-       }
       for (JcompSource src : srcs) {
-         project_map.putIfAbsent((SourceFile) src,jp);
+         project_map.put((SourceFile) src,jp);
        }
     }
    
@@ -365,7 +365,10 @@ private JcompProject getJcompProject(String proj,SourceFile file)
 private void invalidateProject(SourceFile sf) 
 {
    JcompProject jp = project_map.get(sf);
-   if (jp == null) return;
+   if (jp == null) {
+      IvyLog.logD("DISOURCE","No project found for " + sf);
+      return;
+    }
    
    String pnm = source_factory.getProjectForFile(sf.getFile());
    for (Iterator<Map.Entry<SourceFile,JcompProject>> it = project_map.entrySet().iterator(); it.hasNext(); ) {
@@ -423,41 +426,30 @@ private ASTNode findNode(CompilationUnit cu,int offset)
 /*                                                                              */
 /********************************************************************************/
 
-private void addRelatedSources(List<JcompSource> srcs)
+private void addRelatedSources(String proj,SourceFile base)
 {
-   Set<String> used = new HashSet<>();
-   for (JcompSource jcs : srcs) {
-      used.add(jcs.getFileName());
+   Set<JcompSource> used = active_files.get(proj);
+   if (used == null) {
+      used = new HashSet<>();
+      active_files.put(proj,used);
     }
+   if (used.contains(base)) return;
    
-   Set<JcompSource> add = new HashSet<>();
-   for (JcompSource jcs : srcs) {
-      SourceFile sf = (SourceFile) jcs;
-      File f = sf.getFile();
-      File dir = f.getParentFile();
-      addSourceFiles(dir,used,add);
-    }
-   for (SourceFile sf1 : file_map.values()) {
-      if (used.contains(sf1.getFileName())) continue;
-      used.add(sf1.getFileName());
-      add.add(sf1);
-    }
-   
-   srcs.addAll(add);
+   File f = base.getFile();
+   File dir = f.getParentFile();
+   addSourceFiles(dir,used);
 }
 
 
-private void addSourceFiles(File dir,Set<String> used,Set<JcompSource> add) 
+private void addSourceFiles(File dir,Set<JcompSource> used) 
 {
    for (File srcf : dir.listFiles()) {
       if (srcf.getName().endsWith(".java")) {
-         if (used.contains(srcf.getPath())) continue;
          SourceFile sf1 = getSourceFile(srcf);
-         used.add(sf1.getFileName());
-         add.add(sf1);
+         used.add(sf1);
        }
       else if (srcf.isDirectory()) {
-         addSourceFiles(srcf,used,add);
+         addSourceFiles(srcf,used);
        }
     }
 }

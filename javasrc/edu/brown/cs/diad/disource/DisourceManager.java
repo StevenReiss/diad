@@ -262,6 +262,14 @@ private void addUses(String pnm,String subnm)
 
 
 
+Set<File> getRelatedFiles(File fp)
+{
+   String proj = project_map.get(fp);
+   return project_uses.get(proj);
+}
+
+
+
 /********************************************************************************/
 /*                                                                              */
 /*      Handle queries                                                          */
