@@ -1,21 +1,21 @@
 /********************************************************************************/
-/*										*/
-/*		DicontrolExpander.java						*/
-/*										*/
-/*	Expand string with substitutes and conditionals 			*/
-/*										*/
+/*                                                                              */
+/*              DicontrolExpander.java                                          */
+/*                                                                              */
+/*      Expand string with substitutes and conditionals                         */
+/*                                                                              */
 /********************************************************************************/
-/*	Copyright 2025 Brown University -- Steven P. Reiss		      */
+/*      Copyright 2025 Brown University -- Steven P. Reiss                    */
 /*********************************************************************************
- *  Copyright 2025, Brown University, Providence, RI.				 *
- *										 *
- *			  All Rights Reserved					 *
- *										 *
- * This program and the accompanying materials are made available under the	 *
+ *  Copyright 2025, Brown University, Providence, RI.                            *
+ *                                                                               *
+ *                        All Rights Reserved                                    *
+ *                                                                               *
+ * This program and the accompanying materials are made available under the      *
  * terms of the Eclipse Public License v1.0 which accompanies this distribution, *
- * and is available at								 *
- *	http://www.eclipse.org/legal/epl-v10.html				 *
- *										 *
+ * and is available at                                                           *
+ *      http://www.eclipse.org/legal/epl-v10.html                                *
+ *                                                                               *
  ********************************************************************************/
 
 
@@ -29,16 +29,16 @@ final class DicontrolExpander implements DicontrolConstants {
 
 
 /********************************************************************************/
-/*										*/
-/*	Private Storage 							*/
-/*										*/
+/*                                                                              */
+/*      Private Storage                                                         */
+/*                                                                              */
 /********************************************************************************/
 
 
 /********************************************************************************/
-/*										*/
-/*	Constructors								*/
-/*										*/
+/*                                                                              */
+/*      Constructors                                                            */
+/*                                                                              */
 /********************************************************************************/
 
 private DicontrolExpander()
@@ -47,31 +47,31 @@ private DicontrolExpander()
 
 
 /********************************************************************************/
-/*										*/
-/*	Main entry point							*/
-/*										*/
+/*                                                                              */
+/*      Main entry point                                                        */
+/*                                                                              */
 /********************************************************************************/
 
 /**
- *	This method takes a template string and a map of name-value pairs and
- *	expands the template using the map.  Text from the template is copied
- *	directly to the output except for:
- *	 *) $NAME is replaced with the value associated with HANE or
- *		the empty string if there is no associated value.
- *	 *) $?NAME ..<text>.. $/ is either replaced with the empty string if
- *		NAME is not in the map or with text.
- *	 *) $!NAME..<text>..$/ is replaced with the empty string if NAME is
- *		defined in the map and with text if not.
- *	 *) $?NAME ..<text1> .. $! ..<text2>.. $/ is replaced with text1 if the
- *		NAME is defined and test2 if not.  Again variations on the sequences
- *		are allowed.
- *	 *) $$ is replaced with $
+ *      This method takes a template string and a map of name-value pairs and
+ *      expands the template using the map.  Text from the template is copied
+ *      directly to the output except for:
+ *       *) $NAME is replaced with the value associated with HANE or
+ *              the empty string if there is no associated value.
+ *       *) $?NAME ..<text>.. $/ is either replaced with the empty string if
+ *              NAME is not in the map or with text.
+ *       *) $!NAME..<text>..$/ is replaced with the empty string if NAME is
+ *              defined in the map and with text if not.
+ *       *) $?NAME ..<text1> .. $! ..<text2>.. $/ is replaced with text1 if the
+ *              NAME is defined and test2 if not.  Again variations on the sequences
+ *              are allowed.
+ *       *) $$ is replaced with $
  *
- *	Note that the text regions above can have escape and insertion sequences
- *	as well.  Note that .. indicates arbitrary text in the above.
+ *      Note that the text regions above can have escape and insertion sequences
+ *      as well.  Note that .. indicates arbitrary text in the above.
  *
- *	In all the above, NAME can be replaced with {NAME}.  Also $/ can be
- *	replace diwth $/NAME or $/{NAME}
+ *      In all the above, NAME can be replaced with {NAME}.  Also $/ can be
+ *      replace diwth $/NAME or $/{NAME}
  *
  **/
 
@@ -85,19 +85,19 @@ public static String expand(String template,Map<String, String> values)
       char c = template.charAt(i);
 
       if (c == '$') {
-	 if (i + 1 < template.length() && template.charAt(i + 1) == '$') {
-	    // Handle $$ case
-	    sb.append('$');
-	    i += 2;
-	  }
-	 else {
-	    // Process variable or conditional
-	    i = processTag(template, i, values, sb);
-	  }
+         if (i + 1 < template.length() && template.charAt(i + 1) == '$') {
+            // Handle $$ case
+            sb.append('$');
+            i += 2;
+          }
+         else {
+            // Process variable or conditional
+            i = processTag(template, i, values, sb);
+          }
        }
       else {
-	 sb.append(c);
-	 i++;
+         sb.append(c);
+         i++;
        }
     }
 
@@ -133,7 +133,7 @@ private static int processTag(String template,int start,Map<String, String> valu
    else {
       int namestart = i;
       while (i < template.length() && isTagChar(template.charAt(i))) {
-	 i++;
+         i++;
        }
       name = template.substring(namestart, i);
     }
@@ -166,7 +166,7 @@ private static int processTag(String template,int start,Map<String, String> valu
       // Case: $?NAME ..text.. $/  OR  $!NAME ..text.. $/
       boolean shouldshow = (template.charAt(start + 1) == '?') ? nameexists : !nameexists;
       if (shouldshow) {
-	 output.append(expand(blockcontent, values));
+         output.append(expand(blockcontent, values));
        }
     }
 
@@ -181,15 +181,15 @@ private static int findClosingTag(String template,int start,String name)
 
    while (i < template.length()) {
       if (template.startsWith("$/", i)) {
-	 depth--;
-	 if (depth == 0) return i;
+         depth--;
+         if (depth == 0) return i;
        }
       else if (isStartBlock(template,i)) {
-	 depth++;
-	 ++i;
+         depth++;
+         ++i;
        }
       else if (template.startsWith("$$")) {
-	 ++i;
+         ++i;
        }
       i++;
     }
@@ -219,12 +219,12 @@ private static int findElseSeparator(String block)
    int depth = 0;
    for (int i = 0; i < block.length() - 1; i++) {
       if (isStartBlock(block,i)) {
-	 // If we find $! at depth 0, it's our separator
-	 if (block.charAt(i + 1) == '!' && depth == 0) return i;
-	 depth++;
+         // If we find $! at depth 0, it's our separator
+         if (block.charAt(i + 1) == '!' && depth == 0) return i;
+         depth++;
        }
       else if (block.startsWith("$/", i)) {
-	 depth--;
+         depth--;
        }
     }
 
@@ -240,7 +240,7 @@ private static boolean isStartBlock(String template,int i)
    else if (template.startsWith("$!",i) && i+2 < template.length()) {
       char ch = template.charAt(i+2);
       if (isTagChar(ch) || ch == '{') {
-	 return true;
+         return true;
        }
     }
 

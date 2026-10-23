@@ -1,21 +1,21 @@
 /********************************************************************************/
-/*										*/
-/*		DiexecuteCall.java						*/
-/*										*/
-/*	description of class							*/
-/*										*/
+/*                                                                              */
+/*              DiexecuteCall.java                                              */
+/*                                                                              */
+/*      description of class                                                    */
+/*                                                                              */
 /********************************************************************************/
-/*	Copyright 2025 Brown University -- Steven P. Reiss		      */
+/*      Copyright 2025 Brown University -- Steven P. Reiss                    */
 /*********************************************************************************
- *  Copyright 2025, Brown University, Providence, RI.				 *
- *										 *
- *			  All Rights Reserved					 *
- *										 *
- * This program and the accompanying materials are made available under the	 *
+ *  Copyright 2025, Brown University, Providence, RI.                            *
+ *                                                                               *
+ *                        All Rights Reserved                                    *
+ *                                                                               *
+ * This program and the accompanying materials are made available under the      *
  * terms of the Eclipse Public License v1.0 which accompanies this distribution, *
- * and is available at								 *
- *	http://www.eclipse.org/legal/epl-v10.html				 *
- *										 *
+ * and is available at                                                           *
+ *      http://www.eclipse.org/legal/epl-v10.html                                *
+ *                                                                               *
  ********************************************************************************/
 
 
@@ -46,20 +46,20 @@ class DiexecuteCall implements DiadTraceCall
 
 
 /********************************************************************************/
-/*										*/
-/*	Private Storage 							*/
-/*										*/
+/*                                                                              */
+/*      Private Storage                                                         */
+/*                                                                              */
 /********************************************************************************/
 
-private Element 	context_element;
-private DiexecuteTrace	for_trace;
+private Element         context_element;
+private DiexecuteTrace  for_trace;
 
 
 
 /********************************************************************************/
-/*										*/
-/*	Constructors								*/
-/*										*/
+/*                                                                              */
+/*      Constructors                                                            */
+/*                                                                              */
 /********************************************************************************/
 
 DiexecuteCall(DiexecuteTrace vt,Element ctx)
@@ -70,9 +70,9 @@ DiexecuteCall(DiexecuteTrace vt,Element ctx)
 
 
 /********************************************************************************/
-/*										*/
-/*	Access methods								*/
-/*										*/
+/*                                                                              */
+/*      Access methods                                                          */
+/*                                                                              */
 /********************************************************************************/
 
 @Override public String getMethod()
@@ -160,7 +160,7 @@ List<DiexecuteCall> getInnerCalls()
 {
    for (Node n = context_element.getParentNode(); n != null; n = n.getParentNode()) {
       if (IvyXml.isElement(n,"CONTEXT")) {
-	 return  for_trace.getCallForContext((Element) n);
+         return  for_trace.getCallForContext((Element) n);
        }
     }
    return null;
@@ -204,11 +204,11 @@ DiexecuteVarVal getTraceVariable(String name)
    for (Element e : IvyXml.children(context_element,"VARIABLE")) {
       String nm = IvyXml.getAttrString(e,"NAME");
       if (nm.equals(mnm)) {
-	 if (line > 0) {
-	    int lno = IvyXml.getAttrInt(e,"LINE");
-	    if (line > 0 && lno != line) continue;
-	  }
-	 return new DiexecuteVarVal(e,null);
+         if (line > 0) {
+            int lno = IvyXml.getAttrInt(e,"LINE");
+            if (line > 0 && lno != line) continue;
+          }
+         return new DiexecuteVarVal(e,null);
        }
     }
 
@@ -229,11 +229,11 @@ DiexecuteVarVal getTraceVarValueFlex(String name,long when)
       v0 = v0.getValueAtTime(for_trace,when);
       DiexecuteVarVal v1 = v0.getChild(sub,for_trace,when);
       if (v1 != null) {
-	 v1 = v1.dereference(for_trace);
-	 return v1;
+         v1 = v1.dereference(for_trace);
+         return v1;
        }
       else if (when < getEndTime()) {
-	 return getTraceVarValueFlex(name,getEndTime());
+         return getTraceVarValueFlex(name,getEndTime());
        }
       else return null;
     }
@@ -287,7 +287,7 @@ DiexecuteVarVal getValueAtTime(DiadTrace trace,String name,long when)
     }
    else if (var0 == null) {
       IvyLog.logE("DIEXECUTE","Variable not found " + name + " " + when +
-	    " " + getMethod());
+            " " + getMethod());
       return null;
     }
    else {
@@ -296,7 +296,7 @@ DiexecuteVarVal getValueAtTime(DiadTrace trace,String name,long when)
 
    if (var0 == null) {
       IvyLog.logE("DIEXECUTE","Empty value at time " + name + " " + when +
-	    " " + IvyXml.convertXmlToString(context_element));
+            " " + IvyXml.convertXmlToString(context_element));
     }
 
    return var0;
@@ -317,18 +317,18 @@ String getVariableName(String id,int lno)
       int vln = 0;
       int idx = s.indexOf("@");
       if (idx > 0) {
-	 vln = Integer.parseInt(var.substring(idx+1));
-	 var = var.substring(0,idx);
+         vln = Integer.parseInt(var.substring(idx+1));
+         var = var.substring(0,idx);
        }
       if (var.equals(id)) {
-	 if (rslt == null) {
-	    rslt = s;
-	    bestline = vln;
-	  }
-	 else if (vln > 0 && vln > bestline && vln <= lno) {
-	    rslt = s;
-	    bestline = vln;
-	  }
+         if (rslt == null) {
+            rslt = s;
+            bestline = vln;
+          }
+         else if (vln > 0 && vln > bestline && vln <= lno) {
+            rslt = s;
+            bestline = vln;
+          }
        }
     }
    return rslt;
@@ -337,9 +337,9 @@ String getVariableName(String id,int lno)
 
 
 /********************************************************************************/
-/*										*/
-/*	Location methods							*/
-/*										*/
+/*                                                                              */
+/*      Location methods                                                        */
+/*                                                                              */
 /********************************************************************************/
 
 void getExecutedLocations(Set<String> rslt)
@@ -361,9 +361,9 @@ void getExecutedLocations(Set<String> rslt)
 
 
 /********************************************************************************/
-/*										*/
-/*	Output methods								*/
-/*										*/
+/*                                                                              */
+/*      Output methods                                                          */
+/*                                                                              */
 /********************************************************************************/
 
 JSONObject getJsonExecTrace(boolean inner)
@@ -377,19 +377,19 @@ JSONObject getJsonExecTrace(boolean inner)
    
    if (getParentCall() == null) {
       if (!for_trace.isReturn()) {
-	 String exc = for_trace.getExceptionType();
-	 if (exc != null) rslt.put("EXCEPTION",exc);
+         String exc = for_trace.getExceptionType();
+         if (exc != null) rslt.put("EXCEPTION",exc);
        }
     }
    else {
       for (Element e : IvyXml.children(context_element,"VARIABLE")) {
-	 String nm = IvyXml.getAttrString(e,"NAME");
-	 if (nm.equals("*THROWS*")) {
-	    DiexecuteVarVal vv = new DiexecuteVarVal(e,null);
-	    String exc = vv.getDataType(getEndTime());
-	    rslt.put("EXCEPTION",exc);
-	    break;
-	  }
+         String nm = IvyXml.getAttrString(e,"NAME");
+         if (nm.equals("*THROWS*")) {
+            DiexecuteVarVal vv = new DiexecuteVarVal(e,null);
+            String exc = vv.getDataType(getEndTime());
+            rslt.put("EXCEPTION",exc);
+            break;
+          }
        }
     }
    
@@ -426,17 +426,17 @@ JSONArray getJsonLineTrace()
       int prev = -1;
       long start = 0;
       for (Long t : lines.getTimeChanges()) {
-	 int lv = lines.getLineValue(t);
-	 if (prev > 0) {
-	    JSONObject lobj = buildLineObject(prev,start,t-1);
-	    rslt.put(lobj);
-	  }
-	 prev = lv;
-	 start = t;
+         int lv = lines.getLineValue(t);
+         if (prev > 0) {
+            JSONObject lobj = buildLineObject(prev,start,t-1);
+            rslt.put(lobj);
+          }
+         prev = lv;
+         start = t;
        }
       if (prev >= 0) {
-	 JSONObject lobj = buildLineObject(prev,start,getEndTime());
-	 rslt.put(lobj);
+         JSONObject lobj = buildLineObject(prev,start,getEndTime());
+         rslt.put(lobj);
        }
     }
 
@@ -523,7 +523,7 @@ private DiexecuteCall getCallFromLineVar(int line,String var0)
 
 
 
-}	// end of class DiexecuteCall
+}       // end of class DiexecuteCall
 
 
 

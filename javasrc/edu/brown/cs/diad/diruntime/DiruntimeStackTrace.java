@@ -1,21 +1,21 @@
 /********************************************************************************/
-/*										*/
-/*		DiruntimeStackTrace.java					*/
-/*										*/
-/*	Set up runtime for a stack trace to enable bug analysis 		*/
-/*										*/
+/*                                                                              */
+/*              DiruntimeStackTrace.java                                        */
+/*                                                                              */
+/*      Set up runtime for a stack trace to enable bug analysis                 */
+/*                                                                              */
 /********************************************************************************/
-/*	Copyright 2025 Brown University -- Steven P. Reiss		      */
+/*      Copyright 2025 Brown University -- Steven P. Reiss                    */
 /*********************************************************************************
- *  Copyright 2025, Brown University, Providence, RI.				 *
- *										 *
- *			  All Rights Reserved					 *
- *										 *
- * This program and the accompanying materials are made available under the	 *
+ *  Copyright 2025, Brown University, Providence, RI.                            *
+ *                                                                               *
+ *                        All Rights Reserved                                    *
+ *                                                                               *
+ * This program and the accompanying materials are made available under the      *
  * terms of the Eclipse Public License v1.0 which accompanies this distribution, *
- * and is available at								 *
- *	http://www.eclipse.org/legal/epl-v10.html				 *
- *										 *
+ * and is available at                                                           *
+ *      http://www.eclipse.org/legal/epl-v10.html                                *
+ *                                                                               *
  ********************************************************************************/
 
 
@@ -56,9 +56,9 @@ class DiruntimeStackTrace implements DiruntimeConstants
 
 
 /********************************************************************************/
-/*										*/
-/*	Private Storage 							*/
-/*										*/
+/*                                                                              */
+/*      Private Storage                                                         */
+/*                                                                              */
 /********************************************************************************/
 
 private DicontrolMain diad_control;
@@ -77,9 +77,9 @@ private static final int LINE_GROUP = 4;
 
 
 /********************************************************************************/
-/*										*/
-/*	Constructors								*/
-/*										*/
+/*                                                                              */
+/*      Constructors                                                            */
+/*                                                                              */
 /********************************************************************************/
 
 DiruntimeStackTrace(DicontrolMain dc,String trace)
@@ -90,9 +90,9 @@ DiruntimeStackTrace(DicontrolMain dc,String trace)
 
 
 /********************************************************************************/
-/*										*/
-/*	Access methoods 							*/
-/*										*/
+/*                                                                              */
+/*      Access methoods                                                         */
+/*                                                                              */
 /********************************************************************************/
 
 DiadThread getThread()
@@ -102,9 +102,9 @@ DiadThread getThread()
 
 
 /********************************************************************************/
-/*										*/
-/*	Trace parsing								*/
-/*										*/
+/*                                                                              */
+/*      Trace parsing                                                           */
+/*                                                                              */
 /********************************************************************************/
 
 private UserThread parseTrace(String trace)
@@ -118,29 +118,29 @@ private UserThread parseTrace(String trace)
    List<DiadStackFrame> frames = new ArrayList<>();
    try (BufferedReader br = new BufferedReader(new StringReader(trace))) {
       for ( ; ; ) {
-	 String line = br.readLine();
-	 if (line == null) break;
+         String line = br.readLine();
+         if (line == null) break;
          line = line.trim();
-	 if (line.isBlank()) continue;
-	 if (exc == null) {
-	    exc = line;
-	    continue;
-	  }
-	 Matcher m = FRAME_PAT.matcher(line);
-	 if (m.matches()) {
-	    String mod = m.group(MOD_GROUP);
-	    String method = m.group(METHOD_GROUP);
-	    String file = m.group(FILE_GROUP);
-	    String lno = m.group(LINE_GROUP);
-	    IvyLog.logD("DIRUNTIME","PARSE " + mod + " " + method + " " +
-		  file + " " + lno);
-	    UserFrame uf = new UserFrame(mod,method,file,lno);
-	    frames.add(uf);
+         if (line.isBlank()) continue;
+         if (exc == null) {
+            exc = line;
+            continue;
+          }
+         Matcher m = FRAME_PAT.matcher(line);
+         if (m.matches()) {
+            String mod = m.group(MOD_GROUP);
+            String method = m.group(METHOD_GROUP);
+            String file = m.group(FILE_GROUP);
+            String lno = m.group(LINE_GROUP);
+            IvyLog.logD("DIRUNTIME","PARSE " + mod + " " + method + " " +
+                  file + " " + lno);
+            UserFrame uf = new UserFrame(mod,method,file,lno);
+            frames.add(uf);
             if (uf.isUserFrame()) valid = true;
-	  }
-	 else {
-	    IvyLog.logD("DIRUNTIME","Stack frame mismatch " + line);
-	  }
+          }
+         else {
+            IvyLog.logD("DIRUNTIME","Stack frame mismatch " + line);
+          }
        }
     }
    catch (IOException e) {
@@ -156,9 +156,9 @@ private UserThread parseTrace(String trace)
 
 
 /********************************************************************************/
-/*										*/
-/*	Local thread								*/
-/*										*/
+/*                                                                              */
+/*      Local thread                                                            */
+/*                                                                              */
 /********************************************************************************/
 
 private class UserThread implements DiadThread {
@@ -182,21 +182,21 @@ private class UserThread implements DiadThread {
        }
     }
 
-   @Override public String getThreadName()		{ return "STACKTRACE"; }
-   @Override public String getThreadId()		{ return thread_id; }
-   @Override public boolean isTerminated()		{ return false; }
-   @Override public boolean isStopped() 		{ return true; }
-   @Override public boolean isRunning() 		{ return false; }
-   @Override public DiadStack getStack()		{ return for_stack; }
-   @Override public boolean isInternal()		{ return false; }
+   @Override public String getThreadName()              { return "STACKTRACE"; }
+   @Override public String getThreadId()                { return thread_id; }
+   @Override public boolean isTerminated()              { return false; }
+   @Override public boolean isStopped()                 { return true; }
+   @Override public boolean isRunning()                 { return false; }
+   @Override public DiadStack getStack()                { return for_stack; }
+   @Override public boolean isInternal()                { return false; }
    
    @Override public boolean isStackTraceThread()  { return true; } 
-   @Override public String getExceptionType()	 { return exception_type; }
+   @Override public String getExceptionType()    { return exception_type; }
    @Override public String getExceptionDetail()         { return exception_message; }
-   @Override public String getProcessId()		{ return thread_id; }
+   @Override public String getProcessId()               { return thread_id; }
    @Override public int getStateCount()                 { return 0; }
 
-   @Override public DiadValue evaluate(String e)	{ return null; }
+   @Override public DiadValue evaluate(String e)        { return null; }
    @Override public DiadValue evaluate(String e,DiadStackFrame frm) {
       return null;
     }
@@ -222,9 +222,9 @@ private class UserThread implements DiadThread {
 
 
 /********************************************************************************/
-/*										*/
-/*	Local stack frame							*/
-/*										*/
+/*                                                                              */
+/*      Local stack frame                                                       */
+/*                                                                              */
 /********************************************************************************/
 
 private class UserFrame implements DiadStackFrame {
@@ -275,19 +275,19 @@ private class UserFrame implements DiadStackFrame {
        }
     }
 
-   @Override public String getFrameId() 		{ return frame_id; }
-   @Override public String getClassName()		{ return class_name; }
-   @Override public String getMethodName()		{ return method_name; }
-   @Override public String getMethodSignature() 	{ return method_signature; }
-   @Override public String getFormatSignature() 	{ return format_signature; }
-   @Override public int getLineNumber() 		{ return line_number; }
-   @Override public File getSourceFile()		{ return source_file; }
-   @Override public boolean isUserFrame()		{ return is_userframe; }
+   @Override public String getFrameId()                 { return frame_id; }
+   @Override public String getClassName()               { return class_name; }
+   @Override public String getMethodName()              { return method_name; }
+   @Override public String getMethodSignature()         { return method_signature; }
+   @Override public String getFormatSignature()         { return format_signature; }
+   @Override public int getLineNumber()                 { return line_number; }
+   @Override public File getSourceFile()                { return source_file; }
+   @Override public boolean isUserFrame()               { return is_userframe; }
    @Override public String getFullMethodName() {
       String rslt = getClassName();
       rslt += "." + method_name;
       if (method_signature != null) {
-	 rslt += method_signature;
+         rslt += method_signature;
        }
       return rslt;
     }
@@ -306,7 +306,7 @@ private class UserFrame implements DiadStackFrame {
       xw.field("METHOD",method_name);
       xw.field("LINE",line_number);
       if (source_file != null) {
-	 xw.field("FILE",source_file.getPath());
+         xw.field("FILE",source_file.getPath());
        }
       xw.field("USER",is_userframe);
       xw.textElement("SIGNATURE",method_signature);
@@ -325,10 +325,10 @@ private class UserFrame implements DiadStackFrame {
       return rslt;
     }
 
-}	// end of inner class UserFrame
+}       // end of inner class UserFrame
 
 
-}	// end of class DiruntimeStackTrace
+}       // end of class DiruntimeStackTrace
 
 
 
