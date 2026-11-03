@@ -510,7 +510,6 @@ private static class DummySource implements JcompSource {
    @Override public String getFileContents()            { return source_cnts; }
    @Override public String getFileName()                { return source_name; }
 
-
 }
 
 
