@@ -58,7 +58,7 @@ class DicontrolMonitor implements DicontrolConstants
 private DicontrolMain   diad_control;
 private MintControl     mint_control;
 private Map<String,EvalData> eval_handlers;
-private Map<String,Element> limba_replys;
+private Map<String,Element> limba_replies;
 
 private static Random   random_gen = new Random();
 
@@ -74,7 +74,7 @@ DicontrolMonitor(DicontrolMain gm,String mintid)
 {
    diad_control = gm;
    eval_handlers = new HashMap<>();
-   limba_replys = new HashMap<>();
+   limba_replies = new HashMap<>();
    
    mint_control = MintControl.create(mintid,MintSyncMode.ONLY_REPLIES);
    mint_control.register("<BUBBLES DO='EXIT' />",new ExitHandler());
@@ -495,14 +495,14 @@ public Element sendLimbaMessage(String cmd,CommandArgs args,String cnts)
          IvyLog.logE("DICCONTROL","Reply ids don't match " + rid + " " + nrid);
        }
       IvyLog.logD("DICONTROL","Waiting for limba reply " + nrid);
-      synchronized (limba_replys) {
+      synchronized (limba_replies) {
          for ( ; ; ) {
-            if (limba_replys.containsKey(nrid)) {
-               rslt = limba_replys.remove(nrid);
+            if (limba_replies.containsKey(nrid)) {
+               rslt = limba_replies.remove(nrid);
                break;
              }
             try {
-               limba_replys.wait(3000);
+               limba_replies.wait(3000);
              }
             catch (InterruptedException e) { }
           }
@@ -703,14 +703,14 @@ private final class LimbaHandler implements MintHandler {
       }
      String rid = IvyXml.getAttrString(xml,"RID");
      if (rid != null) {
-        synchronized (limba_replys) {
-           limba_replys.put(rid,IvyXml.getChild(xml,"RESULT"));
-           limba_replys.notifyAll();
+        synchronized (limba_replies) {
+           limba_replies.put(rid,IvyXml.getChild(xml,"RESULT"));
+           limba_replies.notifyAll();
          }
       }
    }
   
-}
+}       // end of inner class LimbaHandler
 
 /********************************************************************************/
 /*                                                                              */
